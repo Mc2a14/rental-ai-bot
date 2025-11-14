@@ -6,22 +6,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
-// Improved JSON parsing that handles missing Content-Type
-app.use(express.json({ 
-  type: ['application/json', 'text/plain'] // Also accept text/plain
-}));
-
-// Manual JSON parsing for empty content-type
-app.use((req, res, next) => {
-  if (req.headers['content-type'] === '' && typeof req.body === 'string') {
-    try {
-      req.body = JSON.parse(req.body);
-    } catch (e) {
-      // If parsing fails, continue with original body
-    }
-  }
-  next();
-});
+// Manual body parsing that will definitely work
+app.use(express.raw({ type: '*/*' }));
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -32,39 +18,28 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Rental AI Bot is running!',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Simple chat endpoint (FIXED VERSION)
+// Simple chat endpoint - SUPER SIMPLE VERSION
 app.post('/chat/simple', (req, res) => {
   try {
-    console.log('Received body:', req.body);
-    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Raw body received:', req.body.toString());
     
-    let message = req.body.message;
+    let message = '';
     
-    // If body is a string, try to parse it
-    if (typeof req.body === 'string') {
-      try {
-        const parsed = JSON.parse(req.body);
-        message = parsed.message;
-      } catch (e) {
-        // If parsing fails, continue
-      }
+    // Try to parse the raw body as JSON
+    try {
+      const bodyString = req.body.toString();
+      const parsed = JSON.parse(bodyString);
+      message = parsed.message || '';
+    } catch (e) {
+      console.log('JSON parse failed, using raw body');
+      message = req.body.toString();
     }
     
-    if (!message) {
+    if (!message || message.trim() === '') {
       return res.status(400).json({
         success: false,
         error: 'Message is required',
-        receivedBody: req.body,
-        bodyType: typeof req.body
+        hint: 'Send JSON like: {"message": "your question"}'
       });
     }
     
@@ -91,7 +66,8 @@ app.post('/chat/simple', (req, res) => {
     res.json({ 
       success: true, 
       response: response,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      yourMessage: message
     });
     
   } catch (error) {
