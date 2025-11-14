@@ -1,13 +1,17 @@
 import express from 'express';
 import cors from 'cors';
+import OpenAI from 'openai';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-
-// Manual body parsing that will definitely work
 app.use(express.raw({ type: '*/*' }));
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -27,32 +31,26 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Simple chat endpoint - IMPROVED VERSION
+// SIMPLE CHAT (original keyword-based)
 app.post('/chat/simple', (req, res) => {
   try {
-    console.log('Raw body received:', req.body.toString());
-    
     let message = '';
     
-    // Try to parse the raw body as JSON
     try {
       const bodyString = req.body.toString();
       const parsed = JSON.parse(bodyString);
       message = parsed.message || '';
     } catch (e) {
-      console.log('JSON parse failed, using raw body');
       message = req.body.toString();
     }
     
     if (!message || message.trim() === '') {
       return res.status(400).json({
         success: false,
-        error: 'Message is required',
-        hint: 'Send JSON like: {"message": "your question"}'
+        error: 'Message is required'
       });
     }
     
-    // Improved responses with common variations
     const responses = {
       'check in': 'Check-in is at 3:00 PM. Keys are in the lockbox at the front door. The code is 1234.',
       'check-in': 'Check-in is at 3:00 PM. Keys are in the lockbox at the front door. The code is 1234.',
@@ -75,12 +73,7 @@ app.post('/chat/simple', (req, res) => {
       'amenities': 'We provide towels, toiletries, coffee, and tea. The kitchen is fully equipped.',
       'amenity': 'We provide towels, toiletries, coffee, and tea. The kitchen is fully equipped.',
       'towels': 'We provide towels, toiletries, coffee, and tea. The kitchen is fully equipped.',
-      'toiletries': 'We provide towels, toiletries, coffee, and tea. The kitchen is fully equipped.',
-      'late': 'For late check-out requests, please contact the host 24 hours in advance. Fees may apply.',
-      'extend': 'For late check-out requests, please contact the host 24 hours in advance. Fees may apply.',
-      'cleaning': 'Cleaning service is provided after check-out. For additional cleaning during your stay, contact the host.',
-      'clean': 'Cleaning service is provided after check-out. For additional cleaning during your stay, contact the host.',
-      'trash': 'Trash should be placed in the bins outside. Recycling is in the blue bin.'
+      'toiletries': 'We provide towels, toiletries, coffee, and tea. The kitchen is fully equipped.'
     };
     
     const lowerMessage = message.toLowerCase();
@@ -97,7 +90,8 @@ app.post('/chat/simple', (req, res) => {
       success: true, 
       response: response,
       timestamp: new Date().toISOString(),
-      yourMessage: message
+      yourMessage: message,
+      type: 'simple'
     });
     
   } catch (error) {
@@ -109,8 +103,122 @@ app.post('/chat/simple', (req, res) => {
   }
 });
 
+// NEW: AI-POWERED CHAT ENDPOINT
+app.post('/chat/ai', async (req, res) => {
+  try {
+    let message = '';
+    
+    try {
+      const bodyString = req.body.toString();
+      const parsed = JSON.parse(bodyString);
+      message = parsed.message || '';
+    } catch (e) {
+      message = req.body.toString();
+    }
+    
+    if (!message || message.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        error: 'Message is required'
+      });
+    }
+
+    // AI Prompt for rental assistance
+    const prompt = `
+    You are a helpful short-term rental assistant. You help guests with their stay.
+    
+    Property Information:
+    - Check-in: 3:00 PM, keys in lockbox (code: 1234)
+    - Check-out: 11:00 AM 
+    - WiFi: GuestNetwork, Password: Welcome123
+    - Parking: Spot #A15
+    - Rules: No smoking, no parties, quiet hours 10PM-7AM
+    - Emergency: Call 911, Maintenance: (555) 123-4567
+    - Amenities: Towels, toiletries, coffee, tea, fully equipped kitchen
+    
+    Guest Question: "${message}"
+    
+    Provide a helpful, friendly response. If you don't know something, suggest they contact the host.
+    Keep responses concise and practical.
+    `;
+
+    // Use OpenAI for intelligent responses
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful short-term rental assistant. Provide clear, practical answers about rental properties. Be friendly but professional."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 300,
+      temperature: 0.7
+    });
+
+    const aiResponse = completion.choices[0].message.content;
+
+    res.json({
+      success: true,
+      response: aiResponse,
+      timestamp: new Date().toISOString(),
+      yourMessage: message,
+      type: 'ai',
+      usage: completion.usage
+    });
+
+  } catch (error) {
+    console.error('AI Chat error:', error);
+    
+    // Fallback to simple chat if AI fails
+    try {
+      const bodyString = req.body.toString();
+      const parsed = JSON.parse(bodyString);
+      const message = parsed.message || '';
+      
+      // Use simple chat as fallback
+      const responses = {
+        'check in': 'Check-in is at 3:00 PM. Keys are in the lockbox at the front door. The code is 1234.',
+        'check-out': 'Check-out is at 11:00 AM. Please leave keys in the lockbox.',
+        'wifi': 'WiFi: GuestNetwork, Password: Welcome123',
+        'parking': 'Free parking is available in spot #A15',
+        'rules': 'No smoking, no parties, quiet hours 10PM-7AM',
+        'emergency': 'For emergencies, call 911. For maintenance, call (555) 123-4567'
+      };
+      
+      const lowerMessage = message.toLowerCase();
+      let response = "I'm here to help with your stay! Ask about check-in, WiFi, parking, or house rules.";
+      
+      for (const [key, answer] of Object.entries(responses)) {
+        if (lowerMessage.includes(key)) {
+          response = answer;
+          break;
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        response: response + " (AI temporarily unavailable)",
+        timestamp: new Date().toISOString(),
+        yourMessage: message,
+        type: 'fallback'
+      });
+      
+    } catch (fallbackError) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process message'
+      });
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Health: https://rental-ai-bot-production.up.railway.app/health`);
-  console.log(`📍 Chat: POST https://rental-ai-bot-production.up.railway.app/chat/simple`);
+  console.log(`📍 Simple Chat: POST /chat/simple`);
+  console.log(`📍 AI Chat: POST /chat/ai`);
+  console.log(`📍 Health: GET /health`);
 });
