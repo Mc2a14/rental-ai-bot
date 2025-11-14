@@ -25,15 +25,30 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Simple chat endpoint (NO AI yet)
+// Debug endpoint to see what's being received
+app.post('/debug', (req, res) => {
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  res.json({
+    received: true,
+    headers: req.headers,
+    body: req.body
+  });
+});
+
+// Simple chat endpoint (FIXED VERSION)
 app.post('/chat/simple', (req, res) => {
   try {
+    console.log('Received body:', req.body);
+    
     const { message } = req.body;
     
     if (!message) {
+      console.log('No message found in body');
       return res.status(400).json({
         success: false,
-        error: 'Message is required'
+        error: 'Message is required',
+        receivedBody: req.body // This will show us what was actually received
       });
     }
     
