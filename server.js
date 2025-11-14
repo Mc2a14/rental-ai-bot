@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint for Railway
+// Root endpoint for Railway health checks (IMPORTANT!)
 app.get('/', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -69,4 +69,5 @@ app.post('/api/host/register', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/`);
+  console.log(`📍 API Health: http://localhost:${PORT}/api/health`);
 });
