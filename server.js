@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import 'dotenv/config';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Root endpoint for Railway health checks (IMPORTANT!)
+// Root endpoint for Railway health checks
 app.get('/', (req, res) => {
   res.json({ 
     status: 'OK', 
