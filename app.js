@@ -5,7 +5,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+
+// Improved JSON parsing that handles missing Content-Type
+app.use(express.json({ 
+  type: ['application/json', 'text/plain'] // Also accept text/plain
+}));
+
+// Manual JSON parsing for empty content-type
+app.use((req, res, next) => {
+  if (req.headers['content-type'] === '' && typeof req.body === 'string') {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (e) {
+      // If parsing fails, continue with original body
+    }
+  }
+  next();
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -25,30 +41,30 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Debug endpoint to see what's being received
-app.post('/debug', (req, res) => {
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  res.json({
-    received: true,
-    headers: req.headers,
-    body: req.body
-  });
-});
-
 // Simple chat endpoint (FIXED VERSION)
 app.post('/chat/simple', (req, res) => {
   try {
     console.log('Received body:', req.body);
+    console.log('Content-Type:', req.headers['content-type']);
     
-    const { message } = req.body;
+    let message = req.body.message;
+    
+    // If body is a string, try to parse it
+    if (typeof req.body === 'string') {
+      try {
+        const parsed = JSON.parse(req.body);
+        message = parsed.message;
+      } catch (e) {
+        // If parsing fails, continue
+      }
+    }
     
     if (!message) {
-      console.log('No message found in body');
       return res.status(400).json({
         success: false,
         error: 'Message is required',
-        receivedBody: req.body // This will show us what was actually received
+        receivedBody: req.body,
+        bodyType: typeof req.body
       });
     }
     
