@@ -39,70 +39,71 @@ const openai = new OpenAI({
 // Handle OPTIONS requests for CORS preflight
 app.options('*', cors());
 
-// CONFIGURABLE PROPERTY KNOWLEDGE BASE WITH ENVIRONMENT VARIABLES
-const propertyDetails = {
-  // Basic Property Info
-  name: process.env.PROPERTY_NAME || "Sunset Beach Villa",
-  address: process.env.PROPERTY_ADDRESS || "123 Ocean View Drive, Miami Beach, FL 33139",
-  type: process.env.PROPERTY_TYPE || "Luxury Beachfront Villa",
-  
-  // Contact Information
-  contacts: {
-    host: process.env.HOST_CONTACT || "Maria Rodriguez - (305) 555-0123",
-    emergency: process.env.EMERGENCY_CONTACT || "911",
-    maintenance: process.env.MAINTENANCE_CONTACT || "(305) 555-0456 (24/7)",
-    propertyManager: process.env.MANAGER_CONTACT || "Carlos - (305) 555-0789"
-  },
-  
-  // Check-in/out Details
-  schedule: {
-    checkIn: process.env.CHECK_IN_TIME || "3:00 PM", 
-    checkOut: process.env.CHECK_OUT_TIME || "11:00 AM",
-    lateCheckOut: process.env.LATE_CHECKOUT || "Available upon request ($50 fee after 1 PM)"
-  },
-  
-  // Amenities (comma-separated lists)
-  amenities: {
-    essentials: (process.env.AMENITIES_ESSENTIALS || "WiFi: GuestNetwork / Welcome123, Air Conditioning, Heating, Hot Water, Kitchen").split(', '),
-    comfort: (process.env.AMENITIES_COMFORT || "King Bed, Smart TV, Netflix/Disney+, Coffee Maker, Hair Dryer").split(', '),
-    outdoor: (process.env.AMENITIES_OUTDOOR || "Private Pool, Beach Access, BBQ Grill, Patio Furniture, Parking Spot A15").split(', '),
-    safety: (process.env.AMENITIES_SAFETY || "Security Cameras (exterior only), First Aid Kit, Fire Extinguisher, Smoke Detectors").split(', ')
-  },
-  
-  // House Rules
-  rules: {
-    general: (process.env.RULES_GENERAL || "No smoking inside, No parties or events, Quiet hours: 10:00 PM - 7:00 AM").split(', '),
-    pool: (process.env.RULES_POOL || "No glass near pool, Children must be supervised, Pool hours: 7:00 AM - 10:00 PM").split(', '),
-    parking: (process.env.RULES_PARKING || "One vehicle per reservation - Spot A15, No street parking overnight").split(', '),
-    damages: process.env.RULES_DAMAGES || "Please report any damages immediately"
-  },
-  
-  // Local Recommendations
-  local: {
-    restaurants: (process.env.LOCAL_RESTAURANTS || "Seaside Grill (0.5 miles) - Fresh seafood, great sunset views, Ocean View Bistro (0.3 miles) - Casual dining, family-friendly, Miami Spice (1.2 miles) - Cuban cuisine, live music, Beach Cafe (0.1 miles) - Ideal for breakfast and coffee, opens at 7 AM").split(', '),
-    attractions: (process.env.LOCAL_ATTRACTIONS || "Sunset Beach (across street) - Swimming, sunbathing, Marina Boardwalk (0.8 miles) - Shopping, boat rentals, Miami Art District (2 miles) - Galleries, cafes, Tropical Gardens (1.5 miles) - Nature walks, photography").split(', '),
-    groceries: (process.env.LOCAL_GROCERIES || "Beach Market (0.4 miles) - Essentials, fresh produce, SuperMart (1 mile) - Full supermarket, pharmacy").split(', '),
-    emergencyServices: {
-      hospital: process.env.LOCAL_HOSPITAL || "Miami Beach General - (305) 555-1000 (3 miles)",
-      pharmacy: process.env.LOCAL_PHARMACY || "Beachside Pharmacy - (305) 555-2000 (0.6 miles)",
-      police: process.env.LOCAL_POLICE || "911 or Miami Beach PD - (305) 555-3000"
-    }
-  },
-  
-  // Transportation
-  transportation: {
-    airport: process.env.TRANSPORT_AIRPORT || "Miami International (MIA) - 12 miles, 20-30 min drive",
-    taxi: process.env.TRANSPORT_TAXI || "Beach Cab Co. - (305) 555-4000",
-    rideshare: process.env.TRANSPORT_RIDESHARE || "Uber/Lyft readily available",
-    publicTransit: process.env.TRANSPORT_PUBLIC || "Bus stop 0.2 miles away - Route 123 to downtown"
-  }
-};
+// CONFIGURABLE PROPERTY KNOWLEDGE BASE
+function getPropertyConfig() {
+    // Default configuration (fallback)
+    const defaultConfig = {
+        name: "Sunset Beach Villa",
+        address: "123 Ocean View Drive, Miami Beach, FL 33139",
+        type: "Luxury Beachfront Villa",
+        contacts: {
+            host: "Maria Rodriguez - (305) 555-0123",
+            emergency: "911",
+            maintenance: "(305) 555-0456 (24/7)",
+            propertyManager: "Carlos - (305) 555-0789"
+        },
+        schedule: {
+            checkIn: "3:00 PM", 
+            checkOut: "11:00 AM",
+            lateCheckOut: "Available upon request ($50 fee after 1 PM)"
+        },
+        amenities: {
+            essentials: ["WiFi: GuestNetwork / Welcome123", "Air Conditioning", "Heating", "Hot Water", "Kitchen"],
+            comfort: ["King Bed", "Smart TV", "Netflix/Disney+", "Coffee Maker", "Hair Dryer"],
+            outdoor: ["Private Pool", "Beach Access", "BBQ Grill", "Patio Furniture", "Parking Spot A15"],
+            safety: ["Security Cameras (exterior only)", "First Aid Kit", "Fire Extinguisher", "Smoke Detectors"]
+        },
+        rules: {
+            general: ["No smoking inside", "No parties or events", "Quiet hours: 10:00 PM - 7:00 AM"],
+            pool: ["No glass near pool", "Children must be supervised", "Pool hours: 7:00 AM - 10:00 PM"],
+            parking: ["One vehicle per reservation - Spot A15", "No street parking overnight"],
+            damages: "Please report any damages immediately"
+        },
+        local: {
+            restaurants: [
+                "Seaside Grill (0.5 miles) - Fresh seafood, great sunset views",
+                "Ocean View Bistro (0.3 miles) - Casual dining, family-friendly", 
+                "Miami Spice (1.2 miles) - Cuban cuisine, live music",
+                "Beach Cafe (0.1 miles) - Ideal for breakfast and coffee, opens at 7 AM"
+            ],
+            attractions: [
+                "Sunset Beach (across street) - Swimming, sunbathing",
+                "Marina Boardwalk (0.8 miles) - Shopping, boat rentals",
+                "Miami Art District (2 miles) - Galleries, cafes",
+                "Tropical Gardens (1.5 miles) - Nature walks, photography"
+            ],
+            groceries: [
+                "Beach Market (0.4 miles) - Essentials, fresh produce",
+                "SuperMart (1 mile) - Full supermarket, pharmacy"
+            ],
+            emergencyServices: {
+                hospital: "Miami Beach General - (305) 555-1000 (3 miles)",
+                pharmacy: "Beachside Pharmacy - (305) 555-2000 (0.6 miles)",
+                police: "911 or Miami Beach PD - (305) 555-3000"
+            }
+        },
+        transportation: {
+            airport: "Miami International (MIA) - 12 miles, 20-30 min drive",
+            taxi: "Beach Cab Co. - (305) 555-4000",
+            rideshare: "Uber/Lyft readily available",
+            publicTransit: "Bus stop 0.2 miles away - Route 123 to downtown"
+        }
+    };
 
-// Log the loaded configuration
-console.log('🏠 Property Configuration Loaded:');
-console.log('Property Name:', propertyDetails.name);
-console.log('Property Address:', propertyDetails.address);
-console.log('Using default values:', !process.env.PROPERTY_NAME ? 'YES - No environment variables set' : 'NO - Custom configuration detected');
+    return defaultConfig;
+}
+
+const propertyDetails = getPropertyConfig();
 
 // Multi-language system prompts
 const SYSTEM_PROMPTS = {
@@ -254,6 +255,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Admin configuration page
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 // API endpoint for health check with configuration info
 app.get('/api/health', (req, res) => {
   res.json({ 
@@ -262,9 +268,8 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     openaiKey: !!process.env.OPENAI_API_KEY,
     property: propertyDetails.name,
-    usingCustomConfig: !!process.env.PROPERTY_NAME,
-    version: '4.0.0',
-    features: ['multi-language', 'chat-history', 'dark-mode', 'configurable-property']
+    version: '5.0.0',
+    features: ['multi-language', 'chat-history', 'dark-mode', 'host-configuration']
   });
 });
 
@@ -408,11 +413,11 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Configurable Rental AI Bot running on port ${PORT}`);
+  console.log(`🚀 Host-Configurable Rental AI Bot running on port ${PORT}`);
   console.log(`🏠 Property: ${propertyDetails.name}`);
   console.log(`📍 Address: ${propertyDetails.address}`);
-  console.log(`⚙️  Configuration: ${process.env.PROPERTY_NAME ? 'CUSTOM' : 'DEFAULT'}`);
   console.log(`🌍 Supported languages: English, Spanish, French`);
-  console.log(`🌐 Web interface available at: http://localhost:${PORT}`);
+  console.log(`⚙️  Admin panel: http://localhost:${PORT}/admin`);
+  console.log(`🌐 Web interface: http://localhost:${PORT}`);
   console.log(`🤖 API endpoints: /chat/ai, /chat/simple, /api/health`);
 });
