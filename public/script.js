@@ -2,13 +2,15 @@ class RentalAIChat {
     constructor() {
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
+        this.themeKey = 'rental_ai_theme';
         
         console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
         
         this.initializeEventListeners();
         this.updateCharCount();
         this.loadChatHistory();
-        this.addClearButton();
+        this.addThemeToggle();
+        this.loadThemePreference();
     }
 
     initializeEventListeners() {
@@ -35,36 +37,86 @@ class RentalAIChat {
         });
     }
 
-    addClearButton() {
-        // Create clear chat button
-        const clearBtn = document.createElement('button');
-        clearBtn.innerHTML = '🗑️ Clear Chat';
-        clearBtn.title = 'Clear conversation history';
-        clearBtn.style.cssText = `
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            margin-right: 10px;
-            transition: all 0.2s;
-        `;
-        clearBtn.addEventListener('mouseenter', () => {
-            clearBtn.style.background = 'rgba(255, 255, 255, 0.3)';
-        });
-        clearBtn.addEventListener('mouseleave', () => {
-            clearBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-        });
-        clearBtn.addEventListener('click', () => this.clearChat());
+    // THEME MANAGEMENT METHODS
+    addThemeToggle() {
+        // Create theme toggle button
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.className = 'theme-toggle';
+        themeToggle.innerHTML = '🌙 Dark';
+        themeToggle.title = 'Toggle dark/light mode';
+        themeToggle.addEventListener('click', () => this.toggleTheme());
         
-        // Add to header next to status indicator
+        // Create header controls container
+        const headerControls = document.createElement('div');
+        headerControls.className = 'header-controls';
+        
+        // Add clear button to controls
+        const clearBtn = this.createClearButton();
+        headerControls.appendChild(clearBtn);
+        headerControls.appendChild(themeToggle);
+        
+        // Add to header
         const header = document.querySelector('.chat-header');
         const statusIndicator = document.querySelector('.status-indicator');
-        header.insertBefore(clearBtn, statusIndicator);
+        header.insertBefore(headerControls, statusIndicator);
     }
 
+    createClearButton() {
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-chat-btn';
+        clearBtn.innerHTML = '🗑️ Clear';
+        clearBtn.title = 'Clear conversation history';
+        clearBtn.addEventListener('click', () => this.clearChat());
+        return clearBtn;
+    }
+
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        this.updateThemeButton(newTheme);
+        this.saveThemePreference(newTheme);
+        this.showTempMessage(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode enabled`, 'info');
+    }
+
+    updateThemeButton(theme) {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        }
+    }
+
+    loadThemePreference() {
+        try {
+            // First check system preference
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // Then check user saved preference
+            const savedTheme = localStorage.getItem(this.themeKey);
+            
+            let theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+            
+            document.documentElement.setAttribute('data-theme', theme);
+            this.updateThemeButton(theme);
+            
+            console.log('🎨 Theme loaded:', theme, '(system prefers dark:', systemPrefersDark, ')');
+            
+        } catch (error) {
+            console.error('Error loading theme preference:', error);
+        }
+    }
+
+    saveThemePreference(theme) {
+        try {
+            localStorage.setItem(this.themeKey, theme);
+        } catch (error) {
+            console.error('Error saving theme preference:', error);
+        }
+    }
+
+    // CHAT HISTORY METHODS
     clearChat() {
         if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
             localStorage.removeItem(this.storageKey);
