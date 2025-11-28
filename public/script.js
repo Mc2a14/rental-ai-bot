@@ -47,6 +47,16 @@ class RentalAIChat {
         }
     }
 
+    getHostConfig() {
+        try {
+            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+            return savedConfig ? JSON.parse(savedConfig) : null;
+        } catch (error) {
+            console.error('Error getting host config:', error);
+            return null;
+        }
+    }
+
     initializeEventListeners() {
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
@@ -406,6 +416,10 @@ class RentalAIChat {
 
         try {
             const currentLanguage = this.getCurrentLanguage();
+            
+            // Get host configuration
+            const hostConfig = this.getHostConfig();
+            
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
@@ -413,7 +427,8 @@ class RentalAIChat {
                 },
                 body: JSON.stringify({ 
                     message: message,
-                    language: currentLanguage
+                    language: currentLanguage,
+                    hostConfig: hostConfig // Send host config to backend
                 })
             });
 
@@ -423,6 +438,12 @@ class RentalAIChat {
             if (data.success) {
                 this.addMessage(data.response, 'bot');
                 console.log('🌍 Response language:', data.detectedLanguage);
+                console.log('🏠 Using custom config:', data.usingCustomConfig);
+                
+                // Show notification if using custom config
+                if (data.usingCustomConfig && hostConfig) {
+                    console.log('✅ AI is using your custom property configuration');
+                }
             } else {
                 this.addMessage(
                     "I'm having trouble connecting right now. Please try again in a moment.",
@@ -504,6 +525,19 @@ function askQuestion(question) {
     
     const chat = window.chat || new RentalAIChat();
     chat.sendMessage();
+}
+
+// Debug function to check configuration
+function debugConfig() {
+    const config = localStorage.getItem('rentalAIPropertyConfig');
+    if (config) {
+        const parsed = JSON.parse(config);
+        console.log('🔧 Current Host Configuration:', parsed);
+        alert(`Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`);
+    } else {
+        console.log('🔧 No host configuration found');
+        alert('No host configuration found. Please run setup first.');
+    }
 }
 
 // Initialize chat when page loads
