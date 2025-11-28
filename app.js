@@ -156,7 +156,7 @@ GUIDELINES:
 - Always be clear about house rules when relevant
 `;
 
-// Root endpoint - now serves the HTML interface
+// Root endpoint - serves the HTML interface from public folder
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
