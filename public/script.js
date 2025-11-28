@@ -7,12 +7,44 @@ class RentalAIChat {
         
         console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
         
+        this.loadPropertyConfig(); // Load host configuration first
         this.initializeEventListeners();
         this.updateCharCount();
         this.loadChatHistory();
-        this.createHeaderControls(); // FIXED: Create all controls at once
+        this.createHeaderControls();
         this.loadThemePreference();
         this.loadLanguagePreference();
+    }
+
+    // HOST CONFIGURATION METHODS
+    loadPropertyConfig() {
+        try {
+            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+            if (savedConfig) {
+                const hostConfig = JSON.parse(savedConfig);
+                
+                // Update the chat header with custom property name
+                const headerText = document.querySelector('.header-text h2');
+                const headerSubtext = document.querySelector('.header-text p');
+                
+                if (headerText && hostConfig.name) {
+                    headerText.textContent = `Rental AI Assistant - ${hostConfig.name}`;
+                }
+                
+                if (headerSubtext && hostConfig.name) {
+                    headerSubtext.textContent = `${hostConfig.name} • 24/7 Support`;
+                }
+                
+                console.log('🏠 Using host configuration:', hostConfig.name);
+                this.hostConfig = hostConfig;
+            } else {
+                console.log('🏠 Using default configuration');
+                this.hostConfig = null;
+            }
+        } catch (error) {
+            console.error('Error loading property config:', error);
+            this.hostConfig = null;
+        }
     }
 
     initializeEventListeners() {
@@ -39,10 +71,14 @@ class RentalAIChat {
         });
     }
 
-    // FIXED: Create all header controls together
+    // HEADER CONTROLS METHODS
     createHeaderControls() {
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
+        
+        // Add Setup button (links to admin page)
+        const setupBtn = this.createSetupButton();
+        headerControls.appendChild(setupBtn);
         
         // Add Clear Chat button
         const clearBtn = this.createClearButton();
@@ -60,6 +96,17 @@ class RentalAIChat {
         const header = document.querySelector('.chat-header');
         const statusIndicator = document.querySelector('.status-indicator');
         header.insertBefore(headerControls, statusIndicator);
+    }
+
+    createSetupButton() {
+        const setupBtn = document.createElement('button');
+        setupBtn.className = 'setup-btn';
+        setupBtn.innerHTML = '⚙️ Setup';
+        setupBtn.title = 'Configure your property information';
+        setupBtn.addEventListener('click', () => {
+            window.location.href = '/admin';
+        });
+        return setupBtn;
     }
 
     createClearButton() {
@@ -109,6 +156,7 @@ class RentalAIChat {
         return langSelect;
     }
 
+    // LANGUAGE SUPPORT METHODS
     changeLanguage(langCode) {
         this.saveLanguagePreference(langCode);
         this.updateUIForLanguage(langCode);
@@ -472,6 +520,21 @@ document.addEventListener('DOMContentLoaded', function() {
         @keyframes slideOutRight {
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .setup-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--text-inverse);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .setup-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
     `;
     document.head.appendChild(style);
