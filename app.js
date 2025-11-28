@@ -39,7 +39,7 @@ const openai = new OpenAI({
 // Handle OPTIONS requests for CORS preflight
 app.options('*', cors());
 
-// CONFIGURABLE PROPERTY KNOWLEDGE BASE
+// DYNAMIC PROPERTY KNOWLEDGE BASE
 function getPropertyConfig() {
     // Default configuration (fallback)
     const defaultConfig = {
@@ -103,44 +103,45 @@ function getPropertyConfig() {
     return defaultConfig;
 }
 
-const propertyDetails = getPropertyConfig();
-
-// Multi-language system prompts
-const SYSTEM_PROMPTS = {
-  en: `You are a knowledgeable and helpful short-term rental assistant for "${propertyDetails.name}". Respond in English.
+// Function to create system prompt with custom configuration
+function createSystemPrompt(language = 'en', customConfig = null) {
+    const config = customConfig || getPropertyConfig();
+    
+    const prompts = {
+        en: `You are a knowledgeable and helpful short-term rental assistant for "${config.name}". Respond in English.
 
 PROPERTY KNOWLEDGE BASE:
 
 BASIC INFO:
-- Address: ${propertyDetails.address}
-- Type: ${propertyDetails.type}
+- Address: ${config.address}
+- Type: ${config.type}
 
 CONTACTS:
-${Object.entries(propertyDetails.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(config.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 SCHEDULE:
-- Check-in: ${propertyDetails.schedule.checkIn}
-- Check-out: ${propertyDetails.schedule.checkOut}
-- ${propertyDetails.schedule.lateCheckOut}
+- Check-in: ${config.schedule.checkIn}
+- Check-out: ${config.schedule.checkOut}
+- ${config.schedule.lateCheckOut}
 
 AMENITIES:
-${Object.entries(propertyDetails.amenities).map(([category, items]) => 
+${Object.entries(config.amenities).map(([category, items]) => 
   `${category.toUpperCase()}:\n${items.map(item => `  • ${item}`).join('\n')}`
 ).join('\n')}
 
 HOUSE RULES:
-${Object.entries(propertyDetails.rules).map(([category, rules]) => 
+${Object.entries(config.rules).map(([category, rules]) => 
   `${category.toUpperCase()}:\n${Array.isArray(rules) ? rules.map(rule => `  • ${rule}`).join('\n') : `  • ${rules}`}`
 ).join('\n')}
 
 LOCAL RECOMMENDATIONS:
-${Object.entries(propertyDetails.local).map(([category, items]) => 
+${Object.entries(config.local).map(([category, items]) => 
   `${category.toUpperCase()}:\n${Array.isArray(items) ? items.map(item => `  • ${item}`).join('\n') : 
     Object.entries(items).map(([key, value]) => `  • ${key}: ${value}`).join('\n')}`
 ).join('\n')}
 
 TRANSPORTATION:
-${Object.entries(propertyDetails.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(config.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 GUIDELINES:
 - Be friendly, professional, and helpful
@@ -150,40 +151,40 @@ GUIDELINES:
 - Recommend local spots when guests ask about things to do
 - Always be clear about house rules when relevant`,
 
-  es: `Eres un asistente útil y conocedor de alquileres vacacionales para "${propertyDetails.name}". Responde en español.
+        es: `Eres un asistente útil y conocedor de alquileres vacacionales para "${config.name}". Responde en español.
 
 BASE DE CONOCIMIENTO DE LA PROPIEDAD:
 
 INFORMACIÓN BÁSICA:
-- Dirección: ${propertyDetails.address}
-- Tipo: ${propertyDetails.type}
+- Dirección: ${config.address}
+- Tipo: ${config.type}
 
 CONTACTOS:
-${Object.entries(propertyDetails.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(config.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 HORARIOS:
-- Check-in: ${propertyDetails.schedule.checkIn}
-- Check-out: ${propertyDetails.schedule.checkOut}
-- ${propertyDetails.schedule.lateCheckOut}
+- Check-in: ${config.schedule.checkIn}
+- Check-out: ${config.schedule.checkOut}
+- ${config.schedule.lateCheckOut}
 
 COMODIDADES:
-${Object.entries(propertyDetails.amenities).map(([category, items]) => 
+${Object.entries(config.amenities).map(([category, items]) => 
   `${category.toUpperCase()}:\n${items.map(item => `  • ${item}`).join('\n')}`
 ).join('\n')}
 
 NORMAS DE LA CASA:
-${Object.entries(propertyDetails.rules).map(([category, rules]) => 
+${Object.entries(config.rules).map(([category, rules]) => 
   `${category.toUpperCase()}:\n${Array.isArray(rules) ? rules.map(rule => `  • ${rule}`).join('\n') : `  • ${rules}`}`
 ).join('\n')}
 
 RECOMENDACIONES LOCALES:
-${Object.entries(propertyDetails.local).map(([category, items]) => 
+${Object.entries(config.local).map(([category, items]) => 
   `${category.toUpperCase()}:\n${Array.isArray(items) ? items.map(item => `  • ${item}`).join('\n') : 
     Object.entries(items).map(([key, value]) => `  • ${key}: ${value}`).join('\n')}`
 ).join('\n')}
 
 TRANSPORTE:
-${Object.entries(propertyDetails.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(config.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 PAUTAS:
 - Sé amable, profesional y servicial
@@ -193,40 +194,40 @@ PAUTAS:
 - Recomienda lugares locales cuando los huéspedes pregunten sobre cosas para hacer
 - Siempre sé claro sobre las normas de la casa cuando sea relevante`,
 
-  fr: `Vous êtes un assistant de location de vacances serviable et compétent pour "${propertyDetails.name}". Répondez en français.
+        fr: `Vous êtes un assistant de location de vacances serviable et compétent pour "${config.name}". Répondez en français.
 
 BASE DE CONNAISSANCES DE LA PROPRIÉTÉ:
 
 INFORMATIONS DE BASE:
-- Adresse: ${propertyDetails.address}
-- Type: ${propertyDetails.type}
+- Adresse: ${config.address}
+- Type: ${config.type}
 
 CONTACTS:
-${Object.entries(propertyDetails.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(config.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 HORAIRES:
-- Check-in: ${propertyDetails.schedule.checkIn}
-- Check-out: ${propertyDetails.schedule.checkOut}
-- ${propertyDetails.schedule.lateCheckOut}
+- Check-in: ${config.schedule.checkIn}
+- Check-out: ${config.schedule.checkOut}
+- ${config.schedule.lateCheckOut}
 
 ÉQUIPEMENTS:
-${Object.entries(propertyDetails.amenities).map(([category, items]) => 
+${Object.entries(config.amenities).map(([category, items]) => 
   `${category.toUpperCase()}:\n${items.map(item => `  • ${item}`).join('\n')}`
 ).join('\n')}
 
 RÈGLES DE LA MAISON:
-${Object.entries(propertyDetails.rules).map(([category, rules]) => 
+${Object.entries(config.rules).map(([category, rules]) => 
   `${category.toUpperCase()}:\n${Array.isArray(rules) ? rules.map(rule => `  • ${rule}`).join('\n') : `  • ${rules}`}`
 ).join('\n')}
 
 RECOMMANDATIONS LOCALES:
-${Object.entries(propertyDetails.local).map(([category, items]) => 
+${Object.entries(config.local).map(([category, items]) => 
   `${category.toUpperCase()}:\n${Array.isArray(items) ? items.map(item => `  • ${item}`).join('\n') : 
     Object.entries(items).map(([key, value]) => `  • ${key}: ${value}`).join('\n')}`
 ).join('\n')}
 
 TRANSPORT:
-${Object.entries(propertyDetails.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(config.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 DIRECTIVES:
 - Soyez amical, professionnel et serviable
@@ -235,7 +236,10 @@ DIRECTIVES:
 - Pour les urgences, insistez sur l'appel du 911 en premier
 - Recommandez des endroits locaux lorsque les invités demandent des choses à faire
 - Soyez toujours clair sur les règles de la maison lorsque c'est pertinent`
-};
+    };
+
+    return prompts[language] || prompts.en;
+}
 
 // Language detection function
 function detectLanguage(text) {
@@ -250,6 +254,42 @@ function detectLanguage(text) {
   return 'en'; // Default to English
 }
 
+// Function to convert host configuration to full property details
+function convertHostConfig(hostConfig) {
+    if (!hostConfig) return null;
+    
+    return {
+        name: hostConfig.name,
+        address: hostConfig.address,
+        type: hostConfig.type,
+        contacts: {
+            host: hostConfig.contacts?.host,
+            emergency: "911",
+            maintenance: hostConfig.contacts?.maintenance,
+            propertyManager: hostConfig.contacts?.host
+        },
+        schedule: {
+            checkIn: hostConfig.schedule?.checkIn,
+            checkOut: hostConfig.schedule?.checkOut,
+            lateCheckOut: hostConfig.schedule?.lateCheckOut || "Not available"
+        },
+        amenities: {
+            essentials: [hostConfig.amenities?.wifi, ...(hostConfig.amenities?.essentials || [])],
+            comfort: hostConfig.amenities?.essentials || [],
+            outdoor: [],
+            safety: []
+        },
+        rules: {
+            general: hostConfig.rules?.general || [],
+            pool: [],
+            parking: [],
+            damages: "Please report any damages immediately"
+        },
+        local: getPropertyConfig().local, // Use defaults for local recommendations
+        transportation: getPropertyConfig().transportation // Use defaults for transportation
+    };
+}
+
 // Root endpoint - serves the HTML interface from public folder
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -260,35 +300,49 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// API endpoint for health check with configuration info
+// API endpoint to get configuration
+app.get('/api/config', (req, res) => {
+    const defaultConfig = getPropertyConfig();
+    res.json({
+        property: defaultConfig.name,
+        usingCustomConfig: false, // Frontend will handle custom config
+        version: '6.0.0'
+    });
+});
+
+// API endpoint for health check
 app.get('/api/health', (req, res) => {
+  const defaultConfig = getPropertyConfig();
   res.json({ 
     status: 'OK', 
     message: 'Rental AI Bot is running!',
     timestamp: new Date().toISOString(),
     openaiKey: !!process.env.OPENAI_API_KEY,
-    property: propertyDetails.name,
-    version: '5.0.0',
+    property: defaultConfig.name,
+    version: '6.0.0',
     features: ['multi-language', 'chat-history', 'dark-mode', 'host-configuration']
   });
 });
 
-// ENHANCED AI-POWERED CHAT ENDPOINT WITH MULTI-LANGUAGE
+// ENHANCED AI-POWERED CHAT ENDPOINT WITH HOST CONFIGURATION SUPPORT
 app.post('/chat/ai', async (req, res) => {
   try {
     let message = '';
-    let preferredLanguage = 'en'; // Default language
+    let preferredLanguage = 'en';
+    let hostConfig = null;
     
     // Handle both JSON and raw body
     if (req.is('application/json')) {
       message = req.body.message || '';
       preferredLanguage = req.body.language || detectLanguage(message);
+      hostConfig = req.body.hostConfig || null;
     } else {
       try {
         const bodyString = req.body.toString();
         const parsed = JSON.parse(bodyString);
         message = parsed.message || '';
         preferredLanguage = parsed.language || detectLanguage(message);
+        hostConfig = parsed.hostConfig || null;
       } catch (e) {
         message = req.body.toString();
         preferredLanguage = detectLanguage(message);
@@ -303,14 +357,22 @@ app.post('/chat/ai', async (req, res) => {
     }
 
     console.log('Attempting AI response for:', message, 'Language:', preferredLanguage);
+    if (hostConfig) {
+        console.log('🏠 Using host configuration:', hostConfig.name);
+    } else {
+        console.log('🏠 Using default configuration');
+    }
 
-    // Use OpenAI with enhanced knowledge and language support
+    // Convert host config to full property details if provided
+    const customConfig = hostConfig ? convertHostConfig(hostConfig) : null;
+    
+    // Use OpenAI with dynamic configuration
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: SYSTEM_PROMPTS[preferredLanguage] || SYSTEM_PROMPTS.en
+          content: createSystemPrompt(preferredLanguage, customConfig)
         },
         {
           role: "user",
@@ -331,7 +393,8 @@ app.post('/chat/ai', async (req, res) => {
       detectedLanguage: preferredLanguage,
       type: 'ai',
       usage: completion.usage,
-      property: propertyDetails.name
+      property: customConfig?.name || getPropertyConfig().name,
+      usingCustomConfig: !!customConfig
     });
 
   } catch (error) {
@@ -372,17 +435,18 @@ app.post('/chat/simple', (req, res) => {
       });
     }
     
+    const defaultConfig = getPropertyConfig();
     const responses = {
-      'check in': `Check-in: ${propertyDetails.schedule.checkIn}. Keys in lockbox code 1234.`,
-      'check-in': `Check-in: ${propertyDetails.schedule.checkIn}. Keys in lockbox code 1234.`,
-      'wifi': `WiFi: ${propertyDetails.amenities.essentials[0]}`,
-      'parking': `Parking: ${propertyDetails.amenities.outdoor[4]}`,
-      'rules': `Rules: ${propertyDetails.rules.general.join(', ')}`,
-      'emergency': `Emergency: ${propertyDetails.contacts.emergency}. Maintenance: ${propertyDetails.contacts.maintenance}`
+      'check in': `Check-in: ${defaultConfig.schedule.checkIn}. Keys in lockbox code 1234.`,
+      'check-in': `Check-in: ${defaultConfig.schedule.checkIn}. Keys in lockbox code 1234.`,
+      'wifi': `WiFi: ${defaultConfig.amenities.essentials[0]}`,
+      'parking': `Parking: ${defaultConfig.amenities.outdoor[4]}`,
+      'rules': `Rules: ${defaultConfig.rules.general.join(', ')}`,
+      'emergency': `Emergency: ${defaultConfig.contacts.emergency}. Maintenance: ${defaultConfig.contacts.maintenance}`
     };
     
     const lowerMessage = message.toLowerCase();
-    let response = `Welcome to ${propertyDetails.name}! Ask about check-in, amenities, local recommendations, or house rules.`;
+    let response = `Welcome to ${defaultConfig.name}! Ask about check-in, amenities, local recommendations, or house rules.`;
     
     for (const [key, answer] of Object.entries(responses)) {
       if (lowerMessage.includes(key)) {
@@ -413,9 +477,9 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Host-Configurable Rental AI Bot running on port ${PORT}`);
-  console.log(`🏠 Property: ${propertyDetails.name}`);
-  console.log(`📍 Address: ${propertyDetails.address}`);
+  const defaultConfig = getPropertyConfig();
+  console.log(`🚀 Dynamic Rental AI Bot running on port ${PORT}`);
+  console.log(`🏠 Default Property: ${defaultConfig.name}`);
   console.log(`🌍 Supported languages: English, Spanish, French`);
   console.log(`⚙️  Admin panel: http://localhost:${PORT}/admin`);
   console.log(`🌐 Web interface: http://localhost:${PORT}`);
