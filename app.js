@@ -111,8 +111,9 @@ const propertyDetails = {
   }
 };
 
-// Enhanced AI System Prompt
-const SYSTEM_PROMPT = `You are a knowledgeable and helpful short-term rental assistant for "${propertyDetails.name}".
+// Multi-language system prompts
+const SYSTEM_PROMPTS = {
+  en: `You are a knowledgeable and helpful short-term rental assistant for "${propertyDetails.name}". Respond in English.
 
 PROPERTY KNOWLEDGE BASE:
 
@@ -153,8 +154,107 @@ GUIDELINES:
 - For maintenance issues, provide the maintenance contact number
 - For emergencies, emphasize calling 911 first
 - Recommend local spots when guests ask about things to do
-- Always be clear about house rules when relevant
-`;
+- Always be clear about house rules when relevant`,
+
+  es: `Eres un asistente útil y conocedor de alquileres vacacionales para "${propertyDetails.name}". Responde en español.
+
+BASE DE CONOCIMIENTO DE LA PROPIEDAD:
+
+INFORMACIÓN BÁSICA:
+- Dirección: ${propertyDetails.address}
+- Tipo: ${propertyDetails.type}
+
+CONTACTOS:
+${Object.entries(propertyDetails.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+
+HORARIOS:
+- Check-in: ${propertyDetails.schedule.checkIn}
+- Check-out: ${propertyDetails.schedule.checkOut}
+- ${propertyDetails.schedule.lateCheckOut}
+
+COMODIDADES:
+${Object.entries(propertyDetails.amenities).map(([category, items]) => 
+  `${category.toUpperCase()}:\n${items.map(item => `  • ${item}`).join('\n')}`
+).join('\n')}
+
+NORMAS DE LA CASA:
+${Object.entries(propertyDetails.rules).map(([category, rules]) => 
+  `${category.toUpperCase()}:\n${Array.isArray(rules) ? rules.map(rule => `  • ${rule}`).join('\n') : `  • ${rules}`}`
+).join('\n')}
+
+RECOMENDACIONES LOCALES:
+${Object.entries(propertyDetails.local).map(([category, items]) => 
+  `${category.toUpperCase()}:\n${Array.isArray(items) ? items.map(item => `  • ${item}`).join('\n') : 
+    Object.entries(items).map(([key, value]) => `  • ${key}: ${value}`).join('\n')}`
+).join('\n')}
+
+TRANSPORTE:
+${Object.entries(propertyDetails.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+
+PAUTAS:
+- Sé amable, profesional y servicial
+- Proporciona detalles específicos de la base de conocimiento cuando sea relevante
+- Para problemas de mantenimiento, proporciona el número de contacto de mantenimiento
+- Para emergencias, enfatiza llamar al 911 primero
+- Recomienda lugares locales cuando los huéspedes pregunten sobre cosas para hacer
+- Siempre sé claro sobre las normas de la casa cuando sea relevante`,
+
+  fr: `Vous êtes un assistant de location de vacances serviable et compétent pour "${propertyDetails.name}". Répondez en français.
+
+BASE DE CONNAISSANCES DE LA PROPRIÉTÉ:
+
+INFORMATIONS DE BASE:
+- Adresse: ${propertyDetails.address}
+- Type: ${propertyDetails.type}
+
+CONTACTS:
+${Object.entries(propertyDetails.contacts).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+
+HORAIRES:
+- Check-in: ${propertyDetails.schedule.checkIn}
+- Check-out: ${propertyDetails.schedule.checkOut}
+- ${propertyDetails.schedule.lateCheckOut}
+
+ÉQUIPEMENTS:
+${Object.entries(propertyDetails.amenities).map(([category, items]) => 
+  `${category.toUpperCase()}:\n${items.map(item => `  • ${item}`).join('\n')}`
+).join('\n')}
+
+RÈGLES DE LA MAISON:
+${Object.entries(propertyDetails.rules).map(([category, rules]) => 
+  `${category.toUpperCase()}:\n${Array.isArray(rules) ? rules.map(rule => `  • ${rule}`).join('\n') : `  • ${rules}`}`
+).join('\n')}
+
+RECOMMANDATIONS LOCALES:
+${Object.entries(propertyDetails.local).map(([category, items]) => 
+  `${category.toUpperCase()}:\n${Array.isArray(items) ? items.map(item => `  • ${item}`).join('\n') : 
+    Object.entries(items).map(([key, value]) => `  • ${key}: ${value}`).join('\n')}`
+).join('\n')}
+
+TRANSPORT:
+${Object.entries(propertyDetails.transportation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+
+DIRECTIVES:
+- Soyez amical, professionnel et serviable
+- Fournissez des détails spécifiques de la base de connaissances lorsque c'est pertinent
+- Pour les problèmes de maintenance, fournissez le numéro de contact de maintenance
+- Pour les urgences, insistez sur l'appel du 911 en premier
+- Recommandez des endroits locaux lorsque les invités demandent des choses à faire
+- Soyez toujours clair sur les règles de la maison lorsque c'est pertinent`
+};
+
+// Language detection function
+function detectLanguage(text) {
+  const spanishWords = ['hola', 'gracias', 'por favor', 'ayuda', 'información'];
+  const frenchWords = ['bonjour', 'merci', 's\'il vous plaît', 'aide', 'information'];
+  
+  const lowerText = text.toLowerCase();
+  
+  if (spanishWords.some(word => lowerText.includes(word))) return 'es';
+  if (frenchWords.some(word => lowerText.includes(word))) return 'fr';
+  
+  return 'en'; // Default to English
+}
 
 // Root endpoint - serves the HTML interface from public folder
 app.get('/', (req, res) => {
@@ -169,25 +269,30 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     openaiKey: !!process.env.OPENAI_API_KEY,
     property: propertyDetails.name,
-    version: '2.0.0'
+    version: '3.0.0',
+    features: ['multi-language', 'chat-history', 'dark-mode']
   });
 });
 
-// ENHANCED AI-POWERED CHAT ENDPOINT
+// ENHANCED AI-POWERED CHAT ENDPOINT WITH MULTI-LANGUAGE
 app.post('/chat/ai', async (req, res) => {
   try {
     let message = '';
+    let preferredLanguage = 'en'; // Default language
     
     // Handle both JSON and raw body
     if (req.is('application/json')) {
       message = req.body.message || '';
+      preferredLanguage = req.body.language || detectLanguage(message);
     } else {
       try {
         const bodyString = req.body.toString();
         const parsed = JSON.parse(bodyString);
         message = parsed.message || '';
+        preferredLanguage = parsed.language || detectLanguage(message);
       } catch (e) {
         message = req.body.toString();
+        preferredLanguage = detectLanguage(message);
       }
     }
     
@@ -198,15 +303,15 @@ app.post('/chat/ai', async (req, res) => {
       });
     }
 
-    console.log('Attempting AI response for:', message);
+    console.log('Attempting AI response for:', message, 'Language:', preferredLanguage);
 
-    // Use OpenAI with enhanced knowledge
+    // Use OpenAI with enhanced knowledge and language support
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: SYSTEM_PROMPT
+          content: SYSTEM_PROMPTS[preferredLanguage] || SYSTEM_PROMPTS.en
         },
         {
           role: "user",
@@ -224,6 +329,7 @@ app.post('/chat/ai', async (req, res) => {
       response: aiResponse,
       timestamp: new Date().toISOString(),
       yourMessage: message,
+      detectedLanguage: preferredLanguage,
       type: 'ai',
       usage: completion.usage,
       property: propertyDetails.name
@@ -308,8 +414,9 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Enhanced Rental AI Bot running on port ${PORT}`);
+  console.log(`🚀 Multi-language Rental AI Bot running on port ${PORT}`);
   console.log(`📚 Property: ${propertyDetails.name}`);
+  console.log(`🌍 Supported languages: English, Spanish, French`);
   console.log(`🌐 Web interface available at: http://localhost:${PORT}`);
   console.log(`🤖 API endpoints: /chat/ai, /chat/simple, /api/health`);
 });
