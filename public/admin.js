@@ -6,6 +6,7 @@ class PropertyConfigurator {
         
         this.initializeEventListeners();
         this.loadSavedConfig();
+        this.loadRecommendations(); // Load recommendations when page loads
     }
 
     initializeEventListeners() {
@@ -167,9 +168,138 @@ class PropertyConfigurator {
             if (this.config.rules?.general) document.getElementById('houseRules').value = this.config.rules.general.join('\n');
         }
     }
+
+    // RECOMMENDATIONS MANAGEMENT FUNCTIONS
+    loadRecommendations() {
+        try {
+            const saved = localStorage.getItem('rental_ai_recommendations');
+            this.hostRecommendations = saved ? JSON.parse(saved) : [];
+            this.updateRecommendationsList();
+            console.log('📍 Recommendations loaded:', this.hostRecommendations.length);
+        } catch (error) {
+            console.error('Error loading recommendations:', error);
+            this.hostRecommendations = [];
+        }
+    }
+
+    addRecommendation() {
+        const name = document.getElementById('place-name').value.trim();
+        const category = document.getElementById('place-category').value;
+        const description = document.getElementById('place-description').value.trim();
+        const notes = document.getElementById('place-notes').value.trim();
+        
+        if (!name) {
+            this.showNotification('Please enter a place name', 'error');
+            return;
+        }
+        
+        const newPlace = {
+            id: Date.now(), // Unique identifier
+            name: name,
+            category: category,
+            description: description,
+            notes: notes
+        };
+        
+        this.hostRecommendations.push(newPlace);
+        this.saveRecommendations();
+        this.updateRecommendationsList();
+        
+        // Clear form
+        document.getElementById('place-name').value = '';
+        document.getElementById('place-description').value = '';
+        document.getElementById('place-notes').value = '';
+        
+        this.showNotification('Recommendation added successfully!', 'success');
+    }
+
+    removeRecommendation(id) {
+        if (confirm('Are you sure you want to remove this recommendation?')) {
+            this.hostRecommendations = this.hostRecommendations.filter(place => place.id !== id);
+            this.saveRecommendations();
+            this.updateRecommendationsList();
+            this.showNotification('Recommendation removed', 'info');
+        }
+    }
+
+    updateRecommendationsList() {
+        const container = document.getElementById('recommendations-list');
+        if (!container) return;
+        
+        if (this.hostRecommendations.length === 0) {
+            container.innerHTML = `
+                <div class="no-recommendations">
+                    <p>No recommendations yet. Add your first recommendation above!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = this.hostRecommendations.map(place => `
+            <div class="recommendation-item">
+                <div class="place-info">
+                    <div class="place-header">
+                        <strong>${place.name}</strong>
+                        <span class="category-badge">${place.category}</span>
+                    </div>
+                    ${place.description ? `<p class="place-description">${place.description}</p>` : ''}
+                    ${place.notes ? `<p class="place-notes">💡 ${place.notes}</p>` : ''}
+                </div>
+                <button class="btn-danger" onclick="propertyConfig.removeRecommendation(${place.id})">
+                    Remove
+                </button>
+            </div>
+        `).join('');
+    }
+
+    saveRecommendations() {
+        localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.hostRecommendations));
+    }
+
+    showNotification(message, type = 'info') {
+        // Create a simple notification
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#2ecc71' : '#3498db'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+}
+
+// Global functions for the HTML buttons
+function addRecommendation() {
+    if (window.propertyConfig) {
+        window.propertyConfig.addRecommendation();
+    }
+}
+
+function removeRecommendation(id) {
+    if (window.propertyConfig) {
+        window.propertyConfig.removeRecommendation(id);
+    }
 }
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    new PropertyConfigurator();
+    window.propertyConfig = new PropertyConfigurator();
 });
