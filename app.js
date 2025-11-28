@@ -1,9 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import OpenAI from 'openai';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Get directory name for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Enhanced CORS configuration
 app.use(cors({
@@ -13,7 +19,10 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json()); // Use express.json() instead of raw for better CORS handling
+// Serve static files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(express.json());
 app.use(express.raw({ type: '*/*' }));
 
 // Debug: Check if API key is loaded
@@ -74,7 +83,7 @@ const propertyDetails = {
       "Seaside Grill (0.5 miles) - Fresh seafood, great sunset views",
       "Ocean View Bistro (0.3 miles) - Casual dining, family-friendly", 
       "Miami Spice (1.2 miles) - Cuban cuisine, live music",
-      "Beach Cafe (0.1 miles) - Breakfast & coffee, opens 7 AM"
+      "Beach Cafe (0.1 miles) - Ideal for breakfast and coffee, opens at 7 AM"
     ],
     attractions: [
       "Sunset Beach (across street) - Swimming, sunbathing",
@@ -147,14 +156,20 @@ GUIDELINES:
 - Always be clear about house rules when relevant
 `;
 
-// Root endpoint
+// Root endpoint - now serves the HTML interface
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// API endpoint for health check
+app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'Rental AI Bot is running!',
     timestamp: new Date().toISOString(),
     openaiKey: !!process.env.OPENAI_API_KEY,
-    property: propertyDetails.name
+    property: propertyDetails.name,
+    version: '2.0.0'
   });
 });
 
@@ -287,8 +302,14 @@ app.post('/chat/simple', (req, res) => {
   }
 });
 
+// Catch-all handler for SPA (Single Page Application)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Enhanced Rental AI Bot running on port ${PORT}`);
   console.log(`📚 Property: ${propertyDetails.name}`);
-  console.log(`🌐 CORS enabled for Google domains`);
+  console.log(`🌐 Web interface available at: http://localhost:${PORT}`);
+  console.log(`🤖 API endpoints: /chat/ai, /chat/simple, /api/health`);
 });
