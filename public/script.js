@@ -3,6 +3,7 @@ class RentalAIChat {
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
         this.themeKey = 'rental_ai_theme';
+        this.languageKey = 'rental_ai_language';
         
         console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
         
@@ -10,7 +11,9 @@ class RentalAIChat {
         this.updateCharCount();
         this.loadChatHistory();
         this.addThemeToggle();
+        this.addLanguageSelector();
         this.loadThemePreference();
+        this.loadLanguagePreference();
     }
 
     initializeEventListeners() {
@@ -37,38 +40,156 @@ class RentalAIChat {
         });
     }
 
-    // THEME MANAGEMENT METHODS
-    addThemeToggle() {
-        // Create theme toggle button
-        const themeToggle = document.createElement('button');
-        themeToggle.id = 'themeToggle';
-        themeToggle.className = 'theme-toggle';
-        themeToggle.innerHTML = '🌙 Dark';
-        themeToggle.title = 'Toggle dark/light mode';
-        themeToggle.addEventListener('click', () => this.toggleTheme());
+    // LANGUAGE SUPPORT METHODS
+    addLanguageSelector() {
+        // Create language selector
+        const langSelect = document.createElement('select');
+        langSelect.id = 'languageSelect';
+        langSelect.className = 'language-select';
+        langSelect.title = 'Select language / Seleccionar idioma / Choisir la langue';
         
-        // Create header controls container
+        const languages = [
+            { code: 'en', name: '🇺🇸 English', native: 'English' },
+            { code: 'es', name: '🇪🇸 Español', native: 'Español' },
+            { code: 'fr', name: '🇫🇷 Français', native: 'Français' }
+        ];
+        
+        languages.forEach(lang => {
+            const option = document.createElement('option');
+            option.value = lang.code;
+            option.textContent = lang.name;
+            option.setAttribute('data-native', lang.native);
+            langSelect.appendChild(option);
+        });
+        
+        langSelect.addEventListener('change', (e) => {
+            this.changeLanguage(e.target.value);
+        });
+
+        // Add to header controls
+        const headerControls = document.querySelector('.header-controls') || this.createHeaderControls();
+        headerControls.appendChild(langSelect);
+    }
+
+    createHeaderControls() {
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
         
-        // Add clear button to controls
+        // Add clear button
         const clearBtn = this.createClearButton();
         headerControls.appendChild(clearBtn);
+        
+        // Add theme toggle
+        const themeToggle = this.createThemeToggle();
         headerControls.appendChild(themeToggle);
         
         // Add to header
         const header = document.querySelector('.chat-header');
         const statusIndicator = document.querySelector('.status-indicator');
         header.insertBefore(headerControls, statusIndicator);
+        
+        return headerControls;
     }
 
-    createClearButton() {
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'clear-chat-btn';
-        clearBtn.innerHTML = '🗑️ Clear';
-        clearBtn.title = 'Clear conversation history';
-        clearBtn.addEventListener('click', () => this.clearChat());
-        return clearBtn;
+    changeLanguage(langCode) {
+        this.saveLanguagePreference(langCode);
+        this.updateUIForLanguage(langCode);
+        this.showTempMessage(`Language changed to ${this.getLanguageName(langCode)}`, 'info');
+    }
+
+    updateUIForLanguage(langCode) {
+        // Update placeholder text based on language
+        const messageInput = document.getElementById('messageInput');
+        const placeholders = {
+            en: "Ask about your stay, local recommendations, or property details...",
+            es: "Pregunte sobre su estadía, recomendaciones locales o detalles de la propiedad...",
+            fr: "Demandez des informations sur votre séjour, des recommandations locales ou des détails sur la propriété..."
+        };
+        messageInput.placeholder = placeholders[langCode] || placeholders.en;
+
+        // Update quick question buttons
+        this.updateQuickQuestions(langCode);
+    }
+
+    updateQuickQuestions(langCode) {
+        const quickQuestions = {
+            en: {
+                checkin: "Check-in/out times",
+                wifi: "WiFi Information", 
+                restaurants: "Nearby Restaurants",
+                emergency: "Emergency Contacts"
+            },
+            es: {
+                checkin: "Horarios de check-in/out",
+                wifi: "Información del WiFi",
+                restaurants: "Restaurantes cercanos",
+                emergency: "Contactos de emergencia"
+            },
+            fr: {
+                checkin: "Horaires check-in/out",
+                wifi: "Informations WiFi",
+                restaurants: "Restaurants à proximité",
+                emergency: "Contacts d'urgence"
+            }
+        };
+
+        const questions = quickQuestions[langCode] || quickQuestions.en;
+        
+        // Update quick question buttons
+        const buttons = document.querySelectorAll('.quick-btn');
+        if (buttons.length >= 4) {
+            buttons[0].textContent = questions.checkin;
+            buttons[1].textContent = questions.wifi;
+            buttons[2].textContent = questions.restaurants;
+            buttons[3].textContent = questions.emergency;
+        }
+    }
+
+    getLanguageName(langCode) {
+        const languages = {
+            en: 'English',
+            es: 'Español', 
+            fr: 'Français'
+        };
+        return languages[langCode] || 'English';
+    }
+
+    loadLanguagePreference() {
+        try {
+            const savedLang = localStorage.getItem(this.languageKey) || 'en';
+            const langSelect = document.getElementById('languageSelect');
+            if (langSelect) {
+                langSelect.value = savedLang;
+            }
+            this.updateUIForLanguage(savedLang);
+            console.log('🌍 Language loaded:', savedLang);
+        } catch (error) {
+            console.error('Error loading language preference:', error);
+        }
+    }
+
+    saveLanguagePreference(langCode) {
+        try {
+            localStorage.setItem(this.languageKey, langCode);
+        } catch (error) {
+            console.error('Error saving language preference:', error);
+        }
+    }
+
+    getCurrentLanguage() {
+        const langSelect = document.getElementById('languageSelect');
+        return langSelect ? langSelect.value : 'en';
+    }
+
+    // THEME MANAGEMENT METHODS
+    createThemeToggle() {
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.className = 'theme-toggle';
+        themeToggle.innerHTML = '🌙 Dark';
+        themeToggle.title = 'Toggle dark/light mode';
+        themeToggle.addEventListener('click', () => this.toggleTheme());
+        return themeToggle;
     }
 
     toggleTheme() {
@@ -90,19 +211,14 @@ class RentalAIChat {
 
     loadThemePreference() {
         try {
-            // First check system preference
             const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            // Then check user saved preference
             const savedTheme = localStorage.getItem(this.themeKey);
-            
             let theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
             
             document.documentElement.setAttribute('data-theme', theme);
             this.updateThemeButton(theme);
             
             console.log('🎨 Theme loaded:', theme, '(system prefers dark:', systemPrefersDark, ')');
-            
         } catch (error) {
             console.error('Error loading theme preference:', error);
         }
@@ -117,12 +233,20 @@ class RentalAIChat {
     }
 
     // CHAT HISTORY METHODS
+    createClearButton() {
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-chat-btn';
+        clearBtn.innerHTML = '🗑️ Clear';
+        clearBtn.title = 'Clear conversation history';
+        clearBtn.addEventListener('click', () => this.clearChat());
+        return clearBtn;
+    }
+
     clearChat() {
         if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
             localStorage.removeItem(this.storageKey);
             const chatMessages = document.getElementById('chatMessages');
             
-            // Keep only the welcome message
             const welcomeMessage = chatMessages.querySelector('.message:first-child');
             chatMessages.innerHTML = '';
             if (welcomeMessage) {
@@ -135,21 +259,8 @@ class RentalAIChat {
 
     showTempMessage(text, type = 'info') {
         const tempMsg = document.createElement('div');
+        tempMsg.className = `temp-message temp-message-${type}`;
         tempMsg.textContent = text;
-        tempMsg.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#2ecc71' : type === 'error' ? '#e74c3c' : '#3498db'};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            animation: slideInRight 0.3s ease;
-        `;
-
         document.body.appendChild(tempMsg);
 
         setTimeout(() => {
@@ -167,11 +278,9 @@ class RentalAIChat {
             const chatMessages = document.getElementById('chatMessages');
             const messages = [];
             
-            // Get all message elements except the initial welcome message
             const messageElements = chatMessages.querySelectorAll('.message');
             
             messageElements.forEach((messageEl, index) => {
-                // Skip the initial welcome message (first message)
                 if (index === 0) return;
                 
                 const isBot = messageEl.classList.contains('bot-message');
@@ -200,19 +309,16 @@ class RentalAIChat {
                 const messages = JSON.parse(saved);
                 const chatMessages = document.getElementById('chatMessages');
                 
-                // Clear existing messages except the welcome message
                 const welcomeMessage = chatMessages.querySelector('.message:first-child');
                 chatMessages.innerHTML = '';
                 if (welcomeMessage) {
                     chatMessages.appendChild(welcomeMessage);
                 }
 
-                // Restore saved messages
                 messages.forEach(msg => {
-                    this.addMessage(msg.content, msg.type, true); // true = isRestored
+                    this.addMessage(msg.content, msg.type, true);
                 });
 
-                // Scroll to bottom
                 chatMessages.scrollTop = chatMessages.scrollHeight;
                 console.log('📂 Chat history loaded:', messages.length, 'messages');
                 
@@ -229,7 +335,6 @@ class RentalAIChat {
         const length = messageInput.value.length;
         charCount.textContent = `${length}/500`;
         
-        // Change color if approaching limit
         if (length > 450) {
             charCount.style.color = '#e74c3c';
         } else if (length > 400) {
@@ -245,39 +350,37 @@ class RentalAIChat {
 
         if (!message) return;
 
-        // Clear input and disable send button
         messageInput.value = '';
         this.updateCharCount();
         document.getElementById('sendButton').disabled = true;
 
-        // Add user message to chat
         this.addMessage(message, 'user');
-
-        // Show typing indicator
         this.showTypingIndicator();
 
         try {
+            const currentLanguage = this.getCurrentLanguage();
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({ 
+                    message: message,
+                    language: currentLanguage
+                })
             });
 
             const data = await response.json();
-
-            // Hide typing indicator
             this.hideTypingIndicator();
 
             if (data.success) {
                 this.addMessage(data.response, 'bot');
+                console.log('🌍 Response language:', data.detectedLanguage);
             } else {
                 this.addMessage(
-                    "I'm having trouble connecting right now. Please try again in a moment, or contact the host directly for urgent matters.",
+                    "I'm having trouble connecting right now. Please try again in a moment.",
                     'bot'
                 );
-                console.error('API Error:', data.error);
             }
 
         } catch (error) {
@@ -286,7 +389,6 @@ class RentalAIChat {
                 "Sorry, I'm experiencing connection issues. Please check your internet connection and try again.",
                 'bot'
             );
-            console.error('Network Error:', error);
         }
     }
 
@@ -305,7 +407,6 @@ class RentalAIChat {
         messageContent.className = 'message-content';
 
         if (sender === 'bot') {
-            // Format bot response with line breaks
             const formattedContent = this.formatBotResponse(content);
             messageContent.innerHTML = formattedContent;
         } else {
@@ -316,23 +417,16 @@ class RentalAIChat {
         messageDiv.appendChild(messageContent);
         chatMessages.appendChild(messageDiv);
 
-        // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
-        // Save to history (except when restoring or it's the welcome message)
         if (!isRestored && chatMessages.children.length > 1) {
             this.saveChatHistory();
         }
     }
 
     formatBotResponse(text) {
-        // Convert line breaks to <br>
         let formatted = text.replace(/\n/g, '<br>');
-        
-        // Convert numbered lists with periods
         formatted = formatted.replace(/(\d+)\.\s/g, '<strong>$1.</strong> ');
-        
-        // Add some basic formatting for common patterns
         formatted = formatted.replace(/Emergency:/g, '<strong>🚨 Emergency:</strong>');
         formatted = formatted.replace(/Contact:/g, '<strong>📞 Contact:</strong>');
         formatted = formatted.replace(/Address:/g, '<strong>📍 Address:</strong>');
@@ -347,14 +441,11 @@ class RentalAIChat {
     showTypingIndicator() {
         const typingIndicator = document.getElementById('typingIndicator');
         typingIndicator.style.display = 'flex';
-        
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
     }
 
     hideTypingIndicator() {
-        const typingIndicator = document.getElementById('typingIndicator');
-        typingIndicator.style.display = 'none';
+        document.getElementById('typingIndicator').style.display = 'none';
     }
 }
 
@@ -364,7 +455,6 @@ function askQuestion(question) {
     messageInput.value = question;
     document.getElementById('sendButton').disabled = false;
     
-    // Trigger the send message function
     const chat = window.chat || new RentalAIChat();
     chat.sendMessage();
 }
@@ -373,7 +463,7 @@ function askQuestion(question) {
 document.addEventListener('DOMContentLoaded', function() {
     window.chat = new RentalAIChat();
     
-    // Add CSS animations for new features
+    // Add CSS animations
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideInRight {
