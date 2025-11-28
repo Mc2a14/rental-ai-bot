@@ -1,21 +1,24 @@
-class RentalAIChat {
+    class RentalAIChat {
     constructor() {
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
         this.themeKey = 'rental_ai_theme';
         this.languageKey = 'rental_ai_language';
-        this.recommendationsKey = 'rental_ai_recommendations'; // NEW
+        this.recommendationsKey = 'rental_ai_recommendations';
         
         console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
         
-        this.loadPropertyConfig(); // Load host configuration first
+        this.loadPropertyConfig();
         this.initializeEventListeners();
         this.updateCharCount();
         this.loadChatHistory();
         this.createHeaderControls();
         this.loadThemePreference();
         this.loadLanguagePreference();
-        this.loadRecommendations(); // NEW - Load host recommendations
+        this.loadRecommendations();
+        
+        // Refresh config to ensure we have the latest data
+        this.refreshPropertyConfig();
     }
 
     // HOST CONFIGURATION METHODS
@@ -49,6 +52,15 @@ class RentalAIChat {
         }
     }
 
+    // NEW: Refresh property config to get latest data
+    refreshPropertyConfig() {
+        this.loadPropertyConfig();
+        this.loadRecommendations();
+        
+        console.log('🔄 Refreshed property config:', this.hostConfig?.name);
+        console.log('🔄 Refreshed recommendations:', this.hostRecommendations.length);
+    }
+
     getHostConfig() {
         try {
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
@@ -59,7 +71,7 @@ class RentalAIChat {
         }
     }
 
-    // NEW: HOST RECOMMENDATIONS METHODS
+    // HOST RECOMMENDATIONS METHODS
     loadRecommendations() {
         try {
             const saved = localStorage.getItem(this.recommendationsKey);
@@ -67,22 +79,7 @@ class RentalAIChat {
                 this.hostRecommendations = JSON.parse(saved);
                 console.log('📍 Host recommendations loaded:', this.hostRecommendations.length);
             } else {
-                // Default recommendations
-                this.hostRecommendations = [
-                    {
-                        name: "Joe's Pizza",
-                        category: "Restaurant",
-                        description: "Best New York-style pizza in town",
-                        notes: "Try the pepperoni and mushroom slice"
-                    },
-                    {
-                        name: "Sunset Beach",
-                        category: "Beach", 
-                        description: "Quiet beach perfect for evening walks",
-                        notes: "Best time to visit is 6 PM for sunset"
-                    }
-                ];
-                this.saveRecommendations();
+                this.hostRecommendations = [];
             }
         } catch (error) {
             console.error('Error loading recommendations:', error);
@@ -100,7 +97,7 @@ class RentalAIChat {
 
     getRecommendationsText() {
         if (!this.hostRecommendations || this.hostRecommendations.length === 0) {
-            return "No host recommendations available yet.";
+            return "";
         }
         
         let text = "HOST RECOMMENDATIONS:\n\n";
@@ -137,7 +134,7 @@ class RentalAIChat {
         });
     }
 
-    // HEADER CONTROLS METHODS - UPDATED to include recommendations button
+    // HEADER CONTROLS METHODS
     createHeaderControls() {
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
@@ -146,7 +143,7 @@ class RentalAIChat {
         const setupBtn = this.createSetupButton();
         headerControls.appendChild(setupBtn);
         
-        // NEW: Add Recommendations button
+        // Add Recommendations button
         const recBtn = this.createRecommendationsButton();
         headerControls.appendChild(recBtn);
         
@@ -179,7 +176,6 @@ class RentalAIChat {
         return setupBtn;
     }
 
-    // NEW: Create Recommendations button
     createRecommendationsButton() {
         const recBtn = document.createElement('button');
         recBtn.className = 'recommendations-btn';
@@ -238,7 +234,7 @@ class RentalAIChat {
         return langSelect;
     }
 
-    // NEW: Recommendations Modal
+    // Recommendations Modal
     showRecommendationsModal() {
         // Create modal for managing recommendations
         const modal = document.createElement('div');
@@ -610,7 +606,7 @@ class RentalAIChat {
         }
     }
 
-    // UPDATED: sendMessage method to include recommendations
+    // UPDATED: sendMessage method with proper property config refresh
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
@@ -627,16 +623,24 @@ class RentalAIChat {
         try {
             const currentLanguage = this.getCurrentLanguage();
             
-            // Get host configuration
+            // Get FRESH host configuration every time (don't rely on cached this.hostConfig)
             const hostConfig = this.getHostConfig();
             
-            // NEW: Prepare system message with recommendations for local queries
+            // Prepare system message with recommendations for local queries
             let systemMessage = '';
             const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 'beach', 'park', 'attraction', 'nearby', 'close to', 'local', 'recommend', 'suggestion', 'place to go'];
             
-            if (anyKeywordInMessage(message, localKeywords)) {
-                systemMessage = `When users ask about local places, restaurants, attractions, or recommendations, share the host's personal recommendations. Be enthusiastic about these since they're curated by the host.\n\n${this.getRecommendationsText()}`;
+            if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
+                systemMessage = `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
             }
+
+            // DEBUG: Log what we're sending to the backend
+            console.log('🔄 Sending to AI:', {
+                message: message,
+                language: currentLanguage,
+                hostConfig: hostConfig, // This should have the updated property name
+                hasRecommendations: this.hostRecommendations.length
+            });
 
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
@@ -646,8 +650,8 @@ class RentalAIChat {
                 body: JSON.stringify({ 
                     message: message,
                     language: currentLanguage,
-                    hostConfig: hostConfig, // Send host config to backend
-                    systemMessage: systemMessage // NEW: Send recommendations context
+                    hostConfig: hostConfig, // Send fresh host config
+                    systemMessage: systemMessage
                 })
             });
 
@@ -736,7 +740,7 @@ class RentalAIChat {
     }
 }
 
-// NEW: Helper function to check for local keywords
+// Helper function to check for local keywords
 function anyKeywordInMessage(message, keywords) {
     const lowerMessage = message.toLowerCase();
     return keywords.some(keyword => lowerMessage.includes(keyword));
