@@ -10,8 +10,7 @@ class RentalAIChat {
         this.initializeEventListeners();
         this.updateCharCount();
         this.loadChatHistory();
-        this.addThemeToggle();
-        this.addLanguageSelector();
+        this.createHeaderControls(); // FIXED: Create all controls at once
         this.loadThemePreference();
         this.loadLanguagePreference();
     }
@@ -40,8 +39,49 @@ class RentalAIChat {
         });
     }
 
-    // LANGUAGE SUPPORT METHODS
-    addLanguageSelector() {
+    // FIXED: Create all header controls together
+    createHeaderControls() {
+        const headerControls = document.createElement('div');
+        headerControls.className = 'header-controls';
+        
+        // Add Clear Chat button
+        const clearBtn = this.createClearButton();
+        headerControls.appendChild(clearBtn);
+        
+        // Add Theme Toggle button
+        const themeToggle = this.createThemeToggle();
+        headerControls.appendChild(themeToggle);
+        
+        // Add Language Selector
+        const langSelect = this.createLanguageSelector();
+        headerControls.appendChild(langSelect);
+        
+        // Add to header
+        const header = document.querySelector('.chat-header');
+        const statusIndicator = document.querySelector('.status-indicator');
+        header.insertBefore(headerControls, statusIndicator);
+    }
+
+    createClearButton() {
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-chat-btn';
+        clearBtn.innerHTML = '🗑️ Clear';
+        clearBtn.title = 'Clear conversation history';
+        clearBtn.addEventListener('click', () => this.clearChat());
+        return clearBtn;
+    }
+
+    createThemeToggle() {
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.className = 'theme-toggle';
+        themeToggle.innerHTML = '🌙 Dark';
+        themeToggle.title = 'Toggle dark/light mode';
+        themeToggle.addEventListener('click', () => this.toggleTheme());
+        return themeToggle;
+    }
+
+    createLanguageSelector() {
         // Create language selector
         const langSelect = document.createElement('select');
         langSelect.id = 'languageSelect';
@@ -66,29 +106,7 @@ class RentalAIChat {
             this.changeLanguage(e.target.value);
         });
 
-        // Add to header controls
-        const headerControls = document.querySelector('.header-controls') || this.createHeaderControls();
-        headerControls.appendChild(langSelect);
-    }
-
-    createHeaderControls() {
-        const headerControls = document.createElement('div');
-        headerControls.className = 'header-controls';
-        
-        // Add clear button
-        const clearBtn = this.createClearButton();
-        headerControls.appendChild(clearBtn);
-        
-        // Add theme toggle
-        const themeToggle = this.createThemeToggle();
-        headerControls.appendChild(themeToggle);
-        
-        // Add to header
-        const header = document.querySelector('.chat-header');
-        const statusIndicator = document.querySelector('.status-indicator');
-        header.insertBefore(headerControls, statusIndicator);
-        
-        return headerControls;
+        return langSelect;
     }
 
     changeLanguage(langCode) {
@@ -182,16 +200,6 @@ class RentalAIChat {
     }
 
     // THEME MANAGEMENT METHODS
-    createThemeToggle() {
-        const themeToggle = document.createElement('button');
-        themeToggle.id = 'themeToggle';
-        themeToggle.className = 'theme-toggle';
-        themeToggle.innerHTML = '🌙 Dark';
-        themeToggle.title = 'Toggle dark/light mode';
-        themeToggle.addEventListener('click', () => this.toggleTheme());
-        return themeToggle;
-    }
-
     toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -233,15 +241,6 @@ class RentalAIChat {
     }
 
     // CHAT HISTORY METHODS
-    createClearButton() {
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'clear-chat-btn';
-        clearBtn.innerHTML = '🗑️ Clear';
-        clearBtn.title = 'Clear conversation history';
-        clearBtn.addEventListener('click', () => this.clearChat());
-        return clearBtn;
-    }
-
     clearChat() {
         if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
             localStorage.removeItem(this.storageKey);
