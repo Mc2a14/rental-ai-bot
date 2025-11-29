@@ -36,6 +36,23 @@ class PropertySetup {
                 margin-bottom: 20px;
                 font-style: italic;
             }
+            /* Validation styles */
+            .field-invalid {
+                border-color: #e74c3c !important;
+                background-color: #fff0f0 !important;
+            }
+            .field-valid {
+                border-color: #2ecc71 !important;
+            }
+            .validation-message {
+                color: #e74c3c;
+                font-size: 0.8rem;
+                margin-top: 5px;
+                display: none;
+            }
+            .validation-message.show {
+                display: block;
+            }
         `;
         document.head.appendChild(style);
         console.log("✅ Preview styles added");
@@ -69,7 +86,7 @@ class PropertySetup {
             console.log("✅ Submit button listener added");
         }
         
-        // Real-time validation
+        // Real-time validation with enhanced feedback
         this.setupRealTimeValidation();
         console.log("✅ All event listeners initialized");
     }
@@ -80,11 +97,45 @@ class PropertySetup {
         console.log(`📝 Found ${requiredFields.length} required fields`);
         
         requiredFields.forEach(field => {
-            field.addEventListener('input', () => this.validateCurrentStep());
+            // Add validation message element
+            if (!field.parentNode.querySelector('.validation-message')) {
+                const validationMsg = document.createElement('div');
+                validationMsg.className = 'validation-message';
+                validationMsg.textContent = 'This field is required';
+                field.parentNode.appendChild(validationMsg);
+            }
+            
+            // Enhanced event listeners
+            field.addEventListener('input', () => {
+                this.validateField(field);
+                this.validateCurrentStep();
+            });
+            
+            field.addEventListener('blur', () => this.validateField(field));
+            
+            // Initial validation
+            this.validateField(field);
         });
         
         this.validateCurrentStep();
         console.log("✅ Real-time validation setup complete");
+    }
+
+    validateField(field) {
+        const isValid = field.value.trim().length > 0;
+        const validationMsg = field.parentNode.querySelector('.validation-message');
+        
+        if (isValid) {
+            field.classList.remove('field-invalid');
+            field.classList.add('field-valid');
+            if (validationMsg) validationMsg.classList.remove('show');
+        } else {
+            field.classList.remove('field-valid');
+            field.classList.add('field-invalid');
+            if (validationMsg) validationMsg.classList.add('show');
+        }
+        
+        return isValid;
     }
 
     validateCurrentStep() {
@@ -101,23 +152,27 @@ class PropertySetup {
         console.log(`📝 Checking ${requiredFields.length} required fields in step ${this.currentStep}:`);
         
         requiredFields.forEach(field => {
-            const isFieldValid = field.value.trim().length > 0;
+            const isFieldValid = this.validateField(field);
             console.log(`  - ${field.id}: "${field.value}" -> ${isFieldValid ? 'VALID' : 'INVALID'}`);
             
             if (!isFieldValid) {
                 isValid = false;
-                field.style.borderColor = '#e74c3c';
-            } else {
-                field.style.borderColor = '#e1e5e9';
             }
         });
 
-        // Update button states
+        // Update button states with better UX
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
         
-        if (nextBtn) nextBtn.disabled = !isValid;
-        if (submitBtn) submitBtn.disabled = !isValid;
+        if (nextBtn) {
+            nextBtn.disabled = !isValid;
+            nextBtn.title = isValid ? 'Continue to next step' : 'Please fill in all required fields';
+        }
+        
+        if (submitBtn) {
+            submitBtn.disabled = !isValid;
+            submitBtn.title = isValid ? 'Save configuration' : 'Please fill in all required fields';
+        }
 
         console.log(`✅ Step ${this.currentStep} validation: ${isValid ? 'VALID' : 'INVALID'}`);
         return isValid;
@@ -129,8 +184,12 @@ class PropertySetup {
             this.currentStep++;
             this.updateStepDisplay();
             console.log(`✅ Moved to step ${this.currentStep}`);
+            
+            // Auto-scroll to top for better UX
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             console.log("❌ Cannot move to next step - validation failed");
+            this.showTempMessage('Please fill in all required fields before continuing', 'warning');
         }
     }
 
@@ -140,6 +199,9 @@ class PropertySetup {
             this.currentStep--;
             this.updateStepDisplay();
             console.log(`✅ Moved to step ${this.currentStep}`);
+            
+            // Auto-scroll to top for better UX
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
@@ -159,6 +221,16 @@ class PropertySetup {
         document.querySelectorAll('.form-section').forEach((section, index) => {
             if (index + 1 === this.currentStep) {
                 section.style.display = 'block';
+                
+                // Ensure WiFi section is visible (extra safety)
+                if (index + 1 === 3) {
+                    const wifiInput = document.getElementById('wifiDetails');
+                    if (wifiInput) {
+                        wifiInput.style.display = 'block';
+                        wifiInput.style.visibility = 'visible';
+                        wifiInput.style.opacity = '1';
+                    }
+                }
             } else {
                 section.style.display = 'none';
             }
@@ -169,9 +241,9 @@ class PropertySetup {
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
         
-        if (prevBtn) prevBtn.style.display = this.currentStep > 1 ? 'block' : 'none';
-        if (nextBtn) nextBtn.style.display = this.currentStep < this.totalSteps ? 'block' : 'none';
-        if (submitBtn) submitBtn.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
+        if (prevBtn) prevBtn.style.display = this.currentStep > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = this.currentStep < this.totalSteps ? 'flex' : 'none';
+        if (submitBtn) submitBtn.style.display = this.currentStep === this.totalSteps ? 'flex' : 'none';
 
         // Update preview on step 3
         if (this.currentStep === 3) {
@@ -239,7 +311,7 @@ class PropertySetup {
         if (e) e.preventDefault();
         
         if (!this.validateCurrentStep()) {
-            alert('Please fill in all required fields before saving.');
+            this.showTempMessage('Please fill in all required fields before saving.', 'error');
             console.log("❌ Save blocked - validation failed");
             return;
         }
@@ -276,7 +348,7 @@ class PropertySetup {
             console.log('✅ Configuration saved successfully!', config);
         } catch (error) {
             console.error('❌ Error saving configuration:', error);
-            alert('Error saving configuration. Please try again.');
+            this.showTempMessage('Error saving configuration. Please try again.', 'error');
         }
     }
 
@@ -366,7 +438,7 @@ class PropertySetup {
         const notes = notesInput?.value.trim() || '';
 
         if (!name) {
-            alert('Please enter a place name');
+            this.showTempMessage('Please enter a place name', 'warning');
             console.log("❌ Recommendation not added - missing name");
             return;
         }
@@ -387,7 +459,7 @@ class PropertySetup {
         if (descriptionInput) descriptionInput.value = '';
         if (notesInput) notesInput.value = '';
 
-        this.showTempMessage('Recommendation added successfully!');
+        this.showTempMessage('Recommendation added successfully!', 'success');
         console.log("✅ Recommendation added:", newPlace);
     }
 
@@ -397,24 +469,29 @@ class PropertySetup {
             this.recommendations.splice(index, 1);
             this.saveRecommendations();
             this.updateRecommendationsList();
-            this.showTempMessage('Recommendation removed');
+            this.showTempMessage('Recommendation removed', 'success');
             console.log("✅ Recommendation removed");
         }
     }
 
-    showTempMessage(text) {
-        console.log(`🔄 Showing temp message: ${text}`);
+    showTempMessage(text, type = 'success') {
+        console.log(`🔄 Showing temp message: ${text} (${type})`);
         const message = document.createElement('div');
+        const backgroundColor = type === 'error' ? '#e74c3c' : type === 'warning' ? '#f39c12' : '#2ecc71';
+        
         message.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #2ecc71;
+            background: ${backgroundColor};
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
             z-index: 1000;
             font-family: Arial, sans-serif;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 300px;
+            word-wrap: break-word;
         `;
         message.textContent = text;
         document.body.appendChild(message);
@@ -423,7 +500,7 @@ class PropertySetup {
             if (message.parentNode) {
                 message.parentNode.removeChild(message);
             }
-        }, 3000);
+        }, 4000);
     }
 }
 
@@ -434,6 +511,7 @@ function addRecommendation() {
         window.propertySetup.addRecommendation();
     } else {
         console.log("❌ PropertySetup not initialized");
+        alert('System not ready. Please wait for page to load completely.');
     }
 }
 
@@ -443,6 +521,16 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         window.propertySetup = new PropertySetup();
         console.log("✅ PropertySetup initialized successfully!");
+        
+        // Extra safety: Ensure WiFi field is visible
+        setTimeout(() => {
+            const wifiInput = document.getElementById('wifiDetails');
+            if (wifiInput) {
+                wifiInput.style.display = 'block';
+                wifiInput.style.visibility = 'visible';
+                wifiInput.style.opacity = '1';
+            }
+        }, 100);
     } catch (error) {
         console.error("❌ Error initializing PropertySetup:", error);
     }
