@@ -149,6 +149,31 @@
             font-style: italic;
         }
         
+        .wifi-examples {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .wifi-examples h5 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .wifi-examples ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+        
+        .wifi-examples li {
+            margin-bottom: 5px;
+        }
+        
         .button-group {
             display: flex;
             gap: 15px;
@@ -430,7 +455,17 @@
                 
                 <div class="form-group">
                     <label for="wifiDetails">WiFi Details *</label>
-                    <input type="text" id="wifiDetails" required placeholder="e.g., "Network: GuestWiFi, Password: Welcome123">
+                    <input type="text" id="wifiDetails" required placeholder="e.g., Network: VillaChamitos_Guest, Password: Welcome2024">
+                    <div class="form-help">Your guests will need this information to connect to WiFi</div>
+                    
+                    <div class="wifi-examples">
+                        <h5>📝 Example WiFi formats:</h5>
+                        <ul>
+                            <li><strong>Simple:</strong> Network: VillaChamitos, Password: Welcome123</li>
+                            <li><strong>Detailed:</strong> SSID: VillaChamitos_Guest | Password: StayWithUs2024</li>
+                            <li><strong>Multiple networks:</strong> Main: VillaChamitos (Welcome123) | Backup: VillaChamitos_5G (Welcome123)</li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <div class="form-group">
