@@ -14,8 +14,8 @@ class PropertySetup {
         document.getElementById('nextBtn').addEventListener('click', () => this.nextStep());
         document.getElementById('prevBtn').addEventListener('click', () => this.prevStep());
         
-        // Form submission
-        document.getElementById('propertyConfig').addEventListener('submit', (e) => this.saveConfiguration(e));
+        // Form submission - FIXED: Use click event instead of submit
+        document.getElementById('submitBtn').addEventListener('click', (e) => this.saveConfiguration(e));
         
         // Real-time validation
         this.setupRealTimeValidation();
@@ -27,10 +27,15 @@ class PropertySetup {
         requiredFields.forEach(field => {
             field.addEventListener('input', () => this.validateCurrentStep());
         });
+        
+        // Validate immediately
+        this.validateCurrentStep();
     }
 
     validateCurrentStep() {
         const currentSection = document.getElementById(`section${this.currentStep}`);
+        if (!currentSection) return false;
+        
         const requiredFields = currentSection.querySelectorAll('input[required], textarea[required], select[required]');
         let isValid = true;
 
@@ -43,10 +48,12 @@ class PropertySetup {
             }
         });
 
-        document.getElementById('nextBtn').disabled = !isValid;
-        if (this.currentStep === this.totalSteps) {
-            document.getElementById('submitBtn').disabled = !isValid;
-        }
+        // Update button states
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (nextBtn) nextBtn.disabled = !isValid;
+        if (submitBtn) submitBtn.disabled = !isValid;
 
         return isValid;
     }
@@ -85,9 +92,13 @@ class PropertySetup {
         });
 
         // Update navigation buttons
-        document.getElementById('prevBtn').style.display = this.currentStep > 1 ? 'block' : 'none';
-        document.getElementById('nextBtn').style.display = this.currentStep < this.totalSteps ? 'block' : 'none';
-        document.getElementById('submitBtn').style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (prevBtn) prevBtn.style.display = this.currentStep > 1 ? 'block' : 'none';
+        if (nextBtn) nextBtn.style.display = this.currentStep < this.totalSteps ? 'block' : 'none';
+        if (submitBtn) submitBtn.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
 
         // Update preview on step 3
         if (this.currentStep === 3) {
@@ -101,6 +112,8 @@ class PropertySetup {
     updatePreview() {
         const previewContent = document.getElementById('previewContent');
         const previewSection = document.getElementById('previewSection');
+        
+        if (!previewContent || !previewSection) return;
         
         const formData = this.getFormData();
         
@@ -128,22 +141,24 @@ class PropertySetup {
 
     getFormData() {
         return {
-            name: document.getElementById('propertyName').value,
-            address: document.getElementById('propertyAddress').value,
-            type: document.getElementById('propertyType').value,
-            hostContact: document.getElementById('hostContact').value,
-            maintenanceContact: document.getElementById('maintenanceContact').value,
-            checkInTime: document.getElementById('checkInTime').value,
-            checkOutTime: document.getElementById('checkOutTime').value,
-            lateCheckout: document.getElementById('lateCheckout').value,
-            wifiDetails: document.getElementById('wifiDetails').value,
-            amenities: document.getElementById('amenities').value,
-            houseRules: document.getElementById('houseRules').value
+            name: document.getElementById('propertyName')?.value || '',
+            address: document.getElementById('propertyAddress')?.value || '',
+            type: document.getElementById('propertyType')?.value || '',
+            hostContact: document.getElementById('hostContact')?.value || '',
+            maintenanceContact: document.getElementById('maintenanceContact')?.value || '',
+            checkInTime: document.getElementById('checkInTime')?.value || '',
+            checkOutTime: document.getElementById('checkOutTime')?.value || '',
+            lateCheckout: document.getElementById('lateCheckout')?.value || '',
+            wifiDetails: document.getElementById('wifiDetails')?.value || '',
+            amenities: document.getElementById('amenities')?.value || '',
+            houseRules: document.getElementById('houseRules')?.value || ''
         };
     }
 
     saveConfiguration(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
+        
+        console.log('Save configuration clicked');
         
         if (!this.validateCurrentStep()) {
             alert('Please fill in all required fields before saving.');
@@ -185,8 +200,11 @@ class PropertySetup {
     }
 
     showSuccessMessage() {
-        document.getElementById('propertyConfig').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
+        const propertyConfig = document.getElementById('propertyConfig');
+        const successMessage = document.getElementById('successMessage');
+        
+        if (propertyConfig) propertyConfig.style.display = 'none';
+        if (successMessage) successMessage.style.display = 'block';
     }
 
     // Recommendations management
@@ -210,6 +228,7 @@ class PropertySetup {
 
     updateRecommendationsList() {
         const container = document.getElementById('recommendations-list');
+        if (!container) return;
         
         if (this.recommendations.length === 0) {
             container.innerHTML = `
@@ -238,10 +257,17 @@ class PropertySetup {
     }
 
     addRecommendation() {
-        const name = document.getElementById('place-name').value.trim();
-        const category = document.getElementById('place-category').value;
-        const description = document.getElementById('place-description').value.trim();
-        const notes = document.getElementById('place-notes').value.trim();
+        const nameInput = document.getElementById('place-name');
+        const categoryInput = document.getElementById('place-category');
+        const descriptionInput = document.getElementById('place-description');
+        const notesInput = document.getElementById('place-notes');
+
+        if (!nameInput || !categoryInput) return;
+
+        const name = nameInput.value.trim();
+        const category = categoryInput.value;
+        const description = descriptionInput?.value.trim() || '';
+        const notes = notesInput?.value.trim() || '';
 
         if (!name) {
             alert('Please enter a place name');
@@ -260,9 +286,9 @@ class PropertySetup {
         this.updateRecommendationsList();
 
         // Clear form
-        document.getElementById('place-name').value = '';
-        document.getElementById('place-description').value = '';
-        document.getElementById('place-notes').value = '';
+        if (nameInput) nameInput.value = '';
+        if (descriptionInput) descriptionInput.value = '';
+        if (notesInput) notesInput.value = '';
 
         // Show confirmation
         this.showTempMessage('Recommendation added successfully!');
@@ -289,12 +315,15 @@ class PropertySetup {
             padding: 12px 20px;
             border-radius: 8px;
             z-index: 1000;
+            font-family: Arial, sans-serif;
         `;
         message.textContent = text;
         document.body.appendChild(message);
 
         setTimeout(() => {
-            message.remove();
+            if (message.parentNode) {
+                message.parentNode.removeChild(message);
+            }
         }, 3000);
     }
 }
@@ -308,5 +337,6 @@ function addRecommendation() {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin page loaded, initializing PropertySetup...');
     window.propertySetup = new PropertySetup();
 });
