@@ -1,18 +1,43 @@
 {
+  "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install",
+    "outputs": [
+      "public"
+    ]
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "scripts": {
+    "postdeploy": "echo 'Rental AI Assistant deployed successfully!'"
   },
   "routes": [
     {
       "handle": "filesystem"
     },
     {
+      "src": "/api/.*",
+      "dest": "/app.js",
+      "methods": ["GET", "POST", "PUT", "OPTIONS"]
+    },
+    {
       "src": "/chat/.*",
-      "dest": "/app.js"
+      "dest": "/app.js",
+      "methods": ["GET", "POST", "OPTIONS"]
+    },
+    {
+      "src": "/admin",
+      "dest": "/app.js",
+      "methods": ["GET"]
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/index.html",
+      "methods": ["GET"]
     }
   ]
 }
