@@ -1,4 +1,4 @@
-    class RentalAIChat {
+class RentalAIChat {
     constructor() {
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
