@@ -7,6 +7,32 @@ class PropertySetup {
         this.initializeEventListeners();
         this.updateStepDisplay();
         this.updateRecommendationsList();
+        this.addPreviewStyles();
+    }
+
+    addPreviewStyles() {
+        // Add missing CSS styles for preview items
+        const style = document.createElement('style');
+        style.textContent = `
+            .preview-item {
+                padding: 8px 0;
+                border-bottom: 1px solid #e1e5e9;
+            }
+            .preview-item:last-child {
+                border-bottom: none;
+            }
+            .preview-item strong {
+                color: #2c3e50;
+                display: inline-block;
+                width: 120px;
+            }
+            .section-description {
+                color: #7f8c8d;
+                margin-bottom: 20px;
+                font-style: italic;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     initializeEventListeners() {
@@ -14,7 +40,7 @@ class PropertySetup {
         document.getElementById('nextBtn').addEventListener('click', () => this.nextStep());
         document.getElementById('prevBtn').addEventListener('click', () => this.prevStep());
         
-        // Form submission - FIXED: Use click event instead of submit
+        // Form submission
         document.getElementById('submitBtn').addEventListener('click', (e) => this.saveConfiguration(e));
         
         // Real-time validation
