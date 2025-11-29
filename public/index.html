@@ -6,6 +6,56 @@
     <title>Rental AI Assistant - Sunset Beach Villa</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Additional styles for enhanced UX */
+        .config-warning {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 10px 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            animation: pulse 2s infinite;
+        }
+        
+        .config-warning a {
+            color: white;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.9; }
+            50% { opacity: 1; }
+            100% { opacity: 0.9; }
+        }
+        
+        .quick-questions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .quick-questions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .feature-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="chat-container">
@@ -15,14 +65,30 @@
                 <i class="fas fa-robot"></i>
                 <div class="header-text">
                     <h2>Rental AI Assistant</h2>
-                    <p>Sunset Beach Villa • 24/7 Support</p>
+                    <p id="propertySubtitle">Sunset Beach Villa • 24/7 Support</p>
                 </div>
             </div>
-            <!-- Header controls will be added here by JavaScript -->
+            <div class="header-controls">
+                <button class="header-btn" onclick="toggleDarkMode()" title="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="header-btn" onclick="clearChat()" title="Clear chat">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="header-btn" onclick="openAdminPanel()" title="Property settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
             <div class="status-indicator">
                 <span class="status-dot"></span>
                 <span>Online</span>
             </div>
+        </div>
+
+        <!-- Configuration Warning (shown if no config exists) -->
+        <div id="configWarning" class="config-warning" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            Property not configured. <a href="admin.html" onclick="openAdminPanel(); return false;">Set up your property details</a> to enable the AI assistant.
         </div>
 
         <!-- Chat Messages -->
@@ -41,21 +107,38 @@
                         <li>🚗 Transportation & directions</li>
                         <li>🚨 Emergency contacts & procedures</li>
                         <li>📋 House rules & guidelines</li>
+                        <li>📡 WiFi & technical support</li>
+                        <li>🎯 Local attractions & activities</li>
                     </ul>
                     <p>How can I assist you with your stay today?</p>
+                    
                     <div class="quick-questions">
-                        <button class="quick-btn" onclick="askQuestion('What time is check-in and check-out?')">
-                            Check-in/out times
-                        </button>
-                        <button class="quick-btn" onclick="askQuestion('What are the WiFi details?')">
-                            WiFi Information
-                        </button>
-                        <button class="quick-btn" onclick="askQuestion('What restaurants are nearby?')">
-                            Nearby Restaurants
-                        </button>
-                        <button class="quick-btn" onclick="askQuestion('What are the emergency contacts?')">
-                            Emergency Contacts
-                        </button>
+                        <div class="quick-questions-grid">
+                            <button class="quick-btn" onclick="askQuestion('What time is check-in and check-out?')">
+                                <i class="fas fa-clock"></i> Check-in/out
+                            </button>
+                            <button class="quick-btn" onclick="askQuestion('What are the WiFi details?')">
+                                <i class="fas fa-wifi"></i> WiFi Info
+                            </button>
+                            <button class="quick-btn" onclick="askQuestion('What restaurants are nearby?')">
+                                <i class="fas fa-utensils"></i> Restaurants
+                            </button>
+                            <button class="quick-btn" onclick="askQuestion('What are the emergency contacts?')">
+                                <i class="fas fa-phone-alt"></i> Emergency
+                            </button>
+                            <button class="quick-btn" onclick="askQuestion('What amenities are available?')">
+                                <i class="fas fa-home"></i> Amenities
+                            </button>
+                            <button class="quick-btn" onclick="askQuestion('What are the house rules?')">
+                                <i class="fas fa-list-alt"></i> House Rules
+                            </button>
+                            <button class="quick-btn" onclick="askQuestion('How do I get to the property?')">
+                                <i class="fas fa-directions"></i> Directions
+                            </button>
+                            <button class="quick-btn" onclick="askQuestion('What attractions are nearby?')">
+                                <i class="fas fa-map-marker-alt"></i> Attractions
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -68,7 +151,7 @@
                 <span></span>
                 <span></span>
             </div>
-            <p>AI is typing...</p>
+            <p>AI Assistant is thinking...</p>
         </div>
 
         <!-- Input Area -->
@@ -79,6 +162,7 @@
                     id="messageInput" 
                     placeholder="Ask about your stay, local recommendations, or property details..."
                     maxlength="500"
+                    autocomplete="off"
                 >
                 <button id="sendButton" class="send-button">
                     <i class="fas fa-paper-plane"></i>
@@ -86,11 +170,162 @@
             </div>
             <div class="input-footer">
                 <span class="char-count" id="charCount">0/500</span>
-                <span class="disclaimer">Powered by AI • Multi-language support</span>
+                <div class="footer-features">
+                    <span class="feature-badge">
+                        <i class="fas fa-shield-alt"></i> Secure
+                    </span>
+                    <span class="feature-badge">
+                        <i class="fas fa-globe"></i> Multi-language
+                    </span>
+                    <span class="feature-badge">
+                        <i class="fas fa-bolt"></i> Instant
+                    </span>
+                </div>
+                <span class="disclaimer">Powered by AI • Always learning</span>
             </div>
         </div>
     </div>
 
+    <script>
+        // Enhanced initialization and utility functions
+        function initializeChat() {
+            console.log("🚀 Initializing Rental AI Assistant...");
+            
+            // Check if property is configured
+            const config = getPropertyConfig();
+            if (config && config.name) {
+                // Update UI with actual property data
+                document.getElementById('welcomePropertyName').textContent = config.name;
+                document.getElementById('propertySubtitle').textContent = `${config.name} • 24/7 AI Support`;
+                document.title = `Rental AI Assistant - ${config.name}`;
+                
+                // Hide config warning
+                document.getElementById('configWarning').style.display = 'none';
+            } else {
+                // Show configuration warning
+                document.getElementById('configWarning').style.display = 'block';
+                console.warn("⚠️ Property configuration not found");
+            }
+            
+            // Set up input event listeners
+            const messageInput = document.getElementById('messageInput');
+            const charCount = document.getElementById('charCount');
+            
+            if (messageInput && charCount) {
+                messageInput.addEventListener('input', function() {
+                    charCount.textContent = `${this.value.length}/500`;
+                    
+                    // Visual feedback for character limit
+                    if (this.value.length > 450) {
+                        charCount.style.color = '#e74c3c';
+                    } else if (this.value.length > 400) {
+                        charCount.style.color = '#f39c12';
+                    } else {
+                        charCount.style.color = '#7f8c8d';
+                    }
+                });
+                
+                // Enter key to send
+                messageInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        document.getElementById('sendButton').click();
+                    }
+                });
+            }
+            
+            // Focus input on load
+            setTimeout(() => {
+                if (messageInput) messageInput.focus();
+            }, 500);
+            
+            console.log("✅ Chat initialization complete");
+        }
+        
+        function getPropertyConfig() {
+            try {
+                const config = localStorage.getItem('rentalAIPropertyConfig');
+                return config ? JSON.parse(config) : null;
+            } catch (error) {
+                console.error('Error loading property config:', error);
+                return null;
+            }
+        }
+        
+        function openAdminPanel() {
+            window.open('admin.html', '_blank');
+        }
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            // Save preference to localStorage
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            
+            // Show feedback
+            showTempMessage(isDarkMode ? 'Dark mode enabled' : 'Light mode enabled');
+        }
+        
+        function clearChat() {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                const chatMessages = document.getElementById('chatMessages');
+                // Keep only the first message (welcome message)
+                const welcomeMessage = chatMessages.querySelector('.message');
+                chatMessages.innerHTML = '';
+                chatMessages.appendChild(welcomeMessage);
+                
+                showTempMessage('Chat history cleared');
+            }
+        }
+        
+        function showTempMessage(text) {
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #2c3e50;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                z-index: 1000;
+                font-size: 0.9rem;
+            `;
+            message.textContent = text;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.parentNode.removeChild(message);
+                }
+            }, 2000);
+        }
+        
+        // Check for saved dark mode preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                document.body.classList.add('dark-mode');
+            }
+            
+            initializeChat();
+        });
+        
+        // Global function for quick questions
+        function askQuestion(question) {
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.value = question;
+                messageInput.focus();
+                
+                // Trigger input event to update character count
+                const event = new Event('input', { bubbles: true });
+                messageInput.dispatchEvent(event);
+            }
+        }
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>
