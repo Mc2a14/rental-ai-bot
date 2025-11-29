@@ -1,4 +1,4 @@
-class RentalAIChat {
+public/script.js: class RentalAIChat {
     constructor() {
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
@@ -227,14 +227,14 @@ class RentalAIChat {
         }
     }
 
-    // HEADER CONTROLS - IMPROVED
+    // HEADER CONTROLS - FIXED: Removed duplicate buttons
     createHeaderControls() {
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
         
+        // FIXED: Only create ONE set of controls
         const controls = [
             this.createControlButton('admin', '⚙️', 'Property settings', () => this.openAdminPanel()),
-            this.createControlButton('recommendations', '📍', 'Manage recommendations', () => this.showRecommendationsModal()),
             this.createControlButton('refresh', '🔄', 'Refresh configuration', () => this.refreshPropertyConfig()),
             this.createControlButton('clear', '🗑️', 'Clear chat', () => this.clearChat()),
             this.createThemeToggle(),
