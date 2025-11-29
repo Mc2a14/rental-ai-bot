@@ -39,6 +39,12 @@ class RentalAIChat {
                 if (headerSubtext && hostConfig.name) {
                     headerSubtext.textContent = `${hostConfig.name} • 24/7 Support`;
                 }
+
+                // ✅ UPDATE WELCOME MESSAGE PROPERTY NAME
+                const welcomePropertyName = document.getElementById('welcomePropertyName');
+                if (welcomePropertyName && hostConfig.name) {
+                    welcomePropertyName.textContent = hostConfig.name;
+                }
                 
                 console.log('🏠 Using host configuration:', hostConfig.name);
                 this.hostConfig = hostConfig;
