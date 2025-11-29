@@ -1,185 +1,240 @@
-class PropertyConfigurator {
+class PropertySetup {
     constructor() {
         this.currentStep = 1;
         this.totalSteps = 3;
-        this.config = {};
+        this.recommendations = this.loadRecommendations();
         
         this.initializeEventListeners();
-        this.loadSavedConfig();
-        this.loadRecommendations(); // Load recommendations when page loads
+        this.updateStepDisplay();
+        this.updateRecommendationsList();
     }
 
     initializeEventListeners() {
+        // Navigation buttons
         document.getElementById('nextBtn').addEventListener('click', () => this.nextStep());
         document.getElementById('prevBtn').addEventListener('click', () => this.prevStep());
-        document.getElementById('propertyConfig').addEventListener('submit', (e) => this.saveConfig(e));
+        
+        // Form submission
+        document.getElementById('propertyConfig').addEventListener('submit', (e) => this.saveConfiguration(e));
+        
+        // Real-time validation
+        this.setupRealTimeValidation();
     }
 
-    nextStep() {
-        if (!this.validateCurrentStep()) return;
-
-        this.currentStep++;
-        this.updateUI();
-    }
-
-    prevStep() {
-        this.currentStep--;
-        this.updateUI();
+    setupRealTimeValidation() {
+        // Add input event listeners for real-time validation
+        const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
+        requiredFields.forEach(field => {
+            field.addEventListener('input', () => this.validateCurrentStep());
+        });
     }
 
     validateCurrentStep() {
         const currentSection = document.getElementById(`section${this.currentStep}`);
-        const requiredInputs = currentSection.querySelectorAll('input[required], textarea[required]');
-        
-        for (let input of requiredInputs) {
-            if (!input.value.trim()) {
-                alert(`Please fill in: ${input.previousElementSibling.textContent}`);
-                input.focus();
-                return false;
+        const requiredFields = currentSection.querySelectorAll('input[required], textarea[required], select[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.style.borderColor = '#e74c3c';
+            } else {
+                field.style.borderColor = '#e1e5e9';
             }
+        });
+
+        document.getElementById('nextBtn').disabled = !isValid;
+        if (this.currentStep === this.totalSteps) {
+            document.getElementById('submitBtn').disabled = !isValid;
         }
-        
-        // Save step data
-        this.saveStepData();
-        return true;
+
+        return isValid;
     }
 
-    saveStepData() {
-        switch(this.currentStep) {
-            case 1:
-                this.config.name = document.getElementById('propertyName').value;
-                this.config.address = document.getElementById('propertyAddress').value;
-                this.config.type = document.getElementById('propertyType').value;
-                break;
-            case 2:
-                this.config.contacts = {
-                    host: document.getElementById('hostContact').value,
-                    maintenance: document.getElementById('maintenanceContact').value
-                };
-                this.config.schedule = {
-                    checkIn: document.getElementById('checkInTime').value,
-                    checkOut: document.getElementById('checkOutTime').value,
-                    lateCheckOut: document.getElementById('lateCheckout').value || "Not available"
-                };
-                break;
-            case 3:
-                this.config.amenities = {
-                    wifi: document.getElementById('wifiDetails').value,
-                    essentials: this.parseList(document.getElementById('amenities').value)
-                };
-                this.config.rules = {
-                    general: this.parseList(document.getElementById('houseRules').value)
-                };
-                break;
+    nextStep() {
+        if (this.currentStep < this.totalSteps && this.validateCurrentStep()) {
+            this.currentStep++;
+            this.updateStepDisplay();
         }
     }
 
-    parseList(text) {
-        // Handle both new lines and commas
-        return text.split(/[\n,]/)
-            .map(item => item.trim())
-            .filter(item => item.length > 0)
-            .map(item => item.startsWith('•') ? item : '• ' + item);
+    prevStep() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.updateStepDisplay();
+        }
     }
 
-    updateUI() {
-        // Update steps
+    updateStepDisplay() {
+        // Update step indicators
         document.querySelectorAll('.step').forEach((step, index) => {
-            step.classList.toggle('active', index + 1 === this.currentStep);
+            if (index + 1 === this.currentStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
         });
 
-        // Update sections
+        // Show/hide sections
         document.querySelectorAll('.form-section').forEach((section, index) => {
-            section.style.display = index + 1 === this.currentStep ? 'block' : 'none';
+            if (index + 1 === this.currentStep) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
         });
 
-        // Update buttons
+        // Update navigation buttons
         document.getElementById('prevBtn').style.display = this.currentStep > 1 ? 'block' : 'none';
         document.getElementById('nextBtn').style.display = this.currentStep < this.totalSteps ? 'block' : 'none';
         document.getElementById('submitBtn').style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
 
-        // Show preview on last step
-        if (this.currentStep === this.totalSteps) {
-            this.showPreview();
+        // Update preview on step 3
+        if (this.currentStep === 3) {
+            this.updatePreview();
         }
+
+        // Re-validate current step
+        this.validateCurrentStep();
     }
 
-    showPreview() {
+    updatePreview() {
         const previewContent = document.getElementById('previewContent');
         const previewSection = document.getElementById('previewSection');
         
-        previewContent.innerHTML = `
-            <div style="margin-bottom: 15px;">
-                <strong>Property:</strong> ${this.config.name}<br>
-                <strong>Address:</strong> ${this.config.address}<br>
-                <strong>Type:</strong> ${this.config.type}
+        const formData = this.getFormData();
+        
+        let previewHTML = `
+            <div class="preview-item">
+                <strong>Property:</strong> ${formData.name || 'Not set'}
             </div>
-            <div style="margin-bottom: 15px;">
-                <strong>Host Contact:</strong> ${this.config.contacts?.host}<br>
-                <strong>Maintenance:</strong> ${this.config.contacts?.maintenance}
+            <div class="preview-item">
+                <strong>Address:</strong> ${formData.address || 'Not set'}
             </div>
-            <div style="margin-bottom: 15px;">
-                <strong>Check-in:</strong> ${this.config.schedule?.checkIn}<br>
-                <strong>Check-out:</strong> ${this.config.schedule?.checkOut}
+            <div class="preview-item">
+                <strong>Host Contact:</strong> ${formData.hostContact || 'Not set'}
             </div>
-            <div>
-                <strong>WiFi:</strong> ${this.config.amenities?.wifi}<br>
-                <strong>Amenities:</strong> ${this.config.amenities?.essentials?.slice(0, 3).join(', ')}...
+            <div class="preview-item">
+                <strong>Check-in:</strong> ${formData.checkInTime || 'Not set'} | <strong>Check-out:</strong> ${formData.checkOutTime || 'Not set'}
+            </div>
+            <div class="preview-item">
+                <strong>WiFi:</strong> ${formData.wifiDetails || 'Not set'}
             </div>
         `;
-        
+
+        previewContent.innerHTML = previewHTML;
         previewSection.style.display = 'block';
     }
 
-    saveConfig(e) {
-        e.preventDefault();
-        
-        if (!this.validateCurrentStep()) return;
-
-        // Save the complete configuration
-        this.saveStepData();
-        
-        // Store in localStorage
-        localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(this.config));
-        
-        // Show success message
-        document.getElementById('propertyConfig').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-        
-        console.log('Property configuration saved:', this.config);
+    getFormData() {
+        return {
+            name: document.getElementById('propertyName').value,
+            address: document.getElementById('propertyAddress').value,
+            type: document.getElementById('propertyType').value,
+            hostContact: document.getElementById('hostContact').value,
+            maintenanceContact: document.getElementById('maintenanceContact').value,
+            checkInTime: document.getElementById('checkInTime').value,
+            checkOutTime: document.getElementById('checkOutTime').value,
+            lateCheckout: document.getElementById('lateCheckout').value,
+            wifiDetails: document.getElementById('wifiDetails').value,
+            amenities: document.getElementById('amenities').value,
+            houseRules: document.getElementById('houseRules').value
+        };
     }
 
-    loadSavedConfig() {
-        const saved = localStorage.getItem('rentalAIPropertyConfig');
-        if (saved) {
-            this.config = JSON.parse(saved);
+    saveConfiguration(e) {
+        e.preventDefault();
+        
+        if (!this.validateCurrentStep()) {
+            alert('Please fill in all required fields before saving.');
+            return;
+        }
+
+        const formData = this.getFormData();
+        const config = {
+            name: formData.name,
+            address: formData.address,
+            type: formData.type,
+            contact: {
+                host: formData.hostContact,
+                maintenance: formData.maintenanceContact
+            },
+            checkInOut: {
+                checkIn: formData.checkInTime,
+                checkOut: formData.checkOutTime,
+                lateCheckout: formData.lateCheckout
+            },
+            amenities: {
+                wifi: formData.wifiDetails,
+                list: formData.amenities.split('\n').filter(item => item.trim())
+            },
+            rules: formData.houseRules.split('\n').filter(item => item.trim()),
+            recommendations: this.recommendations
+        };
+
+        try {
+            localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(config));
+            localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
             
-            // Populate form fields
-            if (this.config.name) document.getElementById('propertyName').value = this.config.name;
-            if (this.config.address) document.getElementById('propertyAddress').value = this.config.address;
-            if (this.config.type) document.getElementById('propertyType').value = this.config.type;
-            if (this.config.contacts?.host) document.getElementById('hostContact').value = this.config.contacts.host;
-            if (this.config.contacts?.maintenance) document.getElementById('maintenanceContact').value = this.config.contacts.maintenance;
-            if (this.config.schedule?.checkIn) document.getElementById('checkInTime').value = this.config.schedule.checkIn;
-            if (this.config.schedule?.checkOut) document.getElementById('checkOutTime').value = this.config.schedule.checkOut;
-            if (this.config.schedule?.lateCheckOut) document.getElementById('lateCheckout').value = this.config.schedule.lateCheckOut;
-            if (this.config.amenities?.wifi) document.getElementById('wifiDetails').value = this.config.amenities.wifi;
-            if (this.config.amenities?.essentials) document.getElementById('amenities').value = this.config.amenities.essentials.join('\n');
-            if (this.config.rules?.general) document.getElementById('houseRules').value = this.config.rules.general.join('\n');
+            this.showSuccessMessage();
+            console.log('✅ Configuration saved:', config);
+        } catch (error) {
+            console.error('Error saving configuration:', error);
+            alert('Error saving configuration. Please try again.');
         }
     }
 
-    // RECOMMENDATIONS MANAGEMENT FUNCTIONS
+    showSuccessMessage() {
+        document.getElementById('propertyConfig').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
+    }
+
+    // Recommendations management
     loadRecommendations() {
         try {
             const saved = localStorage.getItem('rental_ai_recommendations');
-            this.hostRecommendations = saved ? JSON.parse(saved) : [];
-            this.updateRecommendationsList();
-            console.log('📍 Recommendations loaded:', this.hostRecommendations.length);
+            return saved ? JSON.parse(saved) : [];
         } catch (error) {
             console.error('Error loading recommendations:', error);
-            this.hostRecommendations = [];
+            return [];
         }
+    }
+
+    saveRecommendations() {
+        try {
+            localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
+        } catch (error) {
+            console.error('Error saving recommendations:', error);
+        }
+    }
+
+    updateRecommendationsList() {
+        const container = document.getElementById('recommendations-list');
+        
+        if (this.recommendations.length === 0) {
+            container.innerHTML = `
+                <div class="no-recommendations">
+                    <p>No recommendations yet. Add some to help your guests discover local gems!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.recommendations.map((place, index) => `
+            <div class="recommendation-item">
+                <div class="place-info">
+                    <div class="place-header">
+                        <strong>${place.name}</strong>
+                        <span class="category-badge">${place.category}</span>
+                    </div>
+                    ${place.description ? `<div class="place-description">${place.description}</div>` : ''}
+                    ${place.notes ? `<div class="place-notes">💡 ${place.notes}</div>` : ''}
+                </div>
+                <button class="btn-danger" onclick="propertySetup.removeRecommendation(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
     }
 
     addRecommendation() {
@@ -187,119 +242,71 @@ class PropertyConfigurator {
         const category = document.getElementById('place-category').value;
         const description = document.getElementById('place-description').value.trim();
         const notes = document.getElementById('place-notes').value.trim();
-        
+
         if (!name) {
-            this.showNotification('Please enter a place name', 'error');
+            alert('Please enter a place name');
             return;
         }
-        
+
         const newPlace = {
-            id: Date.now(), // Unique identifier
-            name: name,
-            category: category,
-            description: description,
-            notes: notes
+            name,
+            category,
+            description,
+            notes
         };
-        
-        this.hostRecommendations.push(newPlace);
+
+        this.recommendations.push(newPlace);
         this.saveRecommendations();
         this.updateRecommendationsList();
-        
+
         // Clear form
         document.getElementById('place-name').value = '';
         document.getElementById('place-description').value = '';
         document.getElementById('place-notes').value = '';
-        
-        this.showNotification('Recommendation added successfully!', 'success');
+
+        // Show confirmation
+        this.showTempMessage('Recommendation added successfully!');
     }
 
-    removeRecommendation(id) {
+    removeRecommendation(index) {
         if (confirm('Are you sure you want to remove this recommendation?')) {
-            this.hostRecommendations = this.hostRecommendations.filter(place => place.id !== id);
+            this.recommendations.splice(index, 1);
             this.saveRecommendations();
             this.updateRecommendationsList();
-            this.showNotification('Recommendation removed', 'info');
+            this.showTempMessage('Recommendation removed');
         }
     }
 
-    updateRecommendationsList() {
-        const container = document.getElementById('recommendations-list');
-        if (!container) return;
-        
-        if (this.hostRecommendations.length === 0) {
-            container.innerHTML = `
-                <div class="no-recommendations">
-                    <p>No recommendations yet. Add your first recommendation above!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = this.hostRecommendations.map(place => `
-            <div class="recommendation-item">
-                <div class="place-info">
-                    <div class="place-header">
-                        <strong>${place.name}</strong>
-                        <span class="category-badge">${place.category}</span>
-                    </div>
-                    ${place.description ? `<p class="place-description">${place.description}</p>` : ''}
-                    ${place.notes ? `<p class="place-notes">💡 ${place.notes}</p>` : ''}
-                </div>
-                <button class="btn-danger" onclick="propertyConfig.removeRecommendation(${place.id})">
-                    Remove
-                </button>
-            </div>
-        `).join('');
-    }
-
-    saveRecommendations() {
-        localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.hostRecommendations));
-    }
-
-    showNotification(message, type = 'info') {
-        // Create a simple notification
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.style.cssText = `
+    showTempMessage(text) {
+        // Simple temporary message
+        const message = document.createElement('div');
+        message.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#2ecc71' : '#3498db'};
+            background: #2ecc71;
             color: white;
-            padding: 15px 20px;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: 8px;
             z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         `;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
+        message.textContent = text;
+        document.body.appendChild(message);
+
         setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.3s';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
+            message.remove();
         }, 3000);
     }
 }
 
-// Global functions for the HTML buttons
+// Global function for the add recommendation button
 function addRecommendation() {
-    if (window.propertyConfig) {
-        window.propertyConfig.addRecommendation();
-    }
-}
-
-function removeRecommendation(id) {
-    if (window.propertyConfig) {
-        window.propertyConfig.removeRecommendation(id);
+    if (window.propertySetup) {
+        window.propertySetup.addRecommendation();
     }
 }
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    window.propertyConfig = new PropertyConfigurator();
+    window.propertySetup = new PropertySetup();
 });
