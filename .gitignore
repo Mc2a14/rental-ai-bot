@@ -5,6 +5,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+.pnpm-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -137,3 +138,168 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# ========================================
+# PROJECT-SPECIFIC ENTRIES FOR RENTAL AI ASSISTANT
+# ========================================
+
+# Local development files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local configuration files (keep example files)
+config/local.json
+config/development.json
+*.local.*
+
+# Session files
+session/
+
+# Temporary files
+tmp/
+temp/
+
+# Backup files
+*.bak
+*.backup
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Application specific
+# Local database files (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# Local uploads directory
+uploads/
+
+# Cache directories
+.cache/
+
+# Build directories (if you add build steps later)
+dist/
+build/
+
+# Package manager lock files (optional - some teams commit these)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Local AI model files (if you download models locally)
+models/
+*.bin
+*.gguf
+
+# Local vector store files (if using local vector databases)
+vector_store/
+
+# Local embeddings cache
+embeddings_cache/
+
+# Local training data
+training_data/
+
+# Certificate files (for local HTTPS development)
+*.pem
+*.key
+*.crt
+
+# Local performance profiles
+*.cpuprofile
+*.heapsnapshot
+
+# Local test files
+test-results/
+playwright-report/
+jest-stare/
+
+# Local benchmark results
+benchmarks/
+*.benchmark
+
+# Local documentation
+_site/
+.sass-cache/
+
+# ========================================
+# SECURITY: Sensitive files that should NEVER be committed
+# ========================================
+
+# API keys and secrets
+secrets.json
+credentials.json
+service-account-key.json
+*.key.json
+
+# Environment files with real values
+.env.local
+.env.production
+.env.staging
+
+# Private keys
+*.priv
+*.private
+
+# Certificate private keys
+*.pkey
+*.privkey
+
+# ========================================
+# PROJECT STRUCTURE SPECIFIC EXCLUSIONS
+# ========================================
+
+# Exclude local development overrides
+public/config.local.js
+public/config.local.json
+
+# Exclude user-generated content that shouldn't be in version control
+public/user_uploads/
+public/guest_content/
+
+# Exclude local backup copies
+*.backup.*
+*_backup.*
+
+# ========================================
+# OPTIONAL: Include these if you use these tools
+# ========================================
+
+# ESLint
+.eslintcache
+
+# Stylelint
+.stylelintcache
+
+# Prettier
+.prettiercache
+
+# Jest
+jest-cache/
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+
+# Playwright
+playwright/.cache/
+
+# Webpack
+webpack-stats.json
