@@ -98,8 +98,13 @@ class PropertySetup {
         const requiredFields = currentSection.querySelectorAll('input[required], textarea[required], select[required]');
         let isValid = true;
 
+        console.log(`📝 Checking ${requiredFields.length} required fields in step ${this.currentStep}:`);
+        
         requiredFields.forEach(field => {
-            if (!field.value.trim()) {
+            const isFieldValid = field.value.trim().length > 0;
+            console.log(`  - ${field.id}: "${field.value}" -> ${isFieldValid ? 'VALID' : 'INVALID'}`);
+            
+            if (!isFieldValid) {
                 isValid = false;
                 field.style.borderColor = '#e74c3c';
             } else {
@@ -114,7 +119,7 @@ class PropertySetup {
         if (nextBtn) nextBtn.disabled = !isValid;
         if (submitBtn) submitBtn.disabled = !isValid;
 
-        console.log(`✅ Step validation: ${isValid ? 'VALID' : 'INVALID'}`);
+        console.log(`✅ Step ${this.currentStep} validation: ${isValid ? 'VALID' : 'INVALID'}`);
         return isValid;
     }
 
