@@ -1,4 +1,4 @@
-public/script.js: class RentalAIChat {
+class RentalAIChat {
     constructor() {
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
@@ -32,9 +32,8 @@ public/script.js: class RentalAIChat {
         console.log('✅ All preferences loaded');
     }
 
-    // CONFIGURATION MONITORING - NEW: Watch for config changes
+    // CONFIGURATION MONITORING
     setupConfigMonitoring() {
-        // Listen for storage changes (when admin panel updates config)
         window.addEventListener('storage', (e) => {
             if (e.key === 'rentalAIPropertyConfig' || e.key === 'rental_ai_recommendations') {
                 console.log('🔄 Configuration updated remotely, refreshing...');
@@ -43,20 +42,18 @@ public/script.js: class RentalAIChat {
             }
         });
 
-        // Also refresh when page becomes visible (in case admin was open in another tab)
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 this.refreshPropertyConfig();
             }
         });
 
-        // Periodic refresh for safety
         setInterval(() => {
             this.refreshPropertyConfig();
-        }, 30000); // Every 30 seconds
+        }, 30000);
     }
 
-    // HOST CONFIGURATION METHODS - IMPROVED
+    // HOST CONFIGURATION METHODS
     loadPropertyConfig() {
         try {
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
@@ -78,7 +75,6 @@ public/script.js: class RentalAIChat {
     }
 
     updateUIWithPropertyData(hostConfig) {
-        // Update header
         const headerText = document.querySelector('.header-text h2');
         const headerSubtext = document.querySelector('.header-text p');
         const welcomePropertyName = document.getElementById('welcomePropertyName');
@@ -95,10 +91,7 @@ public/script.js: class RentalAIChat {
             welcomePropertyName.textContent = hostConfig.name;
         }
         
-        // Update page title
         document.title = `Rental AI Assistant - ${hostConfig.name}`;
-        
-        // Hide config warning if it exists
         this.hideConfigWarning();
     }
 
@@ -115,7 +108,11 @@ public/script.js: class RentalAIChat {
                     Set up your property details
                 </a> to enable the AI assistant.
             `;
-            document.querySelector('.chat-container').insertBefore(warning, document.querySelector('.chat-messages'));
+            const chatContainer = document.querySelector('.chat-container');
+            const chatMessages = document.querySelector('.chat-messages');
+            if (chatContainer && chatMessages) {
+                chatContainer.insertBefore(warning, chatMessages);
+            }
         }
         warning.style.display = 'block';
     }
@@ -186,7 +183,7 @@ public/script.js: class RentalAIChat {
         return text;
     }
 
-    // EVENT LISTENERS - IMPROVED
+    // EVENT LISTENERS
     initializeEventListeners() {
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
@@ -196,10 +193,8 @@ public/script.js: class RentalAIChat {
             return;
         }
 
-        // Send message on button click
         sendButton.addEventListener('click', () => this.sendMessage());
 
-        // Send message on Enter key
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -207,13 +202,11 @@ public/script.js: class RentalAIChat {
             }
         });
 
-        // Update character count and send button state
         messageInput.addEventListener('input', () => {
             this.updateCharCount();
             sendButton.disabled = messageInput.value.trim().length === 0;
         });
 
-        // Auto-resize textarea (if it becomes one)
         messageInput.addEventListener('input', this.autoResizeTextarea.bind(this));
 
         console.log('✅ Event listeners initialized');
@@ -227,12 +220,26 @@ public/script.js: class RentalAIChat {
         }
     }
 
-    // HEADER CONTROLS - FIXED: Removed duplicate buttons
+    // HEADER CONTROLS - FIXED WITH ERROR HANDLING
     createHeaderControls() {
+        console.log('🔧 Creating header controls...');
+        
+        const header = document.querySelector('.chat-header');
+        if (!header) {
+            console.error('❌ chat-header element not found!');
+            return;
+        }
+
+        // Remove any existing header controls to avoid duplicates
+        const existingControls = document.querySelector('.header-controls');
+        if (existingControls) {
+            existingControls.remove();
+        }
+
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
         
-        // FIXED: Only create ONE set of controls
+        // ONLY THESE 5 CONTROLS - NO RECOMMENDATIONS BUTTON
         const controls = [
             this.createControlButton('admin', '⚙️', 'Property settings', () => this.openAdminPanel()),
             this.createControlButton('refresh', '🔄', 'Refresh configuration', () => this.refreshPropertyConfig()),
@@ -241,22 +248,34 @@ public/script.js: class RentalAIChat {
             this.createLanguageSelector()
         ];
         
-        controls.forEach(control => headerControls.appendChild(control));
+        controls.forEach(control => {
+            if (control) headerControls.appendChild(control);
+        });
         
-        const header = document.querySelector('.chat-header');
         const statusIndicator = document.querySelector('.status-indicator');
-        if (header && statusIndicator) {
+        if (statusIndicator && statusIndicator.parentNode === header) {
             header.insertBefore(headerControls, statusIndicator);
+            console.log('✅ Header controls inserted before status indicator');
+        } else {
+            header.appendChild(headerControls);
+            console.log('✅ Header controls appended to header');
         }
+        
+        console.log('✅ Header controls created successfully');
     }
 
     createControlButton(type, icon, title, onClick) {
-        const button = document.createElement('button');
-        button.className = `header-btn header-btn-${type}`;
-        button.innerHTML = icon;
-        button.title = title;
-        button.addEventListener('click', onClick);
-        return button;
+        try {
+            const button = document.createElement('button');
+            button.className = `header-btn header-btn-${type}`;
+            button.innerHTML = icon;
+            button.title = title;
+            button.addEventListener('click', onClick);
+            return button;
+        } catch (error) {
+            console.error('❌ Error creating control button:', error);
+            return null;
+        }
     }
 
     createThemeToggle() {
@@ -264,37 +283,42 @@ public/script.js: class RentalAIChat {
     }
 
     createLanguageSelector() {
-        const select = document.createElement('select');
-        select.className = 'language-select';
-        select.title = 'Select language';
-        
-        const languages = [
-            { code: 'en', name: '🇺🇸 English' },
-            { code: 'es', name: '🇪🇸 Español' },
-            { code: 'fr', name: '🇫🇷 Français' },
-            { code: 'de', name: '🇩🇪 Deutsch' },
-            { code: 'it', name: '🇮🇹 Italiano' }
-        ];
-        
-        languages.forEach(lang => {
-            const option = document.createElement('option');
-            option.value = lang.code;
-            option.textContent = lang.name;
-            select.appendChild(option);
-        });
-        
-        select.addEventListener('change', (e) => {
-            this.changeLanguage(e.target.value);
-        });
+        try {
+            const select = document.createElement('select');
+            select.className = 'language-select';
+            select.title = 'Select language';
+            
+            const languages = [
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'es', name: '🇪🇸 Español' },
+                { code: 'fr', name: '🇫🇷 Français' },
+                { code: 'de', name: '🇩🇪 Deutsch' },
+                { code: 'it', name: '🇮🇹 Italiano' }
+            ];
+            
+            languages.forEach(lang => {
+                const option = document.createElement('option');
+                option.value = lang.code;
+                option.textContent = lang.name;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', (e) => {
+                this.changeLanguage(e.target.value);
+            });
 
-        return select;
+            return select;
+        } catch (error) {
+            console.error('❌ Error creating language selector:', error);
+            return null;
+        }
     }
 
     openAdminPanel() {
         window.open('admin.html', '_blank', 'width=800,height=900');
     }
 
-    // LANGUAGE SUPPORT - IMPROVED
+    // LANGUAGE SUPPORT
     changeLanguage(langCode) {
         this.saveLanguagePreference(langCode);
         this.updateUIForLanguage(langCode);
@@ -397,19 +421,17 @@ public/script.js: class RentalAIChat {
         }
     }
 
-    // CHAT MESSAGING - IMPROVED WITH BETTER ERROR HANDLING
+    // CHAT MESSAGING
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
 
         if (!message) return;
 
-        // Clear input and disable send button
         messageInput.value = '';
         this.updateCharCount();
         document.getElementById('sendButton').disabled = true;
 
-        // Add user message to chat
         this.addMessage(message, 'user');
         this.showTypingIndicator();
 
@@ -427,7 +449,6 @@ public/script.js: class RentalAIChat {
         const hostConfig = this.getHostConfig();
         const currentLanguage = this.getCurrentLanguage();
         
-        // Prepare system context
         const systemMessage = this.prepareSystemContext(message, hostConfig);
 
         console.log('🔄 Sending to AI:', {
@@ -464,7 +485,6 @@ public/script.js: class RentalAIChat {
 
         let systemMessage = `You are a rental AI assistant for ${hostConfig.name}. `;
         
-        // Add recommendations for local queries
         const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 'beach', 'park', 'attraction', 'nearby', 'local', 'recommend'];
         const isLocalQuery = localKeywords.some(keyword => message.toLowerCase().includes(keyword));
         
@@ -530,10 +550,8 @@ public/script.js: class RentalAIChat {
         messageDiv.appendChild(messageContent);
         chatMessages.appendChild(messageDiv);
 
-        // Auto-scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
-        // Save to history (except for restored messages)
         if (!isRestored) {
             this.saveChatHistory();
         }
@@ -559,7 +577,6 @@ public/script.js: class RentalAIChat {
             localStorage.removeItem(this.storageKey);
             const chatMessages = document.getElementById('chatMessages');
             
-            // Keep only the welcome message
             const welcomeMessage = chatMessages.querySelector('.message:first-child');
             chatMessages.innerHTML = '';
             if (welcomeMessage) {
@@ -578,7 +595,7 @@ public/script.js: class RentalAIChat {
             const messageElements = chatMessages.querySelectorAll('.message');
             
             messageElements.forEach((messageEl, index) => {
-                if (index === 0) return; // Skip welcome message
+                if (index === 0) return;
                 
                 const isBot = messageEl.classList.contains('bot-message');
                 const contentEl = messageEl.querySelector('.message-content');
@@ -604,19 +621,16 @@ public/script.js: class RentalAIChat {
                 const messages = JSON.parse(saved);
                 const chatMessages = document.getElementById('chatMessages');
                 
-                // Clear existing messages except welcome
                 const welcomeMessage = chatMessages.querySelector('.message:first-child');
                 chatMessages.innerHTML = '';
                 if (welcomeMessage) {
                     chatMessages.appendChild(welcomeMessage);
                 }
 
-                // Restore messages
                 messages.forEach(msg => {
                     this.addMessage(msg.content, msg.type, true);
                 });
 
-                // Scroll to bottom
                 chatMessages.scrollTop = chatMessages.scrollHeight;
                 
                 console.log('📂 Chat history loaded:', messages.length, 'messages');
@@ -635,7 +649,6 @@ public/script.js: class RentalAIChat {
         const length = messageInput.value.length;
         charCount.textContent = `${length}/500`;
         
-        // Color coding
         if (length > 450) {
             charCount.style.color = '#e74c3c';
         } else if (length > 400) {
@@ -662,7 +675,6 @@ public/script.js: class RentalAIChat {
     }
 
     showTempMessage(text, type = 'info') {
-        // Remove existing temp messages
         document.querySelectorAll('.temp-message').forEach(msg => msg.remove());
 
         const tempMsg = document.createElement('div');
@@ -679,11 +691,6 @@ public/script.js: class RentalAIChat {
             }, 300);
         }, 3000);
     }
-
-    // RECOMMENDATIONS MODAL (simplified - you can expand this)
-    showRecommendationsModal() {
-        this.showTempMessage('Recommendations management coming soon!', 'info');
-    }
 }
 
 // GLOBAL FUNCTIONS
@@ -693,7 +700,6 @@ function askQuestion(question) {
         messageInput.value = question;
         messageInput.focus();
         
-        // Enable send button and update character count
         document.getElementById('sendButton').disabled = false;
         if (window.chat) {
             window.chat.updateCharCount();
