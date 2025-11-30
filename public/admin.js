@@ -319,13 +319,15 @@ class PropertySetup {
         const formData = this.getFormData();
         console.log("📝 Form data:", formData);
         
+        // FIXED: Save in the correct format that the main chat expects
         const config = {
             name: formData.name,
             address: formData.address,
             type: formData.type,
             contact: {
                 host: formData.hostContact,
-                maintenance: formData.maintenanceContact
+                maintenance: formData.maintenanceContact,
+                emergency: formData.maintenanceContact // Add emergency contact explicitly
             },
             checkInOut: {
                 checkIn: formData.checkInTime,
@@ -336,19 +338,42 @@ class PropertySetup {
                 wifi: formData.wifiDetails,
                 list: formData.amenities.split('\n').filter(item => item.trim())
             },
-            rules: formData.houseRules.split('\n').filter(item => item.trim()),
+            rules: {
+                houseRules: formData.houseRules.split('\n').filter(item => item.trim())
+            },
             recommendations: this.recommendations
         };
 
         try {
+            // Save both the main config and recommendations separately
             localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(config));
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
             
-            this.showSuccessMessage();
             console.log('✅ Configuration saved successfully!', config);
+            
+            // Show detailed success message
+            this.showSuccessMessage();
+            
+            // Notify the main chat window if it's open
+            this.notifyMainChat();
+            
         } catch (error) {
             console.error('❌ Error saving configuration:', error);
             this.showTempMessage('Error saving configuration. Please try again.', 'error');
+        }
+    }
+
+    notifyMainChat() {
+        // Trigger storage event to notify the main chat
+        window.dispatchEvent(new Event('storage'));
+        
+        // Also try to notify the parent window if we're in a popup
+        if (window.opener && !window.opener.closed) {
+            try {
+                window.opener.postMessage({ type: 'configUpdated' }, '*');
+            } catch (e) {
+                console.log('Could not notify parent window:', e);
+            }
         }
     }
 
@@ -358,7 +383,32 @@ class PropertySetup {
         const successMessage = document.getElementById('successMessage');
         
         if (propertyConfig) propertyConfig.style.display = 'none';
-        if (successMessage) successMessage.style.display = 'block';
+        if (successMessage) {
+            successMessage.style.display = 'block';
+            
+            // Add a preview of what was saved
+            const formData = this.getFormData();
+            const previewHtml = `
+                <div style="text-align: left; background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4 style="color: #2c3e50; margin-bottom: 10px;">What was saved:</h4>
+                    <p><strong>Property:</strong> ${formData.name}</p>
+                    <p><strong>WiFi:</strong> ${formData.wifiDetails || 'Not set'}</p>
+                    <p><strong>Emergency Contact:</strong> ${formData.maintenanceContact || 'Not set'}</p>
+                    <p><strong>House Rules:</strong> ${formData.houseRules ? '✓ Saved' : 'Not set'}</p>
+                    <p><strong>Recommendations:</strong> ${this.recommendations.length} places</p>
+                </div>
+            `;
+            
+            const existingPreview = successMessage.querySelector('.saved-preview');
+            if (existingPreview) {
+                existingPreview.remove();
+            }
+            
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'saved-preview';
+            previewDiv.innerHTML = previewHtml;
+            successMessage.insertBefore(previewDiv, successMessage.querySelector('button'));
+        }
         console.log("✅ Success message shown");
     }
 
