@@ -4,63 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - FullStack App</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/public/style.css">
 </head>
 <body class="admin-body">
     <div class="container">
         <header class="admin-header">
-            <h1>Admin Panel</h1>
+            <h1>🚀 Admin Panel</h1>
             <nav>
-                <a href="/" class="nav-link">Back to Main</a>
-                <a href="/api/health" class="nav-link">System Health</a>
+                <a href="/" class="nav-link">🏠 Back to Main</a>
+                <a href="/api/health" class="nav-link" target="_blank">❤️ API Health</a>
+                <a href="/api/data" class="nav-link" target="_blank">📊 API Data</a>
             </nav>
         </header>
 
         <main>
             <div class="admin-grid">
                 <div class="admin-card">
-                    <h3>System Status</h3>
+                    <h3>📈 System Status</h3>
                     <div id="systemStatus" class="status-loading">
+                        <div class="loading-spinner"></div>
                         Checking system status...
                     </div>
-                    <button id="refreshStatus" class="btn btn-secondary">Refresh Status</button>
+                    <button id="refreshStatus" class="btn btn-secondary">🔄 Refresh Status</button>
                 </div>
 
                 <div class="admin-card">
-                    <h3>Server Information</h3>
+                    <h3>🖥️ Server Information</h3>
                     <div id="serverInfo">
-                        <p><strong>Port:</strong> <span id="serverPort">Loading...</span></p>
-                        <p><strong>Environment:</strong> <span id="serverEnv">Loading...</span></p>
-                        <p><strong>Uptime:</strong> <span id="serverUptime">Loading...</span></p>
+                        <div class="info-item">
+                            <strong>🌐 Port:</strong> <span id="serverPort">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>🔧 Environment:</strong> <span id="serverEnv">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>⏰ Uptime:</strong> <span id="serverUptime">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>📦 Node Version:</strong> <span id="nodeVersion">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>💾 Platform:</strong> <span id="serverPlatform">Loading...</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="admin-card">
-                    <h3>Data Management</h3>
+                    <h3>📋 Data Management</h3>
                     <div class="admin-actions">
-                        <button id="loadAllData" class="btn">Load All Data</button>
-                        <button id="clearData" class="btn btn-warning">Clear Display</button>
+                        <button id="loadAllData" class="btn">📥 Load All Data</button>
+                        <button id="loadServerInfo" class="btn">🔍 Server Details</button>
+                        <button id="clearData" class="btn btn-warning">🗑️ Clear Display</button>
                     </div>
                     <div id="adminDataContainer" class="data-container">
-                        <!-- Data will be loaded here -->
+                        <p class="placeholder-text">No data loaded. Click buttons above to load information.</p>
                     </div>
                 </div>
 
                 <div class="admin-card">
-                    <h3>Quick Actions</h3>
+                    <h3>⚡ Quick Actions</h3>
                     <div class="admin-actions">
-                        <button id="testAPI" class="btn">Test API Connection</button>
-                        <button id="viewLogs" class="btn">View Server Logs</button>
+                        <button id="testAPI" class="btn">🔗 Test API Connection</button>
+                        <button id="viewLogs" class="btn">📋 View Server Logs</button>
+                        <button id="restartApp" class="btn btn-warning">🔄 Simulate Restart</button>
+                    </div>
+                    <div id="actionResults" class="action-results">
+                        <!-- Action results will appear here -->
                     </div>
                 </div>
+            </div>
+
+            <div class="admin-card full-width">
+                <h3>📊 Real-time Monitoring</h3>
+                <div class="monitoring-grid">
+                    <div class="metric-card">
+                        <h4>API Response Time</h4>
+                        <div class="metric-value" id="responseTime">-- ms</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Memory Usage</h4>
+                        <div class="metric-value" id="memoryUsage">-- MB</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Active Connections</h4>
+                        <div class="metric-value" id="activeConnections">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Last Update</h4>
+                        <div class="metric-value" id="lastUpdate">--</div>
+                    </div>
+                </div>
+                <button id="startMonitoring" class="btn">Start Monitoring</button>
+                <button id="stopMonitoring" class="btn btn-secondary">Stop Monitoring</button>
             </div>
         </main>
 
         <footer>
-            <p>Admin Panel - FullStack App &copy; 2025</p>
+            <p>Admin Panel - FullStack App &copy; 2025 | Deployed on Railway</p>
         </footer>
     </div>
 
-    <script src="admin.js"></script>
+    <script src="/public/admin.js"></script>
 </body>
 </html>
