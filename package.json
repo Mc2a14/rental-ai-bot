@@ -1,102 +1,24 @@
 {
-  "name": "rental-ai-assistant",
-  "version": "7.0.0",
-  "description": "AI-powered assistant for short-term rental hosts with multi-language support, property configuration, and local recommendations",
+  "name": "fullstack-app",
+  "version": "1.0.0",
+  "description": "A full-stack web application",
   "main": "app.js",
-  "type": "module",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "dev:debug": "nodemon --inspect app.js",
-    "test": "node --test",
-    "test:watch": "node --test --watch",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "clean": "rm -rf node_modules package-lock.json",
-    "clean:install": "npm run clean && npm install",
-    "health": "curl http://localhost:3000/api/health || echo 'Server not running'",
-    "production": "NODE_ENV=production node app.js",
-    "docker:build": "docker build -t rental-ai-assistant .",
-    "docker:run": "docker run -p 3000:3000 rental-ai-assistant"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": ["web", "app", "fullstack"],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "openai": "^4.20.1",
-    "helmet": "^7.1.0",
-    "compression": "^1.7.4",
-    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.0.0",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",
-    "eslint": "^8.52.0",
-    "prettier": "^3.0.3",
-    "@eslint/js": "^9.2.0",
-    "globals": "^15.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
-  "keywords": [
-    "ai",
-    "rental",
-    "chatbot",
-    "assistant",
-    "property-management",
-    "hospitality",
-    "openai",
-    "multi-language",
-    "vacation-rental",
-    "airbnb",
-    "vrbo"
-  ],
-  "author": {
-    "name": "Your Name",
-    "email": "your.email@example.com",
-    "url": "https://github.com/yourusername"
-  },
-  "contributors": [],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/rental-ai-assistant.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/rental-ai-assistant/issues"
-  },
-  "homepage": "https://github.com/yourusername/rental-ai-assistant#readme",
-  "funding": {
-    "type": "individual",
-    "url": "https://github.com/sponsors/yourusername"
-  },
-  "files": [
-    "app.js",
-    "public/",
-    "package.json",
-    "README.md",
-    "LICENSE"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "os": [
-    "darwin",
-    "linux",
-    "win32"
-  ],
-  "cpu": [
-    "x64",
-    "arm64"
-  ],
-  "private": false,
-  "prettier": {
-    "semi": true,
-    "singleQuote": true,
-    "printWidth": 100,
-    "tabWidth": 2,
-    "trailingComma": "es5"
+    "eslint": "^8.50.0"
   }
 }
