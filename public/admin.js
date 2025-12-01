@@ -277,6 +277,9 @@ class PropertySetup {
                 <strong>Host Contact:</strong> ${formData.hostContact || 'Not set'}
             </div>
             <div class="preview-item">
+                <strong>Maintenance Contact:</strong> ${formData.maintenanceContact || 'Not set'}
+            </div>
+            <div class="preview-item">
                 <strong>Check-in:</strong> ${formData.checkInTime || 'Not set'}
             </div>
             <div class="preview-item">
@@ -341,25 +344,32 @@ class PropertySetup {
             emergencyContact: formData.maintenanceContact || formData.hostContact,
             
             // Check-in/out - direct properties with CORRECT NAMES
-            checkinTime: formData.checkInTime || '15:00',
-            checkoutTime: formData.checkOutTime || '11:00',
+            checkinTime: this.formatTime(formData.checkInTime) || '3:00 PM',
+            checkoutTime: this.formatTime(formData.checkOutTime) || '11:00 AM',
             lateCheckout: formData.lateCheckout,
             
             // Amenities - structured correctly
             amenities: {
                 wifi: formData.wifiDetails || 'Not set',
-                parking: '', // Add if you have parking field
+                parking: '', // Will be added if you add a parking field
                 other: formData.amenities || ''
             },
             
-            // Rules
+            // Rules - keep as string
             houseRules: formData.houseRules || '',
             
             // Metadata
             lastUpdated: new Date().toISOString(),
             
             // Recommendations count
-            hasRecommendations: this.recommendations.length > 0
+            hasRecommendations: this.recommendations.length > 0,
+            
+            // FIX: Add missing fields that script.js might check
+            contact: formData.hostContact, // Simple backup
+            checkInOut: {
+                checkIn: this.formatTime(formData.checkInTime) || '3:00 PM',
+                checkOut: this.formatTime(formData.checkOutTime) || '11:00 AM'
+            }
         };
 
         try {
@@ -381,6 +391,37 @@ class PropertySetup {
             console.error('❌ Error saving configuration:', error);
             this.showTempMessage('Error saving configuration. Please try again.', 'error');
         }
+    }
+
+    // Helper function to format time (convert "15:00" to "3:00 PM")
+    formatTime(timeString) {
+        if (!timeString) return '';
+        
+        // If already in AM/PM format, return as-is
+        if (timeString.includes('AM') || timeString.includes('PM') || timeString.includes('am') || timeString.includes('pm')) {
+            return timeString;
+        }
+        
+        // Try to parse HH:MM format
+        const match = timeString.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM|am|pm)?/i);
+        if (!match) return timeString;
+        
+        let hours = parseInt(match[1]);
+        const minutes = match[2] ? parseInt(match[2]) : 0;
+        const ampm = match[3] ? match[3].toUpperCase() : '';
+        
+        // If no AM/PM specified and it's 24-hour format
+        if (!ampm) {
+            if (hours >= 12) {
+                ampm = hours > 12 ? 'PM' : 'PM';
+                hours = hours > 12 ? hours - 12 : hours;
+            } else {
+                ampm = 'AM';
+                hours = hours === 0 ? 12 : hours;
+            }
+        }
+        
+        return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
     }
 
     notifyMainChat() {
@@ -413,6 +454,7 @@ class PropertySetup {
                     <p><strong>Property Name:</strong> ${config.name || 'Not set'}</p>
                     <p><strong>Address:</strong> ${config.address || 'Not set'}</p>
                     <p><strong>Host Contact:</strong> ${config.hostContact || 'Not set'}</p>
+                    <p><strong>Maintenance Contact:</strong> ${config.maintenanceContact || 'Not set'}</p>
                     <p><strong>Check-in:</strong> ${config.checkinTime || 'Not set'}</p>
                     <p><strong>Check-out:</strong> ${config.checkoutTime || 'Not set'}</p>
                     <p><strong>WiFi Details:</strong> ${config.amenities?.wifi || 'Not set'}</p>
