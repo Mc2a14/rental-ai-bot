@@ -260,73 +260,7 @@
             justify-content: space-between;
             margin-top: 30px;
         }
-        
-<!-- Appliance Instructions Section -->
-<h3 style="margin-top: 30px;"><i class="fas fa-tools"></i> Appliance Instructions</h3>
-<p class="section-description">Add instructions for appliances guests commonly ask about. Include photos to make it easy!</p>
 
-<div class="appliance-management">
-    <!-- Add New Appliance Form -->
-    <div class="add-appliance-form" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9; margin-bottom: 20px;">
-        <h4>Add New Appliance</h4>
-        
-        <div class="form-group">
-            <label for="appliance-name">Appliance Name *</label>
-            <input type="text" id="appliance-name" placeholder="e.g., Living Room Smart TV" class="form-input">
-        </div>
-        
-        <div class="form-group">
-            <label for="appliance-type">Appliance Type *</label>
-            <select id="appliance-type" class="form-select">
-                <option value="TV/Entertainment">TV/Entertainment System</option>
-                <option value="Thermostat">Thermostat/AC</option>
-                <option value="Kitchen">Kitchen Appliance</option>
-                <option value="Laundry">Washer/Dryer</option>
-                <option value="Coffee">Coffee Maker</option>
-                <option value="Pool/Spa">Pool/Hot Tub</option>
-                <option value="Security">Security System</option>
-                <option value="Lighting">Smart Lighting</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="appliance-instructions">Step-by-Step Instructions *</label>
-            <textarea id="appliance-instructions" placeholder="Enter clear, simple steps:
-1. Find the remote on the coffee table
-2. Press the power button (top left)
-3. Use arrow keys to navigate
-4. For Netflix, press the red button" class="form-textarea" rows="4"></textarea>
-        </div>
-        
-        <div class="form-group">
-            <label for="appliance-photo">Photo URL (Optional)</label>
-            <input type="text" id="appliance-photo" placeholder="https://example.com/photo.jpg OR upload instructions below" class="form-input">
-            <div class="form-help">You can upload to imgur.com or similar and paste the link</div>
-        </div>
-        
-        <div class="form-group">
-            <label for="appliance-troubleshooting">Troubleshooting Tips (Optional)</label>
-            <textarea id="appliance-troubleshooting" placeholder="Common issues and solutions:
-• If remote doesn't work, check batteries
-• For no sound, check volume on both TV and soundbar
-• To reset, unplug for 30 seconds" class="form-textarea" rows="3"></textarea>
-        </div>
-        
-        <button type="button" class="btn btn-primary" onclick="addAppliance()">
-            <i class="fas fa-plus"></i> Add Appliance
-        </button>
-    </div>
-    
-    <!-- Current Appliances List -->
-    <div class="current-appliances" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9;">
-        <h4>Your Appliance Instructions</h4>
-        <div id="appliances-list" class="appliances-list">
-            <!-- Appliances will be listed here -->
-        </div>
-    </div>
-</div>
-        
         /* Recommendations Styles */
         .recommendations-management {
             display: grid;
@@ -575,7 +509,7 @@
                 </div>
             </div>
 
-            <!-- Step 3: Amenities, Rules & Recommendations -->
+            <!-- Step 3: Amenities, Rules, Appliances & Recommendations -->
             <div class="form-section" id="section3" style="display: none;">
                 <h3><i class="fas fa-wifi"></i> Amenities & WiFi</h3>
                 
@@ -606,6 +540,72 @@
                     <label for="houseRules">House Rules *</label>
                     <textarea id="houseRules" required placeholder="Enter each house rule on a new line&#10;• No smoking inside the property&#10;• No pets allowed&#10;• Quiet hours: 10 PM - 7 AM&#10;• No parties or events&#10;• Turn off lights and AC when leaving&#10;• Dispose of trash in designated bins&#10;• Report any damages immediately"></textarea>
                     <div class="form-help">List your specific house rules for guests to follow. These will be shared when guests ask about rules.</div>
+                </div>
+
+                <!-- Appliance Instructions Section -->
+                <h3 style="margin-top: 30px;"><i class="fas fa-tools"></i> Appliance Instructions</h3>
+                <p class="section-description">Add instructions for appliances guests commonly ask about. Include photos to make it easy!</p>
+
+                <div class="appliance-management">
+                    <!-- Add New Appliance Form -->
+                    <div class="add-appliance-form" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9; margin-bottom: 20px;">
+                        <h4>Add New Appliance</h4>
+                        
+                        <div class="form-group">
+                            <label for="appliance-name">Appliance Name *</label>
+                            <input type="text" id="appliance-name" placeholder="e.g., Living Room Smart TV" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appliance-type">Appliance Type *</label>
+                            <select id="appliance-type" class="form-select">
+                                <option value="TV/Entertainment">TV/Entertainment System</option>
+                                <option value="Thermostat">Thermostat/AC</option>
+                                <option value="Kitchen">Kitchen Appliance</option>
+                                <option value="Laundry">Washer/Dryer</option>
+                                <option value="Coffee">Coffee Maker</option>
+                                <option value="Pool/Spa">Pool/Hot Tub</option>
+                                <option value="Security">Security System</option>
+                                <option value="Lighting">Smart Lighting</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appliance-instructions">Step-by-Step Instructions *</label>
+                            <textarea id="appliance-instructions" placeholder="Enter clear, simple steps:
+1. Find the remote on the coffee table
+2. Press the power button (top left)
+3. Use arrow keys to navigate
+4. For Netflix, press the red button" class="form-textarea" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appliance-photo">Photo URL (Optional)</label>
+                            <input type="text" id="appliance-photo" placeholder="https://example.com/photo.jpg OR upload instructions below" class="form-input">
+                            <div class="form-help">You can upload to imgur.com or similar and paste the link</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appliance-troubleshooting">Troubleshooting Tips (Optional)</label>
+                            <textarea id="appliance-troubleshooting" placeholder="Common issues and solutions:
+• If remote doesn't work, check batteries
+• For no sound, check volume on both TV and soundbar
+• To reset, unplug for 30 seconds" class="form-textarea" rows="3"></textarea>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="addAppliance()">
+                            <i class="fas fa-plus"></i> Add Appliance
+                        </button>
+                    </div>
+                    
+                    <!-- Current Appliances List -->
+                    <div class="current-appliances" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9;">
+                        <h4>Your Appliance Instructions</h4>
+                        <div id="appliances-list" class="appliances-list">
+                            <!-- Appliances will be listed here -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Recommended Places Section -->
