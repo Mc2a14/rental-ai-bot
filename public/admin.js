@@ -268,7 +268,7 @@ class PropertySetup {
         
         let previewHTML = `
             <div class="preview-item">
-                <strong>Property:</strong> ${formData.name || 'Not set'}
+                <strong>Property Name:</strong> ${formData.name || 'Not set'}
             </div>
             <div class="preview-item">
                 <strong>Address:</strong> ${formData.address || 'Not set'}
@@ -277,10 +277,19 @@ class PropertySetup {
                 <strong>Host Contact:</strong> ${formData.hostContact || 'Not set'}
             </div>
             <div class="preview-item">
-                <strong>Check-in:</strong> ${formData.checkInTime || 'Not set'} | <strong>Check-out:</strong> ${formData.checkOutTime || 'Not set'}
+                <strong>Check-in:</strong> ${formData.checkInTime || 'Not set'}
             </div>
             <div class="preview-item">
-                <strong>WiFi:</strong> ${formData.wifiDetails || 'Not set'}
+                <strong>Check-out:</strong> ${formData.checkOutTime || 'Not set'}
+            </div>
+            <div class="preview-item">
+                <strong>WiFi Details:</strong> ${formData.wifiDetails || 'Not set'}
+            </div>
+            <div class="preview-item">
+                <strong>House Rules:</strong> ${formData.houseRules ? '✓ Set' : 'Not set'}
+            </div>
+            <div class="preview-item">
+                <strong>Recommendations:</strong> ${this.recommendations.length} places
             </div>
         `;
 
@@ -319,40 +328,51 @@ class PropertySetup {
         const formData = this.getFormData();
         console.log("📝 Form data:", formData);
         
-        // FIXED: Save in the correct format that the main chat expects
+        // FIXED: Save in the CORRECT format that the main chat expects
         const config = {
+            // Basic info
             name: formData.name,
             address: formData.address,
             type: formData.type,
-            contact: {
-                host: formData.hostContact,
-                maintenance: formData.maintenanceContact,
-                emergency: formData.maintenanceContact // Add emergency contact explicitly
-            },
-            checkInOut: {
-                checkIn: formData.checkInTime,
-                checkOut: formData.checkOutTime,
-                lateCheckout: formData.lateCheckout
-            },
+            
+            // Contact info - direct properties
+            hostContact: formData.hostContact,
+            maintenanceContact: formData.maintenanceContact,
+            emergencyContact: formData.maintenanceContact || formData.hostContact,
+            
+            // Check-in/out - direct properties with CORRECT NAMES
+            checkinTime: formData.checkInTime || '15:00',
+            checkoutTime: formData.checkOutTime || '11:00',
+            lateCheckout: formData.lateCheckout,
+            
+            // Amenities - structured correctly
             amenities: {
-                wifi: formData.wifiDetails,
-                list: formData.amenities.split('\n').filter(item => item.trim())
+                wifi: formData.wifiDetails || 'Not set',
+                parking: '', // Add if you have parking field
+                other: formData.amenities || ''
             },
-            rules: {
-                houseRules: formData.houseRules.split('\n').filter(item => item.trim())
-            },
-            recommendations: this.recommendations
+            
+            // Rules
+            houseRules: formData.houseRules || '',
+            
+            // Metadata
+            lastUpdated: new Date().toISOString(),
+            
+            // Recommendations count
+            hasRecommendations: this.recommendations.length > 0
         };
 
         try {
-            // Save both the main config and recommendations separately
+            // Save the main config
             localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(config));
+            
+            // Save recommendations separately
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
             
-            console.log('✅ Configuration saved successfully!', config);
+            console.log('✅ Configuration saved in CORRECT format!', config);
             
             // Show detailed success message
-            this.showSuccessMessage();
+            this.showSuccessMessage(config);
             
             // Notify the main chat window if it's open
             this.notifyMainChat();
@@ -377,7 +397,7 @@ class PropertySetup {
         }
     }
 
-    showSuccessMessage() {
+    showSuccessMessage(config) {
         console.log("🔄 Showing success message...");
         const propertyConfig = document.getElementById('propertyConfig');
         const successMessage = document.getElementById('successMessage');
@@ -386,16 +406,18 @@ class PropertySetup {
         if (successMessage) {
             successMessage.style.display = 'block';
             
-            // Add a preview of what was saved
-            const formData = this.getFormData();
+            // Show what was saved
             const previewHtml = `
                 <div style="text-align: left; background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <h4 style="color: #2c3e50; margin-bottom: 10px;">What was saved:</h4>
-                    <p><strong>Property:</strong> ${formData.name}</p>
-                    <p><strong>WiFi:</strong> ${formData.wifiDetails || 'Not set'}</p>
-                    <p><strong>Emergency Contact:</strong> ${formData.maintenanceContact || 'Not set'}</p>
-                    <p><strong>House Rules:</strong> ${formData.houseRules ? '✓ Saved' : 'Not set'}</p>
-                    <p><strong>Recommendations:</strong> ${this.recommendations.length} places</p>
+                    <h4 style="color: #2c3e50; margin-bottom: 10px;">✅ Configuration Saved!</h4>
+                    <p><strong>Property Name:</strong> ${config.name || 'Not set'}</p>
+                    <p><strong>Address:</strong> ${config.address || 'Not set'}</p>
+                    <p><strong>Host Contact:</strong> ${config.hostContact || 'Not set'}</p>
+                    <p><strong>Check-in:</strong> ${config.checkinTime || 'Not set'}</p>
+                    <p><strong>Check-out:</strong> ${config.checkoutTime || 'Not set'}</p>
+                    <p><strong>WiFi Details:</strong> ${config.amenities?.wifi || 'Not set'}</p>
+                    <p><strong>House Rules:</strong> ${config.houseRules ? '✓ Saved' : 'Not set'}</p>
+                    <p><strong>Recommendations:</strong> ${this.recommendations.length} places saved</p>
                 </div>
             `;
             
