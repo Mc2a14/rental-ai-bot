@@ -779,6 +779,36 @@ function debugConfig() {
     }
 }
 
+// Enhanced debug function
+function debugFullConfig() {
+    const config = localStorage.getItem('rentalAIPropertyConfig');
+    const recommendations = localStorage.getItem('rental_ai_recommendations');
+    
+    if (config) {
+        const parsed = JSON.parse(config);
+        console.log('🔧 FULL Host Configuration:', parsed);
+        
+        let debugInfo = 'Current Configuration:\n';
+        debugInfo += `Property: ${parsed.name || 'Not set'}\n`;
+        debugInfo += `Address: ${parsed.address || 'Not set'}\n`;
+        debugInfo += `Host Contact: ${parsed.hostContact || 'Not set'}\n`;
+        debugInfo += `Maintenance Contact: ${parsed.maintenanceContact || 'Not set'}\n`;
+        debugInfo += `Check-in: ${parsed.checkinTime || 'Not set'}\n`;
+        debugInfo += `Check-out: ${parsed.checkoutTime || 'Not set'}\n`;
+        debugInfo += `WiFi: ${parsed.amenities?.wifi || 'Not set'}\n`;
+        debugInfo += `Other Amenities: ${parsed.amenities?.other || 'Not set'}\n`;
+        debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
+        
+        const recs = recommendations ? JSON.parse(recommendations) : [];
+        debugInfo += `Recommendations: ${recs.length} places`;
+        
+        alert(debugInfo);
+    } else {
+        console.log('🔧 No host configuration found');
+        alert('No host configuration found. Please run setup first.');
+    }
+}
+
 // Initialize chat when page loads
 document.addEventListener('DOMContentLoaded', function() {
     window.chat = new RentalAIChat();
@@ -964,34 +994,4 @@ document.addEventListener('visibilitychange', function() {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     }
-    // Enhanced debug function
-function debugFullConfig() {
-    const config = localStorage.getItem('rentalAIPropertyConfig');
-    const recommendations = localStorage.getItem('rental_ai_recommendations');
-    
-    if (config) {
-        const parsed = JSON.parse(config);
-        console.log('🔧 FULL Host Configuration:', parsed);
-        
-        let debugInfo = 'Current Configuration:\n';
-        debugInfo += `Property: ${parsed.name || 'Not set'}\n`;
-        debugInfo += `Address: ${parsed.address || 'Not set'}\n`;
-        debugInfo += `Host Contact: ${parsed.hostContact || 'Not set'}\n`;
-        debugInfo += `Maintenance Contact: ${parsed.maintenanceContact || 'Not set'}\n`;
-        debugInfo += `Check-in: ${parsed.checkinTime || 'Not set'}\n`;
-        debugInfo += `Check-out: ${parsed.checkoutTime || 'Not set'}\n`;
-        debugInfo += `WiFi: ${parsed.amenities?.wifi || 'Not set'}\n`;
-        debugInfo += `Other Amenities: ${parsed.amenities?.other || 'Not set'}\n`;
-        debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
-        
-        const recs = recommendations ? JSON.parse(recommendations) : [];
-        debugInfo += `Recommendations: ${recs.length} places`;
-        
-        alert(debugInfo);
-    } else {
-        console.log('🔧 No host configuration found');
-        alert('No host configuration found. Please run setup first.');
-    }
-}
 });
-
