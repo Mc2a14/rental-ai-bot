@@ -1,24 +1,28 @@
 {
   "name": "fullstack-app",
   "version": "1.0.0",
-  "description": "A full-stack web application",
+  "description": "A full-stack web application with AI chat",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["web", "app", "fullstack"],
+  "keywords": ["web", "app", "fullstack", "ai", "chat"],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",
     "eslint": "^8.50.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
