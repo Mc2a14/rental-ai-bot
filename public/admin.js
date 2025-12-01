@@ -289,6 +289,9 @@ class PropertySetup {
                 <strong>WiFi Details:</strong> ${formData.wifiDetails || 'Not set'}
             </div>
             <div class="preview-item">
+                <strong>Amenities:</strong> ${formData.amenities ? '✓ Set' : 'Not set'}
+            </div>
+            <div class="preview-item">
                 <strong>House Rules:</strong> ${formData.houseRules ? '✓ Set' : 'Not set'}
             </div>
             <div class="preview-item">
@@ -314,7 +317,7 @@ class PropertySetup {
             lateCheckout: document.getElementById('lateCheckout')?.value || '',
             wifiDetails: document.getElementById('wifiDetails')?.value || '',
             amenities: document.getElementById('amenities')?.value || '',
-            houseRules: document.getElementById('houseRules')?.value || ''
+            houseRules: document.getElementById('houseRules')?.value || ''  // ADDED: House Rules
         };
     }
 
@@ -355,7 +358,7 @@ class PropertySetup {
                 other: formData.amenities || ''
             },
             
-            // Rules - keep as string
+            // Rules - NEW: Save house rules
             houseRules: formData.houseRules || '',
             
             // Metadata
@@ -379,7 +382,7 @@ class PropertySetup {
             // Save recommendations separately
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
             
-            console.log('✅ Configuration saved in CORRECT format!', config);
+            console.log('✅ Configuration saved with HOUSE RULES!', config);
             
             // Show detailed success message
             this.showSuccessMessage(config);
