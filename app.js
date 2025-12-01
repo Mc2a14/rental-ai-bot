@@ -3,14 +3,14 @@ const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const fetch = require('node-fetch'); // You'll need to install this: npm install node-fetch
+const fetch = require('node-fetch');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware - optimized for production
+// Middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable for development
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
 
@@ -20,109 +20,77 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(morgan('combined'));
+app.use(morgan('dev')); // Changed to 'dev' for cleaner logs
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static file serving - multiple approaches for production
+// Static files
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes with comprehensive error handling
+// Routes
 app.get('/', (req, res) => {
-  try {
-    const filePath = path.join(__dirname, 'public', 'index.html');
-    console.log('Serving index.html from:', filePath);
-    res.sendFile(filePath);
-  } catch (error) {
-    console.error('Error serving index.html:', error);
-    res.status(500).json({ 
-      error: 'Error loading main application',
-      details: error.message 
-    });
-  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/admin', (req, res) => {
-  try {
-    const filePath = path.join(__dirname, 'public', 'admin.html');
-    console.log('Serving admin.html from:', filePath);
-    res.sendFile(filePath);
-  } catch (error) {
-    console.error('Error serving admin.html:', error);
-    res.status(500).json({ 
-      error: 'Error loading admin panel',
-      details: error.message 
-    });
-  }
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // ==================== AI CHAT ENDPOINT ====================
 app.post('/chat/ai', async (req, res) => {
   try {
-    const { message, language, hostConfig, systemMessage } = req.body;
+    const { message, language = 'en', hostConfig, systemMessage } = req.body;
     
-    console.log('📨 AI Chat Request Received:', {
-      message,
+    console.log('🤖 AI Request:', {
+      message: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
       language,
-      hasHostConfig: !!hostConfig,
-      systemMessageLength: systemMessage?.length || 0
+      property: hostConfig?.name || 'Default',
+      hasRecommendations: systemMessage ? 'Yes' : 'No'
     });
 
-    // Check for required environment variables
-    const aiApiKey = process.env.OPENAI_API_KEY || process.env.AI_API_KEY;
+    const aiApiKey = process.env.OPENAI_API_KEY;
     
+    // If no API key, return helpful message
     if (!aiApiKey) {
-      console.warn('⚠️ No AI API key found in environment variables');
+      console.log('⚠️  No OpenAI API key found in environment');
       return res.json({
         success: true,
-        response: `I received: "${message}". ⚠️ **Setup Required:** Add your AI API key (OPENAI_API_KEY) in Railway environment variables to enable real AI responses.`,
-        detectedLanguage: language || 'en',
+        response: `I received: "${message}".\n\n**Setup Required:** Add your OPENAI_API_KEY in Railway environment variables to enable AI responses.\n\nFor now, here are common answers:\n• Check-in: 3 PM, Check-out: 11 AM\n• WiFi: Network: Guest-WiFi, Password: welcome123\n• Parking: Free street parking available\n• Emergency: Contact host at (555) 123-4567`,
+        detectedLanguage: language,
         usingCustomConfig: !!hostConfig,
         isMock: true
       });
     }
 
-    // Prepare messages for AI API
+    // Build messages array
     const messages = [];
     
-    // Add system message if provided
-    if (systemMessage) {
-      messages.push({
-        role: 'system',
-        content: systemMessage
-      });
-    }
+    // System message with property context
+    const baseSystemMessage = 'You are a helpful rental property assistant. Be friendly, concise, and helpful. ';
+    let propertyContext = baseSystemMessage;
     
-    // Add property context if host config exists
     if (hostConfig) {
-      const propertyContext = `You are an assistant for ${hostConfig.name || 'a rental property'}. ` +
-        `Guests can ask about check-in/out, WiFi, parking, amenities, and local recommendations. ` +
-        `Be helpful, friendly, and concise. ` +
+      propertyContext = `You are an assistant for ${hostConfig.name || 'a rental property'}. ` +
         `Check-in: ${hostConfig.checkinTime || '3:00 PM'}. ` +
         `Check-out: ${hostConfig.checkoutTime || '11:00 AM'}. ` +
         `WiFi: ${hostConfig.amenities?.wifi || 'Available'}. ` +
-        `Parking: ${hostConfig.amenities?.parking || 'Available'}.`;
-      
-      messages.push({
-        role: 'system',
-        content: propertyContext
-      });
-    } else {
-      messages.push({
-        role: 'system',
-        content: 'You are a helpful rental property assistant. Guests can ask about check-in/out, WiFi, parking, amenities, and local recommendations. Be friendly and concise.'
-      });
+        `Parking: ${hostConfig.amenities?.parking || 'Available'}. ` +
+        `Be helpful, friendly, and concise.`;
+    }
+    
+    messages.push({ role: 'system', content: propertyContext });
+    
+    // Add recommendations if provided
+    if (systemMessage) {
+      messages.push({ role: 'system', content: systemMessage });
     }
     
     // Add user message
-    messages.push({
-      role: 'user',
-      content: message
-    });
+    messages.push({ role: 'user', content: message });
 
-    // Call AI API (OpenAI compatible)
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call OpenAI API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -133,50 +101,46 @@ app.post('/chat/ai', async (req, res) => {
         messages: messages,
         temperature: 0.7,
         max_tokens: 500
-      })
+      }),
+      timeout: 30000 // 30 second timeout
     });
 
-    if (!aiResponse.ok) {
-      const errorData = await aiResponse.text();
-      console.error('AI API Error:', aiResponse.status, errorData);
-      throw new Error(`AI API returned ${aiResponse.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ OpenAI API Error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    const aiData = await aiResponse.json();
-    const aiMessage = aiData.choices[0].message.content;
+    const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
 
-    // Send response
+    console.log('✅ AI Response generated');
+    
     res.json({
       success: true,
-      response: aiMessage,
-      detectedLanguage: language || 'en',
+      response: aiResponse,
+      detectedLanguage: language,
       usingCustomConfig: !!hostConfig,
       isMock: false
     });
 
   } catch (error) {
-    console.error('❌ AI Chat Error:', error);
+    console.error('❌ Chat Error:', error.message);
     
-    // Fallback response if AI fails
-    const fallbackResponses = {
-      'check-in': 'Check-in is at 3:00 PM and check-out is at 11:00 AM. Early check-in may be available upon request.',
-      'checkout': 'Check-out is at 11:00 AM. Please leave keys on the kitchen counter.',
-      'wifi': 'WiFi network: "Rental-Guest", Password: "welcome123". For premium devices, use network "Rental-Guest-5G".',
-      'restaurant': 'Nearby restaurants: 1) Main Street Cafe (0.5 miles) - Great breakfast, 2) River View Bistro (1 mile) - Fine dining, 3) Pizza Express (0.3 miles) - Delivery available.',
-      'emergency': 'Emergency contacts: Police/Fire/Medical: 911, Property Manager: (555) 123-4567, Maintenance: (555) 987-6543.'
-    };
-
-    // Find matching fallback
-    const lowerMessage = (req.body.message || '').toLowerCase();
+    // Fallback responses
+    const lowerMessage = (req.body?.message || '').toLowerCase();
     let fallback = 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.';
     
-    for (const [key, response] of Object.entries(fallbackResponses)) {
-      if (lowerMessage.includes(key)) {
-        fallback = response;
-        break;
-      }
+    if (lowerMessage.includes('check')) {
+      fallback = 'Check-in is at 3:00 PM and check-out is at 11:00 AM. Early check-in may be available upon request.';
+    } else if (lowerMessage.includes('wifi')) {
+      fallback = 'WiFi network: "Guest-WiFi", Password: "welcome123". The network is available throughout the property.';
+    } else if (lowerMessage.includes('restaurant') || lowerMessage.includes('eat') || lowerMessage.includes('food')) {
+      fallback = 'Nearby restaurants: 1) Main Street Cafe (0.5 miles) - Great breakfast, 2) River View Bistro (1 mile) - Fine dining, 3) Pizza Express (0.3 miles) - Delivery available.';
+    } else if (lowerMessage.includes('emergency')) {
+      fallback = 'Emergency contacts: Police/Fire/Medical: 911, Property Manager: (555) 123-4567, After-hours: (555) 987-6543.';
     }
-
+    
     res.json({
       success: false,
       response: fallback,
@@ -193,110 +157,39 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     port: PORT,
-    nodeVersion: process.version,
-    platform: process.platform,
-    hasAIKey: !!(process.env.OPENAI_API_KEY || process.env.AI_API_KEY)
+    hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+    aiEndpoint: '/chat/ai'
   });
 });
 
 app.get('/api/data', (req, res) => {
   res.json({
-    message: 'Hello from the Railway server!',
+    message: 'Hello from Railway!',
     server: 'Railway Deployment',
-    data: [
-      { id: 1, name: 'Railway Item 1', value: 100, category: 'production' },
-      { id: 2, name: 'Railway Item 2', value: 200, category: 'production' },
-      { id: 3, name: 'Railway Item 3', value: 300, category: 'production' }
-    ],
-    total: 3,
-    success: true
+    aiEnabled: !!process.env.OPENAI_API_KEY
   });
 });
 
-// Additional API endpoints for admin
-app.get('/api/server-info', (req, res) => {
-  res.json({
-    server: {
-      platform: process.platform,
-      architecture: process.arch,
-      nodeVersion: process.version,
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      environment: process.env.NODE_ENV || 'development'
-    },
-    process: {
-      pid: process.pid,
-      title: process.title,
-      versions: process.versions
-    },
-    ai: {
-      hasApiKey: !!(process.env.OPENAI_API_KEY || process.env.AI_API_KEY),
-      model: process.env.AI_MODEL || 'Not set',
-      endpoint: '/chat/ai'
-    }
-  });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err.stack);
-  res.status(500).json({ 
-    error: 'Internal Server Error',
-    message: err.message,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// 404 handler for API routes
+// 404 handlers
 app.use('/api/*', (req, res) => {
   res.status(404).json({ 
     error: 'API endpoint not found',
-    path: req.originalUrl,
-    method: req.method
+    path: req.originalUrl
   });
 });
 
-// 404 handler for HTML routes
 app.use((req, res) => {
-  if (req.accepts('html')) {
-    res.status(404).send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>404 - Page Not Found</title>
-        <style>
-          body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-          h1 { color: #e74c3c; }
-          a { color: #3498db; text-decoration: none; }
-        </style>
-      </head>
-      <body>
-        <h1>404 - Page Not Found</h1>
-        <p>The page you are looking for does not exist.</p>
-        <p><a href="/">Go to Home Page</a></p>
-      </body>
-      </html>
-    `);
-  } else {
-    res.status(404).json({ 
-      error: 'Route not found',
-      path: req.originalUrl,
-      method: req.method
-    });
-  }
+  res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('🚀 FullStack App Server Started Successfully!');
-  console.log(`📍 Port: ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🤖 AI Chat Endpoint: /chat/ai ${process.env.OPENAI_API_KEY ? '✅ (API Key Loaded)' : '⚠️ (No API Key)'}`);
-  console.log(`📊 Main App: http://localhost:${PORT}`);
-  console.log(`⚙️  Admin Panel: http://localhost:${PORT}/admin`);
-  console.log(`❤️  Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`📡 API Data: http://localhost:${PORT}/api/data`);
-  console.log('=' .repeat(50));
+  console.log('🚀 Server started on port', PORT);
+  console.log('🌐 Environment:', process.env.NODE_ENV || 'development');
+  console.log('🤖 OpenAI API:', process.env.OPENAI_API_KEY ? '✅ Key loaded' : '❌ No key - add OPENAI_API_KEY');
+  console.log('📊 Health check: /api/health');
+  console.log('💬 AI Chat: POST /chat/ai');
+  console.log('='.repeat(50));
 });
 
 module.exports = app;
