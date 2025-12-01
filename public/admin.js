@@ -6,11 +6,13 @@ class PropertySetup {
         this.currentStep = 1;
         this.totalSteps = 3;
         this.recommendations = this.loadRecommendations();
+        this.appliances = this.loadAppliances(); // ADDED: Load appliances
         
         console.log("🔄 Initializing event listeners...");
         this.initializeEventListeners();
         this.updateStepDisplay();
         this.updateRecommendationsList();
+        this.updateAppliancesList(); // ADDED: Update appliances list
         this.addPreviewStyles();
         console.log("✅ PropertySetup initialized successfully");
     }
@@ -297,6 +299,9 @@ class PropertySetup {
             <div class="preview-item">
                 <strong>Recommendations:</strong> ${this.recommendations.length} places
             </div>
+            <div class="preview-item">
+                <strong>Appliances:</strong> ${this.appliances.length} appliances
+            </div>
         `;
 
         previewContent.innerHTML = previewHTML;
@@ -317,7 +322,7 @@ class PropertySetup {
             lateCheckout: document.getElementById('lateCheckout')?.value || '',
             wifiDetails: document.getElementById('wifiDetails')?.value || '',
             amenities: document.getElementById('amenities')?.value || '',
-            houseRules: document.getElementById('houseRules')?.value || ''  // ADDED: House Rules
+            houseRules: document.getElementById('houseRules')?.value || ''
         };
     }
 
@@ -361,6 +366,10 @@ class PropertySetup {
             // Rules - NEW: Save house rules
             houseRules: formData.houseRules || '',
             
+            // Appliances - ADDED: Save appliances
+            appliances: this.appliances,
+            hasAppliances: this.appliances.length > 0,
+            
             // Metadata
             lastUpdated: new Date().toISOString(),
             
@@ -382,7 +391,10 @@ class PropertySetup {
             // Save recommendations separately
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
             
-            console.log('✅ Configuration saved with HOUSE RULES!', config);
+            // Save appliances separately
+            this.saveAppliances();
+            
+            console.log('✅ Configuration saved with HOUSE RULES & APPLIANCES!', config);
             
             // Show detailed success message
             this.showSuccessMessage(config);
@@ -463,6 +475,7 @@ class PropertySetup {
                     <p><strong>WiFi Details:</strong> ${config.amenities?.wifi || 'Not set'}</p>
                     <p><strong>House Rules:</strong> ${config.houseRules ? '✓ Saved' : 'Not set'}</p>
                     <p><strong>Recommendations:</strong> ${this.recommendations.length} places saved</p>
+                    <p><strong>Appliances:</strong> ${this.appliances.length} appliances saved</p>
                 </div>
             `;
             
@@ -591,6 +604,119 @@ class PropertySetup {
         }
     }
 
+    // Appliance management methods - ADDED
+    loadAppliances() {
+        try {
+            const saved = localStorage.getItem('rental_ai_appliances');
+            this.appliances = saved ? JSON.parse(saved) : [];
+            console.log(`🛠️ Loaded ${this.appliances.length} appliances`);
+            return this.appliances;
+        } catch (error) {
+            console.error('Error loading appliances:', error);
+            this.appliances = [];
+            return [];
+        }
+    }
+
+    saveAppliances() {
+        try {
+            localStorage.setItem('rental_ai_appliances', JSON.stringify(this.appliances));
+            console.log(`🛠️ Saved ${this.appliances.length} appliances`);
+        } catch (error) {
+            console.error('Error saving appliances:', error);
+        }
+    }
+
+    updateAppliancesList() {
+        const container = document.getElementById('appliances-list');
+        if (!container) {
+            console.log("❌ Appliances container not found");
+            return;
+        }
+        
+        if (this.appliances.length === 0) {
+            container.innerHTML = `
+                <div class="no-appliances" style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
+                    <p>No appliances added yet. Add some above to help guests!</p>
+                </div>
+            `;
+            console.log("🛠️ No appliances to display");
+            return;
+        }
+
+        container.innerHTML = this.appliances.map((appliance, index) => `
+            <div class="appliance-item" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; margin-bottom: 10px; background: #f8f9fa; border: 1px solid #e1e5e9; border-radius: 8px;">
+                <div class="appliance-info" style="flex: 1;">
+                    <div class="appliance-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <strong>${appliance.name}</strong>
+                        <span class="type-badge" style="background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 500;">${appliance.type}</span>
+                    </div>
+                    ${appliance.photo ? `<div style="margin: 10px 0;"><img src="${appliance.photo}" alt="${appliance.name}" style="max-width: 200px; border-radius: 5px; border: 1px solid #ddd;"></div>` : ''}
+                    <div class="appliance-instructions" style="color: #2c3e50; margin: 5px 0; line-height: 1.4; font-size: 0.9em; white-space: pre-line;">${appliance.instructions}</div>
+                    ${appliance.troubleshooting ? `<div class="appliance-troubleshooting" style="color: #e74c3c; margin: 10px 0 0 0; font-size: 0.9em;"><strong>Troubleshooting:</strong><br>${appliance.troubleshooting}</div>` : ''}
+                </div>
+                <button class="btn-danger" onclick="propertySetup.removeAppliance(${index})" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8em;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+        
+        console.log(`🛠️ Displayed ${this.appliances.length} appliances`);
+    }
+
+    addAppliance() {
+        console.log("🛠️ Adding appliance...");
+        const nameInput = document.getElementById('appliance-name');
+        const typeInput = document.getElementById('appliance-type');
+        const instructionsInput = document.getElementById('appliance-instructions');
+        const photoInput = document.getElementById('appliance-photo');
+        const troubleshootingInput = document.getElementById('appliance-troubleshooting');
+
+        const name = nameInput.value.trim();
+        const type = typeInput.value;
+        const instructions = instructionsInput.value.trim();
+        const photo = photoInput.value.trim();
+        const troubleshooting = troubleshootingInput.value.trim();
+
+        if (!name || !instructions) {
+            this.showTempMessage('Please enter appliance name and instructions', 'warning');
+            console.log("❌ Appliance not added - missing required fields");
+            return;
+        }
+
+        const newAppliance = {
+            name,
+            type,
+            instructions,
+            photo: photo || null,
+            troubleshooting: troubleshooting || null
+        };
+
+        this.appliances.push(newAppliance);
+        this.saveAppliances();
+        this.updateAppliancesList();
+
+        // Clear form
+        nameInput.value = '';
+        instructionsInput.value = '';
+        photoInput.value = '';
+        troubleshootingInput.value = '';
+
+        this.showTempMessage('Appliance added successfully!', 'success');
+        console.log("✅ Appliance added:", newAppliance);
+    }
+
+    removeAppliance(index) {
+        console.log(`🛠️ Removing appliance at index ${index}...`);
+        if (confirm('Are you sure you want to remove this appliance?')) {
+            this.appliances.splice(index, 1);
+            this.saveAppliances();
+            this.updateAppliancesList();
+            this.showTempMessage('Appliance removed', 'success');
+            console.log("✅ Appliance removed");
+        }
+    }
+
     showTempMessage(text, type = 'success') {
         console.log(`🔄 Showing temp message: ${text} (${type})`);
         const message = document.createElement('div');
@@ -626,6 +752,17 @@ function addRecommendation() {
     console.log("🔄 Global addRecommendation called");
     if (window.propertySetup) {
         window.propertySetup.addRecommendation();
+    } else {
+        console.log("❌ PropertySetup not initialized");
+        alert('System not ready. Please wait for page to load completely.');
+    }
+}
+
+// Global function for the add appliance button - ADDED
+function addAppliance() {
+    console.log("🛠️ Global addAppliance called");
+    if (window.propertySetup) {
+        window.propertySetup.addAppliance();
     } else {
         console.log("❌ PropertySetup not initialized");
         alert('System not ready. Please wait for page to load completely.');
