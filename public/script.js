@@ -140,18 +140,14 @@ class RentalAIChat {
         });
     }
 
-    // HEADER CONTROLS METHODS
+    // HEADER CONTROLS METHODS - UPDATED: Removed Recommendations button
     createHeaderControls() {
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
         
-        // Add Setup button (links to admin page)
+        // Add Setup button (links to admin page) - ONLY admin function visible to users
         const setupBtn = this.createSetupButton();
         headerControls.appendChild(setupBtn);
-        
-        // Add Recommendations button
-        const recBtn = this.createRecommendationsButton();
-        headerControls.appendChild(recBtn);
         
         // Add Clear Chat button
         const clearBtn = this.createClearButton();
@@ -182,16 +178,7 @@ class RentalAIChat {
         return setupBtn;
     }
 
-    createRecommendationsButton() {
-        const recBtn = document.createElement('button');
-        recBtn.className = 'recommendations-btn';
-        recBtn.innerHTML = '📍 Recommendations';
-        recBtn.title = 'Manage local recommendations';
-        recBtn.addEventListener('click', () => {
-            this.showRecommendationsModal();
-        });
-        return recBtn;
-    }
+    // REMOVED: createRecommendationsButton() - Users shouldn't manage recommendations
 
     createClearButton() {
         const clearBtn = document.createElement('button');
@@ -240,7 +227,7 @@ class RentalAIChat {
         return langSelect;
     }
 
-    // Recommendations Modal
+    // Recommendations Modal - KEPT for potential admin use, but not accessible from user interface
     showRecommendationsModal() {
         // Create modal for managing recommendations
         const modal = document.createElement('div');
@@ -825,7 +812,7 @@ document.addEventListener('DOMContentLoaded', function() {
             to { transform: translateX(100%); opacity: 0; }
         }
         
-        .setup-btn, .recommendations-btn {
+        .setup-btn, .clear-chat-btn {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: var(--text-inverse);
@@ -837,7 +824,7 @@ document.addEventListener('DOMContentLoaded', function() {
             margin-right: 8px;
         }
         
-        .setup-btn:hover, .recommendations-btn:hover {
+        .setup-btn:hover, .clear-chat-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
 
