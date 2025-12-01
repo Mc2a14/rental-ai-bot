@@ -5,6 +5,7 @@ class RentalAIChat {
         this.themeKey = 'rental_ai_theme';
         this.languageKey = 'rental_ai_language';
         this.recommendationsKey = 'rental_ai_recommendations';
+        this.appliancesKey = 'rental_ai_appliances';
         
         console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
         
@@ -16,6 +17,7 @@ class RentalAIChat {
         this.loadThemePreference();
         this.loadLanguagePreference();
         this.loadRecommendations();
+        this.loadAppliances();
         
         // Refresh config to ensure we have the latest data
         this.refreshPropertyConfig();
@@ -62,9 +64,11 @@ class RentalAIChat {
     refreshPropertyConfig() {
         this.loadPropertyConfig();
         this.loadRecommendations();
+        this.loadAppliances();
         
         console.log('🔄 Refreshed property config:', this.hostConfig?.name);
         console.log('🔄 Refreshed recommendations:', this.hostRecommendations.length);
+        console.log('🔄 Refreshed appliances:', this.hostAppliances.length);
     }
 
     getHostConfig() {
@@ -93,6 +97,22 @@ class RentalAIChat {
         }
     }
 
+    // HOST APPLIANCES METHODS - ADDED
+    loadAppliances() {
+        try {
+            const saved = localStorage.getItem(this.appliancesKey);
+            if (saved) {
+                this.hostAppliances = JSON.parse(saved);
+                console.log('🛠️ Host appliances loaded:', this.hostAppliances.length);
+            } else {
+                this.hostAppliances = [];
+            }
+        } catch (error) {
+            console.error('Error loading appliances:', error);
+            this.hostAppliances = [];
+        }
+    }
+
     saveRecommendations() {
         try {
             localStorage.setItem(this.recommendationsKey, JSON.stringify(this.hostRecommendations));
@@ -111,6 +131,23 @@ class RentalAIChat {
             text += `📍 ${place.name} (${place.category})\n`;
             if (place.description) text += `📝 ${place.description}\n`;
             if (place.notes) text += `💡 ${place.notes}\n`;
+            text += "\n";
+        });
+        return text;
+    }
+
+    // ADDED: Get appliances text for AI context
+    getAppliancesText() {
+        if (!this.hostAppliances || this.hostAppliances.length === 0) {
+            return "";
+        }
+        
+        let text = "HOST APPLIANCES:\n\n";
+        this.hostAppliances.forEach(appliance => {
+            text += `🛠️ ${appliance.name} (${appliance.type})\n`;
+            if (appliance.instructions) text += `📋 Instructions: ${appliance.instructions}\n`;
+            if (appliance.troubleshooting) text += `🔧 Troubleshooting: ${appliance.troubleshooting}\n`;
+            if (appliance.photo) text += `📸 Photo available\n`;
             text += "\n";
         });
         return text;
@@ -138,6 +175,54 @@ class RentalAIChat {
         messageInput.addEventListener('input', () => {
             sendButton.disabled = messageInput.value.trim().length === 0;
         });
+
+        // ADDED: Quick question buttons for appliances
+        this.setupQuickQuestionButtons();
+    }
+
+    // ADDED: Setup quick question buttons including appliance presets
+    setupQuickQuestionButtons() {
+        const quickQuestionsContainer = document.querySelector('.quick-questions');
+        if (!quickQuestionsContainer) return;
+
+        // ADDED: Appliance-specific quick questions
+        const applianceButtons = [
+            { id: 'appliance-help', text: '🛠️ Appliance Help', question: 'How do I use the appliances?' },
+            { id: 'oven-help', text: '🍳 Oven/Microwave', question: 'How do I use the oven or microwave?' },
+            { id: 'washer-help', text: '🧺 Washer/Dryer', question: 'How do I use the washer and dryer?' },
+            { id: 'thermostat-help', text: '🌡️ Thermostat', question: 'How do I adjust the thermostat?' }
+        ];
+
+        // Create appliance quick questions section
+        const applianceSection = document.createElement('div');
+        applianceSection.className = 'quick-appliance-section';
+        applianceSection.innerHTML = '<h4 class="quick-section-title">Appliance Help</h4>';
+        
+        const applianceGrid = document.createElement('div');
+        applianceGrid.className = 'quick-appliance-grid';
+        
+        applianceButtons.forEach(btn => {
+            const button = document.createElement('button');
+            button.className = 'appliance-quick-btn';
+            button.id = btn.id;
+            button.textContent = btn.text;
+            button.setAttribute('data-question', btn.question);
+            button.addEventListener('click', () => this.askApplianceQuestion(btn.question));
+            applianceGrid.appendChild(button);
+        });
+        
+        applianceSection.appendChild(applianceGrid);
+        
+        // Insert appliance section after the existing quick questions
+        quickQuestionsContainer.appendChild(applianceSection);
+    }
+
+    // ADDED: Handle appliance question button clicks
+    askApplianceQuestion(question) {
+        const messageInput = document.getElementById('messageInput');
+        messageInput.value = question;
+        document.getElementById('sendButton').disabled = false;
+        this.sendMessage();
     }
 
     // HEADER CONTROLS METHODS - UPDATED: Removed Recommendations button
@@ -375,9 +460,9 @@ class RentalAIChat {
         // Update placeholder text based on language
         const messageInput = document.getElementById('messageInput');
         const placeholders = {
-            en: "Ask about your stay, local recommendations, or property details...",
-            es: "Pregunte sobre su estadía, recomendaciones locales o detalles de la propiedad...",
-            fr: "Demandez des informations sur votre séjour, des recommandations locales ou des détails sur la propriété..."
+            en: "Ask about your stay, local recommendations, or appliance instructions...",
+            es: "Pregunte sobre su estadía, recomendaciones locales o instrucciones de electrodomésticos...",
+            fr: "Demandez des informations sur votre séjour, des recommandations locales ou des instructions pour les appareils..."
         };
         messageInput.placeholder = placeholders[langCode] || placeholders.en;
 
@@ -391,31 +476,55 @@ class RentalAIChat {
                 checkin: "Check-in/out times",
                 wifi: "WiFi Information", 
                 restaurants: "Nearby Restaurants",
-                emergency: "Emergency Contacts"
+                emergency: "Emergency Contacts",
+                // ADDED: Appliance questions
+                applianceHelp: "🛠️ Appliance Help",
+                ovenHelp: "🍳 Oven/Microwave",
+                washerHelp: "🧺 Washer/Dryer",
+                thermostatHelp: "🌡️ Thermostat"
             },
             es: {
                 checkin: "Horarios de check-in/out",
                 wifi: "Información del WiFi",
                 restaurants: "Restaurantes cercanos",
-                emergency: "Contactos de emergencia"
+                emergency: "Contactos de emergencia",
+                // ADDED: Appliance questions in Spanish
+                applianceHelp: "🛠️ Ayuda con Electrodomésticos",
+                ovenHelp: "🍳 Horno/Microondas",
+                washerHelp: "🧺 Lavadora/Secadora",
+                thermostatHelp: "🌡️ Termostato"
             },
             fr: {
                 checkin: "Horaires check-in/out",
                 wifi: "Informations WiFi",
                 restaurants: "Restaurants à proximité",
-                emergency: "Contacts d'urgence"
+                emergency: "Contacts d'urgence",
+                // ADDED: Appliance questions in French
+                applianceHelp: "🛠️ Aide aux Appareils",
+                ovenHelp: "🍳 Four/Micro-ondes",
+                washerHelp: "🧺 Lave-linge/Sèche-linge",
+                thermostatHelp: "🌡️ Thermostat"
             }
         };
 
         const questions = quickQuestions[langCode] || quickQuestions.en;
         
-        // Update quick question buttons
+        // Update existing quick question buttons
         const buttons = document.querySelectorAll('.quick-btn');
         if (buttons.length >= 4) {
             buttons[0].textContent = questions.checkin;
             buttons[1].textContent = questions.wifi;
             buttons[2].textContent = questions.restaurants;
             buttons[3].textContent = questions.emergency;
+        }
+        
+        // Update appliance quick question buttons
+        const applianceButtons = document.querySelectorAll('.appliance-quick-btn');
+        if (applianceButtons.length >= 4) {
+            applianceButtons[0].textContent = questions.applianceHelp;
+            applianceButtons[1].textContent = questions.ovenHelp;
+            applianceButtons[2].textContent = questions.washerHelp;
+            applianceButtons[3].textContent = questions.thermostatHelp;
         }
     }
 
@@ -599,7 +708,7 @@ class RentalAIChat {
         }
     }
 
-    // UPDATED: sendMessage method with proper property config refresh
+    // UPDATED: sendMessage method with proper property config refresh including appliances
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
@@ -619,24 +728,45 @@ class RentalAIChat {
             // Get FRESH host configuration every time (don't rely on cached this.hostConfig)
             const hostConfig = this.getHostConfig();
             
-            // Prepare system message with recommendations for local queries
+            // Prepare system messages with recommendations AND appliances for relevant queries
             let systemMessage = '';
-            const localKeywords = [ 'restaurant', 'food', 'eat', 'cafe', 'bar', 
-        'beach', 'park', 'attraction', 'nearby', 'local', 
-        'recommend', 'things to do', 'activity', 'tour', 
-        'sightseeing', 'place to visit', 'what to do', 'see',
-        'visit', 'explore', 'destination'];
+            
+            // Check if question is about local recommendations
+            const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 
+                'beach', 'park', 'attraction', 'nearby', 'local', 
+                'recommend', 'things to do', 'activity', 'tour', 
+                'sightseeing', 'place to visit', 'what to do', 'see',
+                'visit', 'explore', 'destination'];
+            
+            // ADDED: Check if question is about appliances
+            const applianceKeywords = ['appliance', 'oven', 'microwave', 'stove', 'cooktop',
+                'washer', 'dryer', 'laundry', 'washing machine',
+                'dishwasher', 'refrigerator', 'fridge', 'freezer',
+                'thermostat', 'heating', 'cooling', 'air conditioning',
+                'AC', 'heat', 'coffee maker', 'toaster', 'blender',
+                'microwave', 'TV', 'television', 'remote', 'control',
+                'instructions', 'how to use', 'operate', 'work',
+                'not working', 'troubleshoot', 'help with', 'use the',
+                'how do I', 'turn on', 'start', 'begin'];
             
             if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
-                systemMessage = `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
+                systemMessage += `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
+            }
+            
+            // ADDED: Include appliances context for appliance questions
+            if (anyKeywordInMessage(message, applianceKeywords) && this.hostAppliances.length > 0) {
+                if (systemMessage) systemMessage += "\n\n";
+                systemMessage += `When users ask about appliances, use these instructions:\n\n${this.getAppliancesText()}`;
             }
 
             // DEBUG: Log what we're sending to the backend
             console.log('🔄 Sending to AI:', {
                 message: message,
                 language: currentLanguage,
-                hostConfig: hostConfig, // This should have the updated property name
-                hasRecommendations: this.hostRecommendations.length
+                hostConfig: hostConfig,
+                hasRecommendations: this.hostRecommendations.length,
+                hasAppliances: this.hostAppliances.length, // ADDED
+                hasSystemMessage: !!systemMessage
             });
 
             const response = await fetch(this.apiUrl, {
@@ -647,7 +777,7 @@ class RentalAIChat {
                 body: JSON.stringify({ 
                     message: message,
                     language: currentLanguage,
-                    hostConfig: hostConfig, // Send fresh host config
+                    hostConfig: hostConfig,
                     systemMessage: systemMessage
                 })
             });
@@ -659,6 +789,7 @@ class RentalAIChat {
                 this.addMessage(data.response, 'bot');
                 console.log('🌍 Response language:', data.detectedLanguage);
                 console.log('🏠 Using custom config:', data.usingCustomConfig);
+                console.log('🛠️ Using appliances data:', data.usingAppliances || false); // ADDED
                 
                 // Show notification if using custom config
                 if (data.usingCustomConfig && hostConfig) {
@@ -722,6 +853,11 @@ class RentalAIChat {
         formatted = formatted.replace(/Check-out:/g, '<strong>🕒 Check-out:</strong>');
         formatted = formatted.replace(/WiFi:/g, '<strong>📶 WiFi:</strong>');
         formatted = formatted.replace(/Parking:/g, '<strong>🚗 Parking:</strong>');
+        // ADDED: Appliance formatting
+        formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
+        formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
+        formatted = formatted.replace(/Troubleshooting:/g, '<strong>🔧 Troubleshooting:</strong>');
+        formatted = formatted.replace(/Type:/g, '<strong>📝 Type:</strong>');
         
         return formatted;
     }
@@ -756,10 +892,22 @@ function askQuestion(question) {
 // Debug function to check configuration
 function debugConfig() {
     const config = localStorage.getItem('rentalAIPropertyConfig');
+    const recommendations = localStorage.getItem('rental_ai_recommendations');
+    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
+    
     if (config) {
         const parsed = JSON.parse(config);
         console.log('🔧 Current Host Configuration:', parsed);
-        alert(`Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`);
+        
+        let alertText = `Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`;
+        
+        // ADDED: Show appliance count
+        if (appliances) {
+            const applianceList = JSON.parse(appliances);
+            alertText += `\nAppliances: ${applianceList.length} configured`;
+        }
+        
+        alert(alertText);
     } else {
         console.log('🔧 No host configuration found');
         alert('No host configuration found. Please run setup first.');
@@ -770,6 +918,7 @@ function debugConfig() {
 function debugFullConfig() {
     const config = localStorage.getItem('rentalAIPropertyConfig');
     const recommendations = localStorage.getItem('rental_ai_recommendations');
+    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
     
     if (config) {
         const parsed = JSON.parse(config);
@@ -787,7 +936,16 @@ function debugFullConfig() {
         debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
         
         const recs = recommendations ? JSON.parse(recommendations) : [];
-        debugInfo += `Recommendations: ${recs.length} places`;
+        debugInfo += `Recommendations: ${recs.length} places\n`;
+        
+        // ADDED: Appliance information
+        const applianceList = appliances ? JSON.parse(appliances) : [];
+        debugInfo += `Appliances: ${applianceList.length} configured\n`;
+        if (applianceList.length > 0) {
+            applianceList.forEach((appliance, index) => {
+                debugInfo += `  ${index + 1}. ${appliance.name} (${appliance.type})\n`;
+            });
+        }
         
         alert(debugInfo);
     } else {
@@ -824,161 +982,4 @@ document.addEventListener('DOMContentLoaded', function() {
             margin-right: 8px;
         }
         
-        .setup-btn:hover, .clear-chat-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Recommendations Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: var(--bg-primary);
-            border-radius: 12px;
-            padding: 0;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            color: var(--text-primary);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .add-recommendation-form {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-size: 14px;
-        }
-
-        .form-textarea {
-            height: 80px;
-            resize: vertical;
-        }
-
-        .add-rec-btn {
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .add-rec-btn:hover {
-            background: var(--accent-secondary);
-        }
-
-        .recommendation-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            background: var(--bg-secondary);
-        }
-
-        .place-info {
-            flex: 1;
-        }
-
-        .place-info strong {
-            color: var(--text-primary);
-        }
-
-        .category {
-            color: var(--text-secondary);
-            font-size: 0.9em;
-        }
-
-        .notes {
-            color: var(--accent-primary);
-            font-style: italic;
-            margin: 5px 0 0 0;
-            font-size: 0.9em;
-        }
-
-        .remove-rec-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .remove-rec-btn:hover {
-            background: #c82333;
-        }
-
-        .no-recommendations {
-            text-align: center;
-            color: var(--text-secondary);
-            font-style: italic;
-            padding: 20px;
-        }
-    `;
-    document.head.appendChild(style);
-});
-
-// Handle page visibility changes
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    }
-});
+        .setup-btn:hover, .clear-chat
