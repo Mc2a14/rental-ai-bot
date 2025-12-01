@@ -634,7 +634,11 @@ class RentalAIChat {
             
             // Prepare system message with recommendations for local queries
             let systemMessage = '';
-            const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 'beach', 'park', 'attraction', 'nearby', 'close to', 'local', 'recommend', 'suggestion', 'place to go'];
+            const localKeywords = [ 'restaurant', 'food', 'eat', 'cafe', 'bar', 
+        'beach', 'park', 'attraction', 'nearby', 'local', 
+        'recommend', 'things to do', 'activity', 'tour', 
+        'sightseeing', 'place to visit', 'what to do', 'see',
+        'visit', 'explore', 'destination'];
             
             if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
                 systemMessage = `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
