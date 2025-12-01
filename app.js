@@ -45,7 +45,7 @@ app.post('/chat/ai', async (req, res) => {
     const { message, language = 'en', hostConfig, systemMessage } = req.body;
     const openaiApiKey = process.env.OPENAI_API_KEY;
 
-    // Log request details (excluding full message for privacy)
+    // Log request details
     console.log('📝 Request details:', {
       messageLength: message?.length || 0,
       language,
@@ -68,25 +68,68 @@ app.post('/chat/ai', async (req, res) => {
     // Prepare messages for OpenAI
     const messages = [];
     
-    // System message with property context
-    let systemPrompt = 'You are a helpful, friendly rental property assistant. Answer questions about the property, amenities, check-in/out times, local recommendations, and emergency contacts. Keep responses concise but helpful.';
+    // System message with COMPLETE property context
+    let systemPrompt = 'You are a helpful, friendly rental property assistant. Answer questions about the property, amenities, check-in/out times, local recommendations, and emergency contacts. Keep responses concise but helpful. ';
     
-    if (hostConfig) {
-      systemPrompt = `You are the AI assistant for "${hostConfig.name || 'our rental property'}". ` + systemPrompt;
+    if (hostConfig && hostConfig.name) {
+      // Build comprehensive property context
+      let propertyContext = `You are the AI assistant for "${hostConfig.name}". `;
+      
+      // Include ALL fields from hostConfig
+      if (hostConfig.address) {
+        propertyContext += `The property address is: ${hostConfig.address}. `;
+      }
+      
+      if (hostConfig.type) {
+        propertyContext += `Property type: ${hostConfig.type}. `;
+      }
+      
+      if (hostConfig.hostContact) {
+        propertyContext += `Host contact information: ${hostConfig.hostContact}. `;
+      }
+      
+      if (hostConfig.maintenanceContact || hostConfig.emergencyContact) {
+        propertyContext += `Maintenance/emergency contact: ${hostConfig.maintenanceContact || hostConfig.emergencyContact}. `;
+      }
       
       if (hostConfig.checkinTime) {
-        systemPrompt += ` Check-in time is ${hostConfig.checkinTime}.`;
+        propertyContext += `Check-in time: ${hostConfig.checkinTime}. `;
       }
+      
       if (hostConfig.checkoutTime) {
-        systemPrompt += ` Check-out time is ${hostConfig.checkoutTime}.`;
+        propertyContext += `Check-out time: ${hostConfig.checkoutTime}. `;
       }
-      if (hostConfig.amenities?.wifi) {
-        systemPrompt += ` WiFi details: ${hostConfig.amenities.wifi}.`;
+      
+      if (hostConfig.lateCheckout) {
+        propertyContext += `Late checkout policy: ${hostConfig.lateCheckout}. `;
       }
-      if (hostConfig.amenities?.parking) {
-        systemPrompt += ` Parking: ${hostConfig.amenities.parking}.`;
+      
+      if (hostConfig.amenities) {
+        if (hostConfig.amenities.wifi) {
+          propertyContext += `WiFi details: ${hostConfig.amenities.wifi}. `;
+        }
+        if (hostConfig.amenities.parking) {
+          propertyContext += `Parking: ${hostConfig.amenities.parking}. `;
+        }
+        if (hostConfig.amenities.other) {
+          propertyContext += `Other amenities: ${hostConfig.amenities.other}. `;
+        }
       }
+      
+      if (hostConfig.houseRules) {
+        propertyContext += `House rules: ${hostConfig.houseRules}. `;
+      }
+      
+      propertyContext += 'Answer questions accurately based on this information. Be friendly and helpful.';
+      systemPrompt = propertyContext;
     }
+    
+    console.log('📋 System prompt includes:', {
+      hasAddress: !!(hostConfig?.address),
+      hasContact: !!(hostConfig?.hostContact || hostConfig?.maintenanceContact),
+      hasAmenities: !!(hostConfig?.amenities),
+      hasRules: !!(hostConfig?.houseRules)
+    });
     
     messages.push({ role: 'system', content: systemPrompt });
     
@@ -142,17 +185,43 @@ app.post('/chat/ai', async (req, res) => {
     const lowerMessage = (req.body?.message || '').toLowerCase();
     let fallbackResponse = "I'm having trouble connecting to the AI service right now. Please try again in a moment or contact the property manager directly.";
     
-    // Common questions fallbacks
-    if (lowerMessage.includes('check-in') || lowerMessage.includes('checkin')) {
-      fallbackResponse = "Standard check-in time is 3:00 PM. Early check-in may be available upon request.";
-    } else if (lowerMessage.includes('check-out') || lowerMessage.includes('checkout')) {
-      fallbackResponse = "Check-out time is 11:00 AM. Please leave keys on the kitchen counter.";
-    } else if (lowerMessage.includes('wifi') || lowerMessage.includes('internet') || lowerMessage.includes('wi-fi')) {
-      fallbackResponse = "WiFi Network: Guest-WiFi\nPassword: welcome123\nFor 5G devices: Guest-WiFi-5G (same password)";
-    } else if (lowerMessage.includes('restaurant') || lowerMessage.includes('eat') || lowerMessage.includes('food')) {
-      fallbackResponse = "Nearby restaurants:\n1. Main Street Cafe (0.5 miles) - Breakfast & lunch\n2. River View Bistro (1 mile) - Fine dining\n3. Pizza Express (0.3 miles) - Delivery available";
-    } else if (lowerMessage.includes('emergency') || lowerMessage.includes('contact')) {
-      fallbackResponse = "Emergency Contacts:\n• Police/Fire/Medical: 911\n• Property Manager: (555) 123-4567\n• Maintenance: (555) 987-6543\n• After-hours: (555) 555-5555";
+    // Check if we have hostConfig for better fallback
+    const hostConfig = req.body?.hostConfig;
+    
+    if (hostConfig) {
+      // Use actual saved data for fallback
+      if (lowerMessage.includes('check-in') || lowerMessage.includes('checkin')) {
+        fallbackResponse = `Check-in time: ${hostConfig.checkinTime || '3:00 PM'}.`;
+      } else if (lowerMessage.includes('check-out') || lowerMessage.includes('checkout')) {
+        fallbackResponse = `Check-out time: ${hostConfig.checkoutTime || '11:00 AM'}.`;
+      } else if (lowerMessage.includes('wifi') || lowerMessage.includes('internet') || lowerMessage.includes('wi-fi')) {
+        fallbackResponse = `WiFi details: ${hostConfig.amenities?.wifi || 'Network: Guest-WiFi, Password: welcome123'}.`;
+      } else if (lowerMessage.includes('address')) {
+        fallbackResponse = `Address: ${hostConfig.address || 'Address not specified'}.`;
+      } else if (lowerMessage.includes('contact') || lowerMessage.includes('emergency') || lowerMessage.includes('phone')) {
+        fallbackResponse = `Contact information: ${hostConfig.hostContact || 'Contact not specified'}.`;
+        if (hostConfig.maintenanceContact) {
+          fallbackResponse += ` Emergency contact: ${hostConfig.maintenanceContact}.`;
+        }
+      } else if (lowerMessage.includes('amenit')) {
+        fallbackResponse = `Amenities: ${hostConfig.amenities?.other || 'Standard amenities included'}.`;
+        if (hostConfig.amenities?.wifi) {
+          fallbackResponse += ` WiFi: ${hostConfig.amenities.wifi}.`;
+        }
+      }
+    } else {
+      // Generic fallback
+      if (lowerMessage.includes('check-in') || lowerMessage.includes('checkin')) {
+        fallbackResponse = "Standard check-in time is 3:00 PM. Early check-in may be available upon request.";
+      } else if (lowerMessage.includes('check-out') || lowerMessage.includes('checkout')) {
+        fallbackResponse = "Check-out time is 11:00 AM. Please leave keys on the kitchen counter.";
+      } else if (lowerMessage.includes('wifi') || lowerMessage.includes('internet') || lowerMessage.includes('wi-fi')) {
+        fallbackResponse = "WiFi Network: Guest-WiFi\nPassword: welcome123\nFor 5G devices: Guest-WiFi-5G (same password)";
+      } else if (lowerMessage.includes('restaurant') || lowerMessage.includes('eat') || lowerMessage.includes('food')) {
+        fallbackResponse = "Nearby restaurants:\n1. Main Street Cafe (0.5 miles) - Breakfast & lunch\n2. River View Bistro (1 mile) - Fine dining\n3. Pizza Express (0.3 miles) - Delivery available";
+      } else if (lowerMessage.includes('emergency') || lowerMessage.includes('contact')) {
+        fallbackResponse = "Emergency Contacts:\n• Police/Fire/Medical: 911\n• Property Manager: (555) 123-4567\n• Maintenance: (555) 987-6543\n• After-hours: (555) 555-5555";
+      }
     }
     
     res.json({
