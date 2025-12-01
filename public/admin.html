@@ -14,6 +14,17 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .admin-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .admin-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
         }
         
         .admin-header {
@@ -91,6 +102,9 @@
             border-radius: 15px;
             margin-bottom: 20px;
             border-left: 4px solid #3498db;
+            max-width: 100%;
+            overflow: visible;
+            min-height: auto;
         }
         
         .form-section h3 {
@@ -107,6 +121,7 @@
         
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
         
         .form-group label {
@@ -126,6 +141,9 @@
             font-size: 1rem;
             transition: border-color 0.3s;
             box-sizing: border-box;
+            background: white;
+            opacity: 1;
+            visibility: visible;
         }
         
         .form-group input:focus, 
@@ -145,6 +163,31 @@
             color: #7f8c8d;
             margin-top: 5px;
             font-style: italic;
+        }
+        
+        .wifi-examples {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .wifi-examples h5 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .wifi-examples ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+        
+        .wifi-examples li {
+            margin-bottom: 5px;
         }
         
         .button-group {
@@ -220,6 +263,8 @@
             grid-template-columns: 1fr 1fr;
             gap: 30px;
             margin-top: 20px;
+            max-width: 100%;
+            overflow: visible;
         }
 
         .add-recommendation-form {
@@ -302,6 +347,24 @@
             background: #c0392b;
         }
 
+        /* WiFi Section Specific Fixes */
+        #wifiDetails {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+
+        /* Ensure all form elements are properly visible */
+        .form-section input,
+        .form-section textarea,
+        .form-section select {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .setup-steps {
@@ -331,6 +394,18 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            /* Mobile-specific WiFi fixes */
+            #wifiDetails {
+                font-size: 16px !important;
+                min-height: 44px !important;
+            }
+        }
+
+        /* Additional safety styles to prevent hiding */
+        .form-section * {
+            max-height: none !important;
+            overflow: visible !important;
         }
     </style>
 </head>
@@ -426,7 +501,17 @@
                 
                 <div class="form-group">
                     <label for="wifiDetails">WiFi Details *</label>
-                    <input type="text" id="wifiDetails" required placeholder="e.g., Network: GuestWiFi, Password: Welcome123">
+                    <input type="text" id="wifiDetails" required placeholder="e.g., Network: VillaChamitos_Guest, Password: Welcome2024">
+                    <div class="form-help">Your guests will need this information to connect to WiFi</div>
+                    
+                    <div class="wifi-examples">
+                        <h5>📝 Example WiFi formats:</h5>
+                        <ul>
+                            <li><strong>Simple:</strong> Network: VillaChamitos, Password: Welcome123</li>
+                            <li><strong>Detailed:</strong> SSID: VillaChamitos_Guest | Password: StayWithUs2024</li>
+                            <li><strong>Multiple networks:</strong> Main: VillaChamitos (Welcome123) | Backup: VillaChamitos_5G (Welcome123)</li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -526,8 +611,5 @@
     </div>
 
     <script src="./admin.js"></script>
-</body>
-</html>
-/public/admin.js"></script>
 </body>
 </html>
