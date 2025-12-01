@@ -55,8 +55,8 @@
             content: '';
             position: absolute;
             top: 20px;
-            left: 0;
-            right: 0;
+            left: 10%;
+            right: 10%;
             height: 2px;
             background: #e1e5e9;
             z-index: 1;
@@ -67,6 +67,7 @@
             position: relative;
             z-index: 2;
             flex: 1;
+            min-width: 100px;
         }
         
         .step-number {
@@ -80,6 +81,8 @@
             justify-content: center;
             margin: 0 auto 10px;
             font-weight: bold;
+            position: relative;
+            z-index: 3;
         }
         
         .step.active .step-number {
@@ -89,6 +92,7 @@
         .step-text {
             font-size: 0.9rem;
             color: #7f8c8d;
+            font-weight: 500;
         }
         
         .step.active .step-text {
@@ -368,12 +372,22 @@
         /* Responsive design */
         @media (max-width: 768px) {
             .setup-steps {
-                flex-direction: column;
-                gap: 20px;
+                flex-direction: row;
+                gap: 10px;
             }
             
             .setup-steps::before {
-                display: none;
+                left: 5%;
+                right: 5%;
+                top: 20px;
+            }
+            
+            .step {
+                min-width: 80px;
+            }
+            
+            .step-text {
+                font-size: 0.8rem;
             }
             
             .button-group {
