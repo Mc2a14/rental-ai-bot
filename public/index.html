@@ -3,52 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FullStack App - Main</title>
+    <title>Rental AI Assistant - Sunset Beach Villa</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Welcome to FullStack App</h1>
-            <nav>
-                <a href="/admin" class="nav-link">Admin Panel</a>
-                <a href="/api/health" class="nav-link">API Health</a>
-            </nav>
-        </header>
-
-        <main>
-            <section class="hero">
-                <h2>Modern Web Application</h2>
-                <p>Built with Node.js, Express, and vanilla JavaScript</p>
-                <button id="loadData" class="btn">Load Data from API</button>
-            </section>
-
-            <section class="data-section">
-                <h3>API Data</h3>
-                <div id="dataContainer" class="data-container">
-                    <p>Click the button above to load data from the server</p>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-content">
+                <i class="fas fa-robot"></i>
+                <div class="header-text">
+                    <h2>Rental AI Assistant</h2>
+                    <p>Sunset Beach Villa • 24/7 Support</p>
                 </div>
-            </section>
+            </div>
+            <!-- Header controls will be added here by JavaScript -->
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Online</span>
+            </div>
+        </div>
 
-            <section class="features">
-                <div class="feature-card">
-                    <h4>Fast & Lightweight</h4>
-                    <p>Optimized for performance with minimal dependencies</p>
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome message -->
+            <div class="message bot-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
                 </div>
-                <div class="feature-card">
-                    <h4>Secure</h4>
-                    <p>Built with security best practices using Helmet.js</p>
+                <div class="message-content">
+                    <p>Hello! I'm your Rental AI Assistant for <strong id="welcomePropertyName">Sunset Beach Villa</strong>. I can help you with:</p>
+                    <ul>
+                        <li>🏠 Property information & amenities</li>
+                        <li>🕒 Check-in/check-out details</li>
+                        <li>🍽️ Local restaurant recommendations</li>
+                        <li>🚗 Transportation & directions</li>
+                        <li>🚨 Emergency contacts & procedures</li>
+                        <li>📋 House rules & guidelines</li>
+                    </ul>
+                    <p>How can I assist you with your stay today?</p>
+                    <div class="quick-questions">
+                        <button class="quick-btn" onclick="askQuestion('What time is check-in and check-out?')">
+                            Check-in/out times
+                        </button>
+                        <button class="quick-btn" onclick="askQuestion('What are the WiFi details?')">
+                            WiFi Information
+                        </button>
+                        <button class="quick-btn" onclick="askQuestion('What restaurants are nearby?')">
+                            Nearby Restaurants
+                        </button>
+                        <button class="quick-btn" onclick="askQuestion('What are the emergency contacts?')">
+                            Emergency Contacts
+                        </button>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <h4>Scalable</h4>
-                    <p>Ready for deployment on platforms like Railway</p>
-                </div>
-            </section>
-        </main>
+            </div>
+        </div>
 
-        <footer>
-            <p>&copy; 2025 FullStack App. All rights reserved.</p>
-        </footer>
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <p>AI is typing...</p>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Ask about your stay, local recommendations, or property details..."
+                    maxlength="500"
+                >
+                <button id="sendButton" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-footer">
+                <span class="char-count" id="charCount">0/500</span>
+                <span class="disclaimer">Powered by AI • Multi-language support</span>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
