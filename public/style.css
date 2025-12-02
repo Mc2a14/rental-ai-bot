@@ -104,6 +104,23 @@ body {
     gap: 10px;
 }
 
+/* Setup Button */
+.setup-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-inverse);
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.setup-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
 /* Language Selector */
 .language-select {
     background: rgba(255, 255, 255, 0.1);
@@ -458,7 +475,62 @@ body {
     margin-left: 10px;
 }
 
-/* Responsive */
+/* ================================================ */
+/* ADMIN PAGE BUTTON STYLES - ADDED */
+/* ================================================ */
+
+/* Danger button for reset */
+.btn-danger {
+    background: #e74c3c !important;
+    border-color: #c0392b !important;
+    color: white !important;
+}
+
+.btn-danger:hover {
+    background: #c0392b !important;
+    border-color: #a93226 !important;
+}
+
+/* Info button for backup */
+.btn-info {
+    background: #3498db !important;
+    border-color: #2980b9 !important;
+    color: white !important;
+}
+
+.btn-info:hover {
+    background: #2980b9 !important;
+    border-color: #1f618d !important;
+}
+
+/* Edit mode banner styles */
+.edit-mode-banner {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Button spacing in admin */
+.nav-buttons button {
+    margin: 0 5px;
+}
+
+/* Responsive button adjustments */
+@media (max-width: 768px) {
+    .nav-buttons {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .nav-buttons button {
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+    }
+}
+
+/* ================================================ */
+/* RESPONSIVE STYLES */
+/* ================================================ */
+
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -491,6 +563,7 @@ body {
         margin-top: 10px;
     }
     
+    .setup-btn,
     .language-select,
     .theme-toggle,
     .clear-chat-btn {
@@ -518,5 +591,13 @@ body {
     
     .language-select {
         min-width: 80px;
+    }
+    
+    .setup-btn,
+    .language-select,
+    .theme-toggle,
+    .clear-chat-btn {
+        font-size: 0.65rem;
+        padding: 4px 6px;
     }
 }
