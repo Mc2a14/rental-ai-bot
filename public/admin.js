@@ -944,4 +944,41 @@ function setupBackupButton() {
         linkElement.click();
         
         if (window.propertySetup) {
-            window.propertySetup.showTempMessage('Backup downloaded successfully!', '
+            window.propertySetup.showTempMessage('Backup downloaded successfully!', 'success');
+        }
+    });
+}
+
+// ================================================
+// UPDATED INITIALIZATION - ADDED
+// ================================================
+
+// Update the existing initialization function
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("🚀 DOM Content Loaded - Initializing PropertySetup...");
+    try {
+        window.propertySetup = new PropertySetup();
+        console.log("✅ PropertySetup initialized successfully!");
+        
+        // AUTO-LOAD existing configuration
+        autoLoadExistingConfig();
+        
+        // SETUP additional buttons
+        setupResetButton();
+        setupBackupButton();
+        
+        // Extra safety: Ensure WiFi field is visible
+        setTimeout(() => {
+            const wifiInput = document.getElementById('wifiDetails');
+            if (wifiInput) {
+                wifiInput.style.display = 'block';
+                wifiInput.style.visibility = 'visible';
+                wifiInput.style.opacity = '1';
+            }
+        }, 100);
+    } catch (error) {
+        console.error("❌ Error initializing PropertySetup:", error);
+    }
+});
+
+console.log("✅ admin.js loaded completely");
