@@ -769,25 +769,179 @@ function addAppliance() {
     }
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("🚀 DOM Content Loaded - Initializing PropertySetup...");
-    try {
-        window.propertySetup = new PropertySetup();
-        console.log("✅ PropertySetup initialized successfully!");
-        
-        // Extra safety: Ensure WiFi field is visible
-        setTimeout(() => {
-            const wifiInput = document.getElementById('wifiDetails');
-            if (wifiInput) {
-                wifiInput.style.display = 'block';
-                wifiInput.style.visibility = 'visible';
-                wifiInput.style.opacity = '1';
-            }
-        }, 100);
-    } catch (error) {
-        console.error("❌ Error initializing PropertySetup:", error);
-    }
-});
+// ================================================
+// AUTO-LOAD EXISTING CONFIGURATION - ADDED
+// ================================================
 
-console.log("✅ admin.js loaded completely");
+// Add this function to auto-load existing config
+function autoLoadExistingConfig() {
+    console.log("🔄 Attempting to auto-load existing configuration...");
+    
+    try {
+        // Check if configuration exists
+        const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+        const savedAppliances = localStorage.getItem('rental_ai_appliances');
+        const savedRecommendations = localStorage.getItem('rental_ai_recommendations');
+        
+        if (savedConfig) {
+            console.log('📁 Found saved configuration, loading...');
+            const config = JSON.parse(savedConfig);
+            
+            // Populate basic info (Step 1)
+            document.getElementById('propertyName').value = config.name || '';
+            document.getElementById('propertyAddress').value = config.address || '';
+            document.getElementById('propertyType').value = config.type || 'Apartment';
+            
+            // Populate contact info (Step 2)
+            document.getElementById('hostContact').value = config.hostContact || '';
+            document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
+            document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
+            document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
+            document.getElementById('lateCheckout').value = config.lateCheckout || '';
+            
+            // Populate details (Step 3)
+            document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
+            document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
+            document.getElementById('houseRules').value = config.houseRules || '';
+            
+            console.log('✅ Configuration loaded into form');
+            
+            // Show edit mode indicator
+            showEditModeIndicator();
+        }
+        
+        // Appliances and recommendations will auto-load via your existing load functions
+        
+        if (!savedConfig && !savedAppliances && !savedRecommendations) {
+            console.log('ℹ️ No existing configuration found - starting fresh');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error auto-loading configuration:', error);
+    }
+}
+
+// ================================================
+// EDIT MODE INDICATOR - ADDED
+// ================================================
+
+function showEditModeIndicator() {
+    const hasConfig = localStorage.getItem('rentalAIPropertyConfig');
+    
+    if (hasConfig) {
+        // Create edit mode banner
+        const banner = document.createElement('div');
+        banner.className = 'edit-mode-banner';
+        banner.innerHTML = `
+            <div style="background: #d1ecf1; border-left: 4px solid #3498db; padding: 12px 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-edit" style="color: #0c5460;"></i>
+                <div>
+                    <strong style="color: #0c5460;">Edit Mode</strong> - You are editing your existing configuration.
+                    <span style="color: #0c5460; opacity: 0.8; font-size: 0.9em; display: block;">Changes will update your current setup.</span>
+                </div>
+            </div>
+        `;
+        
+        // Insert at the top of the admin container
+        const adminContainer = document.querySelector('.admin-container');
+        if (adminContainer) {
+            const firstChild = adminContainer.firstChild;
+            adminContainer.insertBefore(banner, firstChild);
+        }
+    }
+}
+
+// ================================================
+// RESET BUTTON FUNCTIONALITY - ADDED
+// ================================================
+
+function setupResetButton() {
+    // Create reset button
+    const resetBtn = document.createElement('button');
+    resetBtn.id = 'resetBtn';
+    resetBtn.className = 'btn btn-danger';
+    resetBtn.innerHTML = '<i class="fas fa-trash"></i> Reset All Data';
+    
+    // Add it to the button group
+    const navButtons = document.querySelector('.nav-buttons');
+    if (navButtons) {
+        navButtons.appendChild(resetBtn);
+    }
+    
+    resetBtn.addEventListener('click', function() {
+        if (confirm('⚠️ WARNING: This will delete ALL your property data, appliances, and recommendations. This cannot be undone! Are you sure?')) {
+            // Clear all localStorage data
+            localStorage.removeItem('rentalAIPropertyConfig');
+            localStorage.removeItem('rental_ai_appliances');
+            localStorage.removeItem('rental_ai_recommendations');
+            
+            // Clear form fields
+            document.querySelectorAll('input, textarea, select').forEach(field => {
+                if (field.type !== 'button' && field.type !== 'submit' && field.id !== 'appliance-photo') {
+                    field.value = '';
+                }
+            });
+            
+            // Reset to step 1
+            if (window.propertySetup) {
+                window.propertySetup.currentStep = 1;
+                window.propertySetup.updateStepDisplay();
+                
+                // Clear appliances and recommendations lists
+                window.propertySetup.appliances = [];
+                window.propertySetup.recommendations = [];
+                window.propertySetup.updateAppliancesList();
+                window.propertySetup.updateRecommendationsList();
+            }
+            
+            // Remove edit mode banner
+            const banner = document.querySelector('.edit-mode-banner');
+            if (banner) banner.remove();
+            
+            // Show confirmation
+            if (window.propertySetup) {
+                window.propertySetup.showTempMessage('All data has been reset. You can now start fresh.', 'success');
+            }
+            console.log('🧹 All data reset successfully');
+        }
+    });
+}
+
+// ================================================
+// BACKUP BUTTON FUNCTIONALITY - ADDED
+// ================================================
+
+function setupBackupButton() {
+    // Create backup button
+    const backupBtn = document.createElement('button');
+    backupBtn.id = 'backupBtn';
+    backupBtn.className = 'btn btn-info';
+    backupBtn.innerHTML = '<i class="fas fa-download"></i> Download Backup';
+    
+    // Add it to the button group
+    const navButtons = document.querySelector('.nav-buttons');
+    if (navButtons) {
+        navButtons.appendChild(backupBtn);
+    }
+    
+    backupBtn.addEventListener('click', function() {
+        const config = {
+            property: JSON.parse(localStorage.getItem('rentalAIPropertyConfig') || '{}'),
+            appliances: JSON.parse(localStorage.getItem('rental_ai_appliances') || '[]'),
+            recommendations: JSON.parse(localStorage.getItem('rental_ai_recommendations') || '[]'),
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        const dataStr = JSON.stringify(config, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `rental-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        
+        if (window.propertySetup) {
+            window.propertySetup.showTempMessage('Backup downloaded successfully!', '
