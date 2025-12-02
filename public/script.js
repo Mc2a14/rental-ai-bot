@@ -1003,4 +1003,228 @@ class RentalAIChat {
         formatted = formatted.replace(/(\d+)\.\s/g, '<strong>$1.</strong> ');
         formatted = formatted.replace(/Emergency:/g, '<strong>🚨 Emergency:</strong>');
         formatted = formatted.replace(/Contact:/g, '<strong>📞 Contact:</strong>');
-        formatted = formatted.replace(/Address:/g,
+        formatted = formatted.replace(/Address:/g, '<strong>📍 Address:</strong>');
+        formatted = formatted.replace(/Check-in:/g, '<strong>🕒 Check-in:</strong>');
+        formatted = formatted.replace(/Check-out:/g, '<strong>🕒 Check-out:</strong>');
+        formatted = formatted.replace(/WiFi:/g, '<strong>📶 WiFi:</strong>');
+        formatted = formatted.replace(/Parking:/g, '<strong>🚗 Parking:</strong>');
+        // ADDED: Appliance formatting
+        formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
+        formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
+        formatted = formatted.replace(/Troubleshooting:/g, '<strong>🔧 Troubleshooting:</strong>');
+        formatted = formatted.replace(/Type:/g, '<strong>📝 Type:</strong>');
+        
+        return formatted;
+    }
+
+    showTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.style.display = 'flex';
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+    }
+
+    hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.style.display = 'none';
+        }
+    }
+}
+
+// Helper function to check for local keywords
+function anyKeywordInMessage(message, keywords) {
+    const lowerMessage = message.toLowerCase();
+    return keywords.some(keyword => lowerMessage.includes(keyword));
+}
+
+// Global function for quick questions
+function askQuestion(question) {
+    const messageInput = document.getElementById('messageInput');
+    messageInput.value = question;
+    document.getElementById('sendButton').disabled = false;
+    
+    const chat = window.chat || new RentalAIChat();
+    chat.sendMessage();
+}
+
+// Debug function to check configuration
+function debugConfig() {
+    const config = localStorage.getItem('rentalAIPropertyConfig');
+    const recommendations = localStorage.getItem('rental_ai_recommendations');
+    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
+    
+    if (config) {
+        const parsed = JSON.parse(config);
+        console.log('🔧 Current Host Configuration:', parsed);
+        
+        let alertText = `Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`;
+        
+        // ADDED: Show appliance count
+        if (appliances) {
+            const applianceList = JSON.parse(appliances);
+            alertText += `\nAppliances: ${applianceList.length} configured`;
+        }
+        
+        alert(alertText);
+    } else {
+        console.log('🔧 No host configuration found');
+        alert('No host configuration found. Please run setup first.');
+    }
+}
+
+// Enhanced debug function
+function debugFullConfig() {
+    const config = localStorage.getItem('rentalAIPropertyConfig');
+    const recommendations = localStorage.getItem('rental_ai_recommendations');
+    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
+    
+    if (config) {
+        const parsed = JSON.parse(config);
+        console.log('🔧 FULL Host Configuration:', parsed);
+        
+        let debugInfo = 'Current Configuration:\n';
+        debugInfo += `Property: ${parsed.name || 'Not set'}\n`;
+        debugInfo += `Address: ${parsed.address || 'Not set'}\n`;
+        debugInfo += `Host Contact: ${parsed.hostContact || 'Not set'}\n`;
+        debugInfo += `Maintenance Contact: ${parsed.maintenanceContact || 'Not set'}\n`;
+        debugInfo += `Check-in: ${parsed.checkinTime || 'Not set'}\n`;
+        debugInfo += `Check-out: ${parsed.checkoutTime || 'Not set'}\n`;
+        debugInfo += `WiFi: ${parsed.amenities?.wifi || 'Not set'}\n`;
+        debugInfo += `Other Amenities: ${parsed.amenities?.other || 'Not set'}\n`;
+        debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
+        
+        const recs = recommendations ? JSON.parse(recommendations) : [];
+        debugInfo += `Recommendations: ${recs.length} places\n`;
+        
+        // ADDED: Appliance information
+        const applianceList = appliances ? JSON.parse(appliances) : [];
+        debugInfo += `Appliances: ${applianceList.length} configured\n`;
+        if (applianceList.length > 0) {
+            applianceList.forEach((appliance, index) => {
+                debugInfo += `  ${index + 1}. ${appliance.name} (${appliance.type})\n`;
+            });
+        }
+        
+        alert(debugInfo);
+    } else {
+        console.log('🔧 No host configuration found');
+        alert('No host configuration found. Please run setup first.');
+    }
+}
+
+// Initialize chat when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM Content Loaded - Initializing RentalAIChat...');
+    try {
+        window.chat = new RentalAIChat();
+        console.log('✅ RentalAIChat initialized successfully!');
+        
+        // Add CSS for header controls
+        const style = document.createElement('style');
+        style.textContent = `
+            .header-controls {
+                display: flex !important;
+                align-items: center;
+                gap: 8px;
+                margin-left: auto;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            .setup-btn, .clear-chat-btn, .theme-toggle {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 6px 10px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            .setup-btn:hover, .clear-chat-btn:hover, .theme-toggle:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            
+            .language-select {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 6px 10px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+                cursor: pointer;
+            }
+            
+            .language-select option {
+                background: #2c3e50;
+                color: white;
+            }
+            
+            /* Appliance quick questions */
+            .quick-appliance-section {
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border-color);
+            }
+            
+            .quick-section-title {
+                margin-bottom: 10px;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            
+            .quick-appliance-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .appliance-quick-btn {
+                background: var(--accent-secondary);
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                text-align: center;
+            }
+            
+            .appliance-quick-btn:hover {
+                background: var(--accent-primary);
+            }
+            
+            /* Animation styles */
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+    } catch (error) {
+        console.error('❌ Error initializing RentalAIChat:', error);
+        alert('Error initializing chat. Please check console for details.');
+    }
+});
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+});
