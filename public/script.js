@@ -1,5 +1,7 @@
 class RentalAIChat {
     constructor() {
+        console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
+        
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
         this.themeKey = 'rental_ai_theme';
@@ -7,20 +9,30 @@ class RentalAIChat {
         this.recommendationsKey = 'rental_ai_recommendations';
         this.appliancesKey = 'rental_ai_appliances';
         
-        console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
-        
+        console.log('🔍 Step 1: Loading property config...');
         this.loadPropertyConfig();
+        
+        console.log('🔍 Step 2: Initializing event listeners...');
         this.initializeEventListeners();
         this.updateCharCount();
         this.loadChatHistory();
+        
+        console.log('🔍 Step 3: Creating header controls...');
         this.createHeaderControls();
+        
+        console.log('🔍 Step 4: Loading preferences...');
         this.loadThemePreference();
         this.loadLanguagePreference();
         this.loadRecommendations();
         this.loadAppliances();
         
-        // Refresh config to ensure we have the latest data
+        console.log('🔍 Step 5: Setting up quick questions...');
+        this.setupQuickQuestionButtons();
+        
+        console.log('🔍 Step 6: Refreshing config...');
         this.refreshPropertyConfig();
+        
+        console.log('✅ Chat initialization complete!');
     }
 
     // HOST CONFIGURATION METHODS
@@ -154,11 +166,18 @@ class RentalAIChat {
     }
 
     initializeEventListeners() {
+        console.log('🔍 Setting up event listeners...');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
 
+        if (!messageInput || !sendButton) {
+            console.error('❌ Message input or send button not found!');
+            return;
+        }
+
         // Send message on button click
         sendButton.addEventListener('click', () => this.sendMessage());
+        console.log('✅ Send button listener added');
 
         // Send message on Enter key
         messageInput.addEventListener('keypress', (e) => {
@@ -176,14 +195,24 @@ class RentalAIChat {
             sendButton.disabled = messageInput.value.trim().length === 0;
         });
 
-        // ADDED: Quick question buttons for appliances
-        this.setupQuickQuestionButtons();
+        console.log('✅ All event listeners initialized');
     }
 
     // ADDED: Setup quick question buttons including appliance presets
     setupQuickQuestionButtons() {
+        console.log('🔍 Setting up quick question buttons...');
         const quickQuestionsContainer = document.querySelector('.quick-questions');
-        if (!quickQuestionsContainer) return;
+        if (!quickQuestionsContainer) {
+            console.log('⚠️ Quick questions container not found');
+            return;
+        }
+
+        // Check if appliance section already exists
+        const existingApplianceSection = quickQuestionsContainer.querySelector('.quick-appliance-section');
+        if (existingApplianceSection) {
+            console.log('⚠️ Appliance section already exists, removing...');
+            existingApplianceSection.remove();
+        }
 
         // ADDED: Appliance-specific quick questions
         const applianceButtons = [
@@ -215,6 +244,7 @@ class RentalAIChat {
         
         // Insert appliance section after the existing quick questions
         quickQuestionsContainer.appendChild(applianceSection);
+        console.log('✅ Appliance quick questions added');
     }
 
     // ADDED: Handle appliance question button clicks
@@ -225,31 +255,152 @@ class RentalAIChat {
         this.sendMessage();
     }
 
-    // HEADER CONTROLS METHODS - UPDATED: Removed Recommendations button
+    // HEADER CONTROLS METHODS - FIXED WITH DEBUGGING
     createHeaderControls() {
+        console.log('🔄 Creating header controls...');
+        
+        // Check if header exists
+        const header = document.querySelector('.chat-header');
+        console.log('🔍 Header element found:', !!header);
+        
+        if (!header) {
+            console.error('❌ Chat header not found! Looking for .chat-header');
+            // Try alternative selectors
+            const altHeader = document.querySelector('header');
+            console.log('🔍 Alternative header found:', !!altHeader);
+            
+            // Emergency: Create a temporary header if none exists
+            if (!altHeader) {
+                console.error('❌ No header found at all!');
+                this.createEmergencyHeader();
+                return;
+            }
+            return;
+        }
+        
+        // Check if controls already exist
+        const existingControls = header.querySelector('.header-controls');
+        if (existingControls) {
+            console.log('⚠️ Header controls already exist, removing...');
+            existingControls.remove();
+        }
+        
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
+        console.log('✅ Created headerControls div');
         
-        // Add Setup button (links to admin page) - ONLY admin function visible to users
-        const setupBtn = this.createSetupButton();
+        // Add Setup button
+        const setupBtn = document.createElement('button');
+        setupBtn.className = 'setup-btn';
+        setupBtn.innerHTML = '⚙️ Setup';
+        setupBtn.title = 'Configure your property information';
+        setupBtn.addEventListener('click', () => {
+            window.location.href = '/admin';
+        });
         headerControls.appendChild(setupBtn);
+        console.log('✅ Added Setup button');
         
         // Add Clear Chat button
-        const clearBtn = this.createClearButton();
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-chat-btn';
+        clearBtn.innerHTML = '🗑️ Clear';
+        clearBtn.title = 'Clear conversation history';
+        clearBtn.addEventListener('click', () => this.clearChat());
         headerControls.appendChild(clearBtn);
+        console.log('✅ Added Clear button');
         
         // Add Theme Toggle button
-        const themeToggle = this.createThemeToggle();
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.className = 'theme-toggle';
+        themeToggle.innerHTML = '🌙 Dark';
+        themeToggle.title = 'Toggle dark/light mode';
+        themeToggle.addEventListener('click', () => this.toggleTheme());
         headerControls.appendChild(themeToggle);
+        console.log('✅ Added Theme toggle');
         
         // Add Language Selector
-        const langSelect = this.createLanguageSelector();
-        headerControls.appendChild(langSelect);
+        const langSelect = document.createElement('select');
+        langSelect.id = 'languageSelect';
+        langSelect.className = 'language-select';
+        langSelect.title = 'Select language / Seleccionar idioma / Choisir la langue';
         
-        // Add to header
-        const header = document.querySelector('.chat-header');
-        const statusIndicator = document.querySelector('.status-indicator');
-        header.insertBefore(headerControls, statusIndicator);
+        const languages = [
+            { code: 'en', name: '🇺🇸 English', native: 'English' },
+            { code: 'es', name: '🇪🇸 Español', native: 'Español' },
+            { code: 'fr', name: '🇫🇷 Français', native: 'Français' }
+        ];
+        
+        languages.forEach(lang => {
+            const option = document.createElement('option');
+            option.value = lang.code;
+            option.textContent = lang.name;
+            option.setAttribute('data-native', lang.native);
+            langSelect.appendChild(option);
+        });
+        
+        langSelect.addEventListener('change', (e) => {
+            this.changeLanguage(e.target.value);
+        });
+        headerControls.appendChild(langSelect);
+        console.log('✅ Added Language selector');
+        
+        // Find where to insert
+        const statusIndicator = header.querySelector('.status-indicator');
+        console.log('🔍 Status indicator found:', !!statusIndicator);
+        
+        if (statusIndicator) {
+            header.insertBefore(headerControls, statusIndicator);
+            console.log('✅ Inserted controls before status indicator');
+        } else {
+            header.appendChild(headerControls);
+            console.log('✅ Appended controls to header');
+        }
+        
+        // Force visibility
+        headerControls.style.display = 'flex';
+        headerControls.style.alignItems = 'center';
+        headerControls.style.gap = '8px';
+        headerControls.style.marginLeft = 'auto';
+        headerControls.style.visibility = 'visible';
+        headerControls.style.opacity = '1';
+        
+        console.log('✅ Header controls created successfully!');
+    }
+
+    // Emergency header creation if no header exists
+    createEmergencyHeader() {
+        console.log('🚨 Creating emergency header...');
+        const emergencyHeader = document.createElement('div');
+        emergencyHeader.className = 'emergency-header-controls';
+        emergencyHeader.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 8px;
+        `;
+        
+        // Add Setup button
+        const setupBtn = document.createElement('button');
+        setupBtn.textContent = '⚙️ Setup';
+        setupBtn.style.cssText = 'padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;';
+        setupBtn.addEventListener('click', () => window.location.href = '/admin');
+        emergencyHeader.appendChild(setupBtn);
+        
+        // Add Clear button
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = '🗑️ Clear';
+        clearBtn.style.cssText = 'padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;';
+        clearBtn.addEventListener('click', () => this.clearChat());
+        emergencyHeader.appendChild(clearBtn);
+        
+        document.body.appendChild(emergencyHeader);
+        console.log('✅ Emergency header created');
     }
 
     createSetupButton() {
@@ -464,7 +615,9 @@ class RentalAIChat {
             es: "Pregunte sobre su estadía, recomendaciones locales o instrucciones de electrodomésticos...",
             fr: "Demandez des informations sur votre séjour, des recommandations locales ou des instructions pour les appareils..."
         };
-        messageInput.placeholder = placeholders[langCode] || placeholders.en;
+        if (messageInput) {
+            messageInput.placeholder = placeholders[langCode] || placeholders.en;
+        }
 
         // Update quick question buttons
         this.updateQuickQuestions(langCode);
@@ -696,15 +849,17 @@ class RentalAIChat {
     updateCharCount() {
         const messageInput = document.getElementById('messageInput');
         const charCount = document.getElementById('charCount');
-        const length = messageInput.value.length;
-        charCount.textContent = `${length}/500`;
-        
-        if (length > 450) {
-            charCount.style.color = '#e74c3c';
-        } else if (length > 400) {
-            charCount.style.color = '#f39c12';
-        } else {
-            charCount.style.color = '#7f8c8d';
+        if (messageInput && charCount) {
+            const length = messageInput.value.length;
+            charCount.textContent = `${length}/500`;
+            
+            if (length > 450) {
+                charCount.style.color = '#e74c3c';
+            } else if (length > 400) {
+                charCount.style.color = '#f39c12';
+            } else {
+                charCount.style.color = '#7f8c8d';
+            }
         }
     }
 
@@ -848,138 +1003,4 @@ class RentalAIChat {
         formatted = formatted.replace(/(\d+)\.\s/g, '<strong>$1.</strong> ');
         formatted = formatted.replace(/Emergency:/g, '<strong>🚨 Emergency:</strong>');
         formatted = formatted.replace(/Contact:/g, '<strong>📞 Contact:</strong>');
-        formatted = formatted.replace(/Address:/g, '<strong>📍 Address:</strong>');
-        formatted = formatted.replace(/Check-in:/g, '<strong>🕒 Check-in:</strong>');
-        formatted = formatted.replace(/Check-out:/g, '<strong>🕒 Check-out:</strong>');
-        formatted = formatted.replace(/WiFi:/g, '<strong>📶 WiFi:</strong>');
-        formatted = formatted.replace(/Parking:/g, '<strong>🚗 Parking:</strong>');
-        // ADDED: Appliance formatting
-        formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
-        formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
-        formatted = formatted.replace(/Troubleshooting:/g, '<strong>🔧 Troubleshooting:</strong>');
-        formatted = formatted.replace(/Type:/g, '<strong>📝 Type:</strong>');
-        
-        return formatted;
-    }
-
-    showTypingIndicator() {
-        const typingIndicator = document.getElementById('typingIndicator');
-        typingIndicator.style.display = 'flex';
-        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-    }
-
-    hideTypingIndicator() {
-        document.getElementById('typingIndicator').style.display = 'none';
-    }
-}
-
-// Helper function to check for local keywords
-function anyKeywordInMessage(message, keywords) {
-    const lowerMessage = message.toLowerCase();
-    return keywords.some(keyword => lowerMessage.includes(keyword));
-}
-
-// Global function for quick questions
-function askQuestion(question) {
-    const messageInput = document.getElementById('messageInput');
-    messageInput.value = question;
-    document.getElementById('sendButton').disabled = false;
-    
-    const chat = window.chat || new RentalAIChat();
-    chat.sendMessage();
-}
-
-// Debug function to check configuration
-function debugConfig() {
-    const config = localStorage.getItem('rentalAIPropertyConfig');
-    const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
-    
-    if (config) {
-        const parsed = JSON.parse(config);
-        console.log('🔧 Current Host Configuration:', parsed);
-        
-        let alertText = `Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`;
-        
-        // ADDED: Show appliance count
-        if (appliances) {
-            const applianceList = JSON.parse(appliances);
-            alertText += `\nAppliances: ${applianceList.length} configured`;
-        }
-        
-        alert(alertText);
-    } else {
-        console.log('🔧 No host configuration found');
-        alert('No host configuration found. Please run setup first.');
-    }
-}
-
-// Enhanced debug function
-function debugFullConfig() {
-    const config = localStorage.getItem('rentalAIPropertyConfig');
-    const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
-    
-    if (config) {
-        const parsed = JSON.parse(config);
-        console.log('🔧 FULL Host Configuration:', parsed);
-        
-        let debugInfo = 'Current Configuration:\n';
-        debugInfo += `Property: ${parsed.name || 'Not set'}\n`;
-        debugInfo += `Address: ${parsed.address || 'Not set'}\n`;
-        debugInfo += `Host Contact: ${parsed.hostContact || 'Not set'}\n`;
-        debugInfo += `Maintenance Contact: ${parsed.maintenanceContact || 'Not set'}\n`;
-        debugInfo += `Check-in: ${parsed.checkinTime || 'Not set'}\n`;
-        debugInfo += `Check-out: ${parsed.checkoutTime || 'Not set'}\n`;
-        debugInfo += `WiFi: ${parsed.amenities?.wifi || 'Not set'}\n`;
-        debugInfo += `Other Amenities: ${parsed.amenities?.other || 'Not set'}\n`;
-        debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
-        
-        const recs = recommendations ? JSON.parse(recommendations) : [];
-        debugInfo += `Recommendations: ${recs.length} places\n`;
-        
-        // ADDED: Appliance information
-        const applianceList = appliances ? JSON.parse(appliances) : [];
-        debugInfo += `Appliances: ${applianceList.length} configured\n`;
-        if (applianceList.length > 0) {
-            applianceList.forEach((appliance, index) => {
-                debugInfo += `  ${index + 1}. ${appliance.name} (${appliance.type})\n`;
-            });
-        }
-        
-        alert(debugInfo);
-    } else {
-        console.log('🔧 No host configuration found');
-        alert('No host configuration found. Please run setup first.');
-    }
-}
-
-// Initialize chat when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    window.chat = new RentalAIChat();
-    
-    // Add CSS animations and modal styles
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        .setup-btn, .clear-chat-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: var(--text-inverse);
-            padding: 6px 10px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-right: 8px;
-        }
-        
-        .setup-btn:hover, .clear-chat
+        formatted = formatted.replace(/Address:/g,
