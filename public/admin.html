@@ -259,6 +259,8 @@
             display: flex;
             justify-content: space-between;
             margin-top: 30px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         /* Recommendations Styles */
@@ -351,6 +353,31 @@
             background: #c0392b;
         }
 
+        .btn-info {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-info:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Edit Mode Banner */
+        .edit-mode-banner {
+            animation: fadeIn 0.5s ease;
+            margin-bottom: 20px;
+        }
+
         /* WiFi Section Specific Fixes */
         #wifiDetails {
             display: block !important;
@@ -367,6 +394,14 @@
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
+        }
+
+        /* Button spacing */
+        .nav-buttons button {
+            margin: 0 5px;
+            flex: 1;
+            min-width: 140px;
+            justify-content: center;
         }
 
         /* Responsive design */
@@ -407,6 +442,7 @@
             .nav-buttons button {
                 width: 100%;
                 justify-content: center;
+                min-width: unset;
             }
 
             /* Mobile-specific WiFi fixes */
@@ -420,6 +456,11 @@
         .form-section * {
             max-height: none !important;
             overflow: visible !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -679,6 +720,8 @@
                 <button type="button" class="btn btn-primary" id="submitBtn" style="display: none;">
                     <i class="fas fa-check"></i> Save Configuration
                 </button>
+                
+                <!-- Reset and Backup buttons will be added by JavaScript -->
             </div>
         </form>
 
