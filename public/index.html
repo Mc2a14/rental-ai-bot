@@ -6,6 +6,102 @@
     <title>Rental AI Assistant - Sunset Beach Villa</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Header Controls Styles */
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+        
+        .setup-btn, .clear-chat-btn, .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .setup-btn:hover, .clear-chat-btn:hover, .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .language-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .language-select option {
+            background: #2c3e50;
+            color: white;
+        }
+        
+        /* Appliance quick questions */
+        .quick-appliance-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .quick-section-title {
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .quick-appliance-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .appliance-quick-btn {
+            background: var(--accent-secondary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+        
+        .appliance-quick-btn:hover {
+            background: var(--accent-primary);
+        }
+        
+        /* Theme variables */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --text-inverse: #ffffff;
+            --accent-primary: #3498db;
+            --accent-secondary: #2980b9;
+            --border-color: #e1e5e9;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-inverse: #ffffff;
+            --accent-primary: #3498db;
+            --accent-secondary: #2980b9;
+            --border-color: #404040;
+        }
+    </style>
 </head>
 <body>
     <div class="chat-container">
@@ -14,11 +110,23 @@
             <div class="header-content">
                 <i class="fas fa-robot"></i>
                 <div class="header-text">
-                    <h2>Rental AI Assistant</h2>
-                    <p>Sunset Beach Villa • 24/7 Support</p>
+                    <h2 id="headerTitle">Rental AI Assistant</h2>
+                    <p id="propertySubtitle">Sunset Beach Villa • 24/7 Support</p>
                 </div>
             </div>
-            <!-- Header controls will be added here by JavaScript -->
+            
+            <!-- Header Controls - ADDED -->
+            <div class="header-controls">
+                <button class="setup-btn" onclick="window.location.href='/admin'">⚙️ Setup</button>
+                <button class="clear-chat-btn" onclick="clearChatHistory()">🗑️ Clear</button>
+                <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+                <select id="languageSelect" class="language-select" onchange="changeLanguage(this.value)">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                </select>
+            </div>
+            
             <div class="status-indicator">
                 <span class="status-dot"></span>
                 <span>Online</span>
@@ -41,6 +149,7 @@
                         <li>🚗 Transportation & directions</li>
                         <li>🚨 Emergency contacts & procedures</li>
                         <li>📋 House rules & guidelines</li>
+                        <li>🛠️ Appliance instructions & troubleshooting</li>
                     </ul>
                     <p>How can I assist you with your stay today?</p>
                     <div class="quick-questions">
@@ -56,6 +165,25 @@
                         <button class="quick-btn" onclick="askQuestion('What are the emergency contacts?')">
                             Emergency Contacts
                         </button>
+                        
+                        <!-- Appliance Quick Questions - ADDED -->
+                        <div class="quick-appliance-section">
+                            <h4 class="quick-section-title">Appliance Help</h4>
+                            <div class="quick-appliance-grid">
+                                <button class="appliance-quick-btn" onclick="askQuestion('How do I use the appliances?')">
+                                    🛠️ Appliance Help
+                                </button>
+                                <button class="appliance-quick-btn" onclick="askQuestion('How do I use the oven or microwave?')">
+                                    🍳 Oven/Microwave
+                                </button>
+                                <button class="appliance-quick-btn" onclick="askQuestion('How do I use the washer and dryer?')">
+                                    🧺 Washer/Dryer
+                                </button>
+                                <button class="appliance-quick-btn" onclick="askQuestion('How do I adjust the thermostat?')">
+                                    🌡️ Thermostat
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -77,7 +205,7 @@
                 <input 
                     type="text" 
                     id="messageInput" 
-                    placeholder="Ask about your stay, local recommendations, or property details..."
+                    placeholder="Ask about your stay, local recommendations, or appliance instructions..."
                     maxlength="500"
                 >
                 <button id="sendButton" class="send-button">
@@ -92,5 +220,187 @@
     </div>
 
     <script src="script.js"></script>
+    
+    <script>
+        // Global helper functions for header controls
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.innerHTML = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+            }
+            localStorage.setItem('rental_ai_theme', newTheme);
+            showTempMessage(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode enabled`, 'info');
+        }
+        
+        function changeLanguage(langCode) {
+            localStorage.setItem('rental_ai_language', langCode);
+            const languageNames = { en: 'English', es: 'Español', fr: 'Français' };
+            showTempMessage(`Language changed to ${languageNames[langCode] || 'English'}`, 'info');
+            
+            // Update UI immediately
+            updateUIForLanguage(langCode);
+            
+            // If chat is initialized, use its method
+            if (window.chat && window.chat.updateUIForLanguage) {
+                window.chat.updateUIForLanguage(langCode);
+            }
+        }
+        
+        function clearChatHistory() {
+            if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
+                localStorage.removeItem('rental_ai_chat_history');
+                const chatMessages = document.getElementById('chatMessages');
+                const welcomeMessage = chatMessages.querySelector('.message:first-child');
+                chatMessages.innerHTML = '';
+                if (welcomeMessage) {
+                    chatMessages.appendChild(welcomeMessage);
+                }
+                showTempMessage('Chat history cleared successfully!', 'success');
+            }
+        }
+        
+        function showTempMessage(text, type = 'info') {
+            const tempMsg = document.createElement('div');
+            const backgroundColor = type === 'error' ? '#e74c3c' : type === 'warning' ? '#f39c12' : '#2ecc71';
+            
+            tempMsg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${backgroundColor};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 1000;
+                font-family: Arial, sans-serif;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            tempMsg.textContent = text;
+            document.body.appendChild(tempMsg);
+
+            setTimeout(() => {
+                if (tempMsg.parentNode) {
+                    tempMsg.parentNode.removeChild(tempMsg);
+                }
+            }, 4000);
+        }
+        
+        function updateUIForLanguage(langCode) {
+            const messageInput = document.getElementById('messageInput');
+            const placeholders = {
+                en: "Ask about your stay, local recommendations, or appliance instructions...",
+                es: "Pregunte sobre su estadía, recomendaciones locales o instrucciones de electrodomésticos...",
+                fr: "Demandez des informations sur votre séjour, des recommandations locales ou des instructions pour les appareils..."
+            };
+            if (messageInput) {
+                messageInput.placeholder = placeholders[langCode] || placeholders.en;
+            }
+            
+            // Update quick question buttons
+            const quickQuestions = {
+                en: {
+                    checkin: "Check-in/out times",
+                    wifi: "WiFi Information", 
+                    restaurants: "Nearby Restaurants",
+                    emergency: "Emergency Contacts",
+                    applianceHelp: "🛠️ Appliance Help",
+                    ovenHelp: "🍳 Oven/Microwave",
+                    washerHelp: "🧺 Washer/Dryer",
+                    thermostatHelp: "🌡️ Thermostat"
+                },
+                es: {
+                    checkin: "Horarios de check-in/out",
+                    wifi: "Información del WiFi",
+                    restaurants: "Restaurantes cercanos",
+                    emergency: "Contactos de emergencia",
+                    applianceHelp: "🛠️ Ayuda con Electrodomésticos",
+                    ovenHelp: "🍳 Horno/Microondas",
+                    washerHelp: "🧺 Lavadora/Secadora",
+                    thermostatHelp: "🌡️ Termostato"
+                },
+                fr: {
+                    checkin: "Horaires check-in/out",
+                    wifi: "Informations WiFi",
+                    restaurants: "Restaurants à proximité",
+                    emergency: "Contacts d'urgence",
+                    applianceHelp: "🛠️ Aide aux Appareils",
+                    ovenHelp: "🍳 Four/Micro-ondes",
+                    washerHelp: "🧺 Lave-linge/Sèche-linge",
+                    thermostatHelp: "🌡️ Thermostat"
+                }
+            };
+            
+            const questions = quickQuestions[langCode] || quickQuestions.en;
+            
+            // Update existing quick question buttons
+            const buttons = document.querySelectorAll('.quick-btn');
+            if (buttons.length >= 4) {
+                buttons[0].textContent = questions.checkin;
+                buttons[1].textContent = questions.wifi;
+                buttons[2].textContent = questions.restaurants;
+                buttons[3].textContent = questions.emergency;
+            }
+            
+            // Update appliance quick question buttons
+            const applianceButtons = document.querySelectorAll('.appliance-quick-btn');
+            if (applianceButtons.length >= 4) {
+                applianceButtons[0].textContent = questions.applianceHelp;
+                applianceButtons[1].textContent = questions.ovenHelp;
+                applianceButtons[2].textContent = questions.washerHelp;
+                applianceButtons[3].textContent = questions.thermostatHelp;
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load theme preference
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedTheme = localStorage.getItem('rental_ai_theme');
+            let theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+            }
+            
+            // Load language preference
+            const savedLang = localStorage.getItem('rental_ai_language') || 'en';
+            const langSelect = document.getElementById('languageSelect');
+            if (langSelect) {
+                langSelect.value = savedLang;
+            }
+            updateUIForLanguage(savedLang);
+            
+            // Update property name from saved config
+            try {
+                const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+                if (savedConfig) {
+                    const hostConfig = JSON.parse(savedConfig);
+                    const headerTitle = document.getElementById('headerTitle');
+                    const propertySubtitle = document.getElementById('propertySubtitle');
+                    const welcomePropertyName = document.getElementById('welcomePropertyName');
+                    
+                    if (headerTitle && hostConfig.name) {
+                        headerTitle.textContent = `Rental AI Assistant - ${hostConfig.name}`;
+                    }
+                    if (propertySubtitle && hostConfig.name) {
+                        propertySubtitle.textContent = `${hostConfig.name} • 24/7 Support`;
+                    }
+                    if (welcomePropertyName && hostConfig.name) {
+                        welcomePropertyName.textContent = hostConfig.name;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading property config:', error);
+            }
+            
+            console.log('✅ Header controls initialized successfully!');
+        });
+    </script>
 </body>
 </html>
