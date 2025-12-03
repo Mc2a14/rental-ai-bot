@@ -825,18 +825,7 @@
             }
         }
         
-        /* Fix for very small screens */
-     @media (max-height: 600px) {
-            .empty-state {
-                padding: 30px 20px;
-            }
-            
-            .empty-state i {
-                font-size: 3rem;
-            }
-        }
-        
-        /* ADD THIS RIGHT HERE - Fix for laptop cutoff */
+     /* Fix for laptop cutoff */
         @media (min-width: 769px) {
             .faq-container {
                 padding-top: 20px;
@@ -845,6 +834,28 @@
             body {
                 overflow-y: auto;
             }
+        }
+        
+        /* Force all sections to be visible */
+        .section {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Ensure content loads even if JS fails */
+        #reviewList, #knowledgeBase, #allQuestions {
+            min-height: 100px;
+        }
+        
+        #reviewList:empty::before, 
+        #knowledgeBase:empty::before,
+        #allQuestions:empty::before {
+            content: 'Loading content...';
+            color: #95a5a6;
+            text-align: center;
+            display: block;
+            padding: 40px;
         }
     </style>
 </head>
@@ -1619,24 +1630,37 @@ loadStats() {
             }
         });
         
-        // Initialize on page load
+               // Initialize on page load - SAFE VERSION
         document.addEventListener('DOMContentLoaded', function() {
-            FAQManager.loadAllData();
-            
-            // Auto-refresh every 30 seconds if page is visible
-            setInterval(() => {
-                if (!document.hidden) {
-                    FAQManager.refreshAllData();
-                }
-            }, 30000);
-            
-            // Add keyboard shortcut for new FAQ (Ctrl+N or Cmd+N)
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-                    e.preventDefault();
-                    showAddFAQModal();
-                }
-            });
+            try {
+                FAQManager.loadAllData();
+                
+                // Auto-refresh every 30 seconds if page is visible
+                setInterval(() => {
+                    if (!document.hidden) {
+                        try {
+                            FAQManager.refreshAllData();
+                        } catch (refreshError) {
+                            console.error('Auto-refresh error:', refreshError);
+                        }
+                    }
+                }, 30000);
+                
+                // Add keyboard shortcut for new FAQ (Ctrl+N or Cmd+N)
+                document.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                        e.preventDefault();
+                        showAddFAQModal();
+                    }
+                });
+            } catch (initError) {
+                console.error('Initialization error:', initError);
+                // Show error message to user
+                const errorMsg = document.createElement('div');
+                errorMsg.style.cssText = 'background: #e74c3c; color: white; padding: 20px; margin: 20px; border-radius: 10px; text-align: center;';
+                errorMsg.innerHTML = '<h3>⚠️ Page Load Error</h3><p>Some features may not work properly. Please refresh the page.</p>';
+                document.querySelector('.faq-container').appendChild(errorMsg);
+            }
         });
     </script>
 </body>
