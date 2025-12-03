@@ -127,6 +127,21 @@
             letter-spacing: 1px;
         }
         
+        /* ADD THIS CSS RIGHT HERE - for loading state */
+        /* Ensure stats section always shows */
+        .faq-stats:empty {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .faq-stats:empty::before {
+            content: 'Loading statistics...';
+            color: #95a5a6;
+            font-size: 1.2rem;
+        }
+        
         /* Sections */
         .section {
             background: white;
@@ -758,7 +773,8 @@
             }
             
             .kb-meta {
-                flex-direction: column;
+                flex-direction: co
+                    lumn;
                 align-items: flex-start;
                 gap: 10px;
             }
@@ -810,13 +826,24 @@
         }
         
         /* Fix for very small screens */
-        @media (max-height: 600px) {
+     @media (max-height: 600px) {
             .empty-state {
                 padding: 30px 20px;
             }
             
             .empty-state i {
                 font-size: 3rem;
+            }
+        }
+        
+        /* ADD THIS RIGHT HERE - Fix for laptop cutoff */
+        @media (min-width: 769px) {
+            .faq-container {
+                padding-top: 20px;
+            }
+            
+            body {
+                overflow-y: auto;
             }
         }
     </style>
@@ -831,10 +858,29 @@
             </div>
         </div>
         
-        <!-- Stats Dashboard -->
-        <div class="faq-stats" id="statsDashboard">
-            <!-- Loaded by JavaScript -->
-        </div>
+       <!-- Stats Dashboard -->
+<div class="faq-stats" id="statsDashboard">
+    <div class="stat-card">
+        <div class="stat-label">Total Questions Tracked</div>
+        <div class="stat-number">0</div>
+        <div class="subtext">Questions asked by guests</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Knowledge Base FAQs</div>
+        <div class="stat-number">0</div>
+        <div class="subtext">Answered questions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Needing Review</div>
+        <div class="stat-number">0</div>
+        <div class="subtext">Frequent questions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Frequent Questions</div>
+        <div class="stat-number">0</div>
+        <div class="subtext">Asked 2+ times</div>
+    </div>
+</div>
         
         <!-- Frequent Questions Needing Review -->
         <div class="section">
@@ -968,49 +1014,71 @@
                 this.loadAllData();
             },
             
-            // Load statistics
-            loadStats() {
-                try {
-                    const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
-                    const faqStats = JSON.parse(localStorage.getItem('rental_ai_faq_stats') || '{}');
-                    const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
-                    const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
-                    
-                    const statsHtml = `
-                        <div class="stat-card">
-                            <div class="stat-label">Total Questions Tracked</div>
-                            <div class="stat-number">${faqLog.length}</div>
-                            <div class="subtext">Questions asked by guests</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Knowledge Base FAQs</div>
-                            <div class="stat-number">${knowledgeBase.length}</div>
-                            <div class="subtext">Answered questions</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Needing Review</div>
-                            <div class="stat-number">${reviewList.filter(q => !q.reviewed).length}</div>
-                            <div class="subtext">Frequent questions</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Frequent Questions</div>
-                            <div class="stat-number">${faqStats.frequentQuestions ? faqStats.frequentQuestions.length : 0}</div>
-                            <div class="subtext">Asked 2+ times</div>
-                        </div>
-                    `;
-                    
-                    document.getElementById('statsDashboard').innerHTML = statsHtml;
-                } catch (error) {
-                    console.error('Error loading stats:', error);
-                    document.getElementById('statsDashboard').innerHTML = `
-                        <div class="stat-card">
-                            <div class="stat-label">Error Loading Data</div>
-                            <div class="stat-number">0</div>
-                            <div class="subtext">Check console for details</div>
-                        </div>
-                    `;
-                }
-            },
+           // Load statistics - FIXED VERSION
+loadStats() {
+    try {
+        const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
+        const faqStats = JSON.parse(localStorage.getItem('rental_ai_faq_stats') || '{"frequentQuestions": []}');
+        const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
+        const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
+        
+        // Calculate stats with fallbacks
+        const totalQuestions = faqLog.length || 0;
+        const knowledgeBaseCount = knowledgeBase.length || 0;
+        const needsReviewCount = reviewList.filter(q => !q.reviewed).length || 0;
+        const frequentQuestionsCount = faqStats.frequentQuestions ? faqStats.frequentQuestions.length : 0;
+        
+        const statsHtml = `
+            <div class="stat-card">
+                <div class="stat-label">Total Questions Tracked</div>
+                <div class="stat-number">${totalQuestions}</div>
+                <div class="subtext">Questions asked by guests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Knowledge Base FAQs</div>
+                <div class="stat-number">${knowledgeBaseCount}</div>
+                <div class="subtext">Answered questions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Needing Review</div>
+                <div class="stat-number">${needsReviewCount}</div>
+                <div class="subtext">Frequent questions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Frequent Questions</div>
+                <div class="stat-number">${frequentQuestionsCount}</div>
+                <div class="subtext">Asked 2+ times</div>
+            </div>
+        `;
+        
+        document.getElementById('statsDashboard').innerHTML = statsHtml;
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        // Show default stats even if there's an error
+        document.getElementById('statsDashboard').innerHTML = `
+            <div class="stat-card">
+                <div class="stat-label">Total Questions Tracked</div>
+                <div class="stat-number">0</div>
+                <div class="subtext">Questions asked by guests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Knowledge Base FAQs</div>
+                <div class="stat-number">0</div>
+                <div class="subtext">Answered questions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Needing Review</div>
+                <div class="stat-number">0</div>
+                <div class="subtext">Frequent questions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Frequent Questions</div>
+                <div class="stat-number">0</div>
+                <div class="subtext">Asked 2+ times</div>
+            </div>
+        `;
+    }
+},
             
             // Load questions needing review
             loadReviewList() {
