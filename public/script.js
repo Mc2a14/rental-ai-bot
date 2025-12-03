@@ -1,3 +1,187 @@
+// ================================================
+// FAQ AUTO-LEARNING SYSTEM - ADDED
+// ================================================
+
+const FAQTracker = {
+    // Track a new question
+    trackQuestion(question, propertyId = 'default') {
+        console.log("📝 Tracking question:", question);
+        
+        try {
+            const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
+            
+            // Don't track very short questions
+            if (question.length < 3) return;
+            
+            // Don't track commands or special queries
+            if (question.startsWith('/') || question.includes('password') || question.includes('credit card')) {
+                return;
+            }
+            
+            faqLog.push({
+                id: Date.now() + Math.random(),
+                question: question.trim(),
+                timestamp: new Date().toISOString(),
+                propertyId: propertyId,
+                answered: false,
+                category: this.detectCategory(question)
+            });
+            
+            // Keep only last 1000 questions to avoid storage issues
+            const trimmedLog = faqLog.slice(-1000);
+            localStorage.setItem('rental_ai_faq_log', JSON.stringify(trimmedLog));
+            
+            console.log(`✅ Question logged. Total: ${trimmedLog.length}`);
+            
+            // Check if this is becoming frequent
+            this.analyzeFrequency();
+            
+        } catch (error) {
+            console.error('❌ Error tracking question:', error);
+        }
+    },
+    
+    // Detect question category
+    detectCategory(question) {
+        const q = question.toLowerCase();
+        
+        if (q.includes('wifi') || q.includes('internet') || q.includes('wi-fi')) {
+            return 'wifi';
+        } else if (q.includes('check') && (q.includes('in') || q.includes('out'))) {
+            return 'checkin';
+        } else if (q.includes('appliance') || q.includes('tv') || q.includes('oven') || q.includes('washer')) {
+            return 'appliances';
+        } else if (q.includes('rule') || q.includes('policy') || q.includes('quiet')) {
+            return 'rules';
+        } else if (q.includes('restaurant') || q.includes('eat') || q.includes('food')) {
+            return 'recommendations';
+        } else if (q.includes('emergency') || q.includes('contact') || q.includes('help')) {
+            return 'emergency';
+        } else {
+            return 'general';
+        }
+    },
+    
+    // Analyze frequency of questions
+    analyzeFrequency() {
+        const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
+        const faqStats = JSON.parse(localStorage.getItem('rental_ai_faq_stats') || '{}');
+        
+        // Group questions by text (simplified)
+        const questionCounts = {};
+        faqLog.forEach(entry => {
+            const key = entry.question.toLowerCase().trim();
+            questionCounts[key] = (questionCounts[key] || 0) + 1;
+        });
+        
+        // Update stats
+        faqStats.totalQuestions = faqLog.length;
+        faqStats.uniqueQuestions = Object.keys(questionCounts).length;
+        faqStats.lastAnalyzed = new Date().toISOString();
+        
+        // Find frequent questions (asked 2+ times)
+        const frequentQuestions = Object.entries(questionCounts)
+            .filter(([_, count]) => count >= 2)
+            .map(([question, count]) => ({ question, count }));
+        
+        faqStats.frequentQuestions = frequentQuestions;
+        localStorage.setItem('rental_ai_faq_stats', JSON.stringify(faqStats));
+        
+        console.log(`📊 FAQ Stats: ${frequentQuestions.length} frequent questions`);
+        
+        // If we have very frequent questions (3+ times), flag for review
+        const needsReview = frequentQuestions.filter(q => q.count >= 3);
+        if (needsReview.length > 0) {
+            this.flagForReview(needsReview);
+        }
+    },
+    
+    // Flag questions for host review
+    flagForReview(questions) {
+        const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
+        
+        questions.forEach(q => {
+            // Check if already in review list
+            const exists = reviewList.some(item => 
+                item.question.toLowerCase() === q.question.toLowerCase()
+            );
+            
+            if (!exists) {
+                reviewList.push({
+                    question: q.question,
+                    count: q.count,
+                    firstSeen: new Date().toISOString(),
+                    lastSeen: new Date().toISOString(),
+                    reviewed: false
+                });
+            }
+        });
+        
+        // Keep list manageable
+        const trimmedList = reviewList.slice(-50);
+        localStorage.setItem('rental_ai_review_list', JSON.stringify(trimmedList));
+        
+        console.log(`🚩 ${questions.length} questions flagged for review`);
+        
+        // Show notification if host is on admin page
+        this.showNotificationIfNeeded(questions.length);
+    },
+    
+    // Show notification in admin
+    showNotificationIfNeeded(count) {
+        // Could trigger a visual notification in admin panel
+        // For now, just log
+        console.log(`💡 ${count} frequent questions need review. Visit /faq-manage.html`);
+    },
+    
+    // Get FAQ knowledge base
+    getKnowledgeBase() {
+        return JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
+    },
+    
+    // Add to knowledge base
+    addToKnowledgeBase(question, answer, category = 'general') {
+        const knowledgeBase = this.getKnowledgeBase();
+        
+        knowledgeBase.push({
+            id: Date.now(),
+            question: question.trim(),
+            answer: answer.trim(),
+            category: category,
+            created: new Date().toISOString(),
+            uses: 0,
+            confidence: 1.0
+        });
+        
+        localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
+        console.log(`✅ Added to knowledge base: "${question}"`);
+    },
+    
+    // Find answer in knowledge base
+    findAnswer(question) {
+        const knowledgeBase = this.getKnowledgeBase();
+        const q = question.toLowerCase();
+        
+        // Simple keyword matching (can be improved later)
+        for (const entry of knowledgeBase) {
+            const entryQ = entry.question.toLowerCase();
+            
+            // Check for direct match or keyword inclusion
+            if (q.includes(entryQ) || entryQ.includes(q)) {
+                entry.uses = (entry.uses || 0) + 1;
+                localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
+                return entry.answer;
+            }
+        }
+        
+        return null;
+    }
+};
+
+// ================================================
+// MAIN CHAT CLASS
+// ================================================
+
 class RentalAIChat {
     constructor() {
         console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
@@ -863,13 +1047,16 @@ class RentalAIChat {
         }
     }
 
-    // UPDATED: sendMessage method with proper property config refresh including appliances
+    // UPDATED: sendMessage method with FAQ tracking and knowledge base check
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
 
         if (!message) return;
 
+        // TRACK QUESTION FOR FAQ AUTO-LEARNING
+        FAQTracker.trackQuestion(message); // ADDED THIS LINE
+        
         messageInput.value = '';
         this.updateCharCount();
         document.getElementById('sendButton').disabled = true;
@@ -879,6 +1066,16 @@ class RentalAIChat {
 
         try {
             const currentLanguage = this.getCurrentLanguage();
+            
+            // FIRST: Check if we have an FAQ answer in knowledge base
+            const faqAnswer = FAQTracker.findAnswer(message); // ADDED THIS CHECK
+            
+            if (faqAnswer) {
+                console.log("✅ Found FAQ answer in knowledge base");
+                this.hideTypingIndicator();
+                this.addMessage(faqAnswer, 'bot');
+                return; // Skip AI API call
+            }
             
             // Get FRESH host configuration every time (don't rely on cached this.hostConfig)
             const hostConfig = this.getHostConfig();
@@ -920,8 +1117,9 @@ class RentalAIChat {
                 language: currentLanguage,
                 hostConfig: hostConfig,
                 hasRecommendations: this.hostRecommendations.length,
-                hasAppliances: this.hostAppliances.length, // ADDED
-                hasSystemMessage: !!systemMessage
+                hasAppliances: this.hostAppliances.length,
+                hasSystemMessage: !!systemMessage,
+                checkedFAQ: true // ADDED
             });
 
             const response = await fetch(this.apiUrl, {
@@ -944,7 +1142,7 @@ class RentalAIChat {
                 this.addMessage(data.response, 'bot');
                 console.log('🌍 Response language:', data.detectedLanguage);
                 console.log('🏠 Using custom config:', data.usingCustomConfig);
-                console.log('🛠️ Using appliances data:', data.usingAppliances || false); // ADDED
+                console.log('🛠️ Using appliances data:', data.usingAppliances || false);
                 
                 // Show notification if using custom config
                 if (data.usingCustomConfig && hostConfig) {
@@ -1056,7 +1254,8 @@ function askQuestion(question) {
 function debugConfig() {
     const config = localStorage.getItem('rentalAIPropertyConfig');
     const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
+    const appliances = localStorage.getItem('rental_ai_appliances');
+    const faqLog = localStorage.getItem('rental_ai_faq_log'); // ADDED
     
     if (config) {
         const parsed = JSON.parse(config);
@@ -1070,6 +1269,12 @@ function debugConfig() {
             alertText += `\nAppliances: ${applianceList.length} configured`;
         }
         
+        // ADDED: Show FAQ stats
+        if (faqLog) {
+            const faqList = JSON.parse(faqLog);
+            alertText += `\nQuestions Tracked: ${faqList.length}`;
+        }
+        
         alert(alertText);
     } else {
         console.log('🔧 No host configuration found');
@@ -1081,7 +1286,9 @@ function debugConfig() {
 function debugFullConfig() {
     const config = localStorage.getItem('rentalAIPropertyConfig');
     const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances'); // ADDED
+    const appliances = localStorage.getItem('rental_ai_appliances');
+    const faqLog = localStorage.getItem('rental_ai_faq_log'); // ADDED
+    const faqStats = localStorage.getItem('rental_ai_faq_stats'); // ADDED
     
     if (config) {
         const parsed = JSON.parse(config);
@@ -1110,11 +1317,28 @@ function debugFullConfig() {
             });
         }
         
+        // ADDED: FAQ Statistics
+        if (faqLog) {
+            const faqList = JSON.parse(faqLog);
+            debugInfo += `\nFAQ Tracking:\n`;
+            debugInfo += `  Questions Tracked: ${faqList.length}\n`;
+        }
+        
+        if (faqStats) {
+            const stats = JSON.parse(faqStats);
+            debugInfo += `  Frequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}\n`;
+        }
+        
         alert(debugInfo);
     } else {
         console.log('🔧 No host configuration found');
         alert('No host configuration found. Please run setup first.');
     }
+}
+
+// ADDED: FAQ Manager shortcut
+function openFAQManager() {
+    window.open('/faq-manage.html', '_blank');
 }
 
 // Initialize chat when page loads
@@ -1123,6 +1347,20 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         window.chat = new RentalAIChat();
         console.log('✅ RentalAIChat initialized successfully!');
+        
+        // Add FAQ Manager button to header controls if needed
+        setTimeout(() => {
+            const headerControls = document.querySelector('.header-controls');
+            if (headerControls) {
+                const faqBtn = document.createElement('button');
+                faqBtn.className = 'setup-btn';
+                faqBtn.innerHTML = '🧠 FAQ Manager';
+                faqBtn.title = 'Manage FAQ auto-learning';
+                faqBtn.addEventListener('click', openFAQManager);
+                headerControls.appendChild(faqBtn);
+                console.log('✅ FAQ Manager button added to header');
+            }
+        }, 1000);
         
         // Add CSS for header controls
         const style = document.createElement('style');
