@@ -7,8 +7,21 @@
     <link rel="stylesheet" href="./style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
         .faq-container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -18,11 +31,25 @@
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 2px solid #e1e5e9;
+            position: sticky;
+            top: 0;
+            background: #f5f7fa;
+            z-index: 100;
+            padding-top: 10px;
         }
         
         .faq-header h1 {
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+        }
+        
+        .faq-header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin: 0;
+            max-width: 600px;
+            margin: 0 auto;
         }
         
         .faq-stats {
@@ -36,8 +63,14 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
         }
         
         .stat-number {
@@ -45,34 +78,54 @@
             font-weight: bold;
             color: #3498db;
             margin: 10px 0;
+            line-height: 1;
         }
         
         .stat-label {
             color: #7f8c8d;
             font-size: 0.9rem;
+            font-weight: 500;
         }
         
         .section {
             background: white;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
         }
         
         .section h2 {
             color: #2c3e50;
-            margin-bottom: 20px;
+            margin: 0 0 15px 0;
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 1.4rem;
+        }
+        
+        .section p {
+            color: #7f8c8d;
+            margin: 0 0 20px 0;
+            line-height: 1.5;
         }
         
         .question-list {
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
             border: 1px solid #e1e5e9;
             border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .question-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .question-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
         }
         
         .question-item {
@@ -81,6 +134,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: white;
+            margin: 0;
         }
         
         .question-item:last-child {
@@ -90,6 +145,9 @@
         .question-text {
             flex: 1;
             font-weight: 500;
+            color: #2c3e50;
+            line-height: 1.4;
+            padding-right: 15px;
         }
         
         .question-count {
@@ -99,19 +157,25 @@
             border-radius: 12px;
             font-size: 0.8rem;
             margin-left: 10px;
+            display: inline-block;
         }
         
         .question-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-shrink: 0;
         }
         
         .btn-sm {
-            padding: 5px 10px;
+            padding: 6px 12px;
             font-size: 0.8rem;
             border-radius: 5px;
             border: none;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
         }
         
         .btn-success {
@@ -119,14 +183,50 @@
             color: white;
         }
         
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
         .btn-warning {
             background: #f39c12;
             color: white;
         }
         
+        .btn-warning:hover {
+            background: #d68910;
+        }
+        
         .btn-info {
             background: #3498db;
             color: white;
+        }
+        
+        .btn-info:hover {
+            background: #2980b9;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .knowledge-base-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .knowledge-base-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .knowledge-base-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
         }
         
         .knowledge-base-item {
@@ -135,25 +235,45 @@
             border-radius: 8px;
             margin-bottom: 15px;
             border-left: 4px solid #2ecc71;
+            transition: transform 0.2s;
+        }
+        
+        .knowledge-base-item:hover {
+            transform: translateX(5px);
         }
         
         .kb-question {
             font-weight: bold;
             color: #2c3e50;
             margin-bottom: 10px;
+            font-size: 1.1rem;
         }
         
         .kb-answer {
             color: #34495e;
             margin-bottom: 10px;
             white-space: pre-line;
+            line-height: 1.6;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e1e5e9;
         }
         
         .kb-meta {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             color: #7f8c8d;
             font-size: 0.8rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .kb-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .modal {
@@ -167,6 +287,7 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
         
         .modal-content {
@@ -174,9 +295,18 @@
             padding: 30px;
             border-radius: 10px;
             max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+            width: 100%;
+            max-height: 90vh;
             overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .modal-content h2 {
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .form-group {
@@ -185,45 +315,188 @@
         
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #2c3e50;
+            font-size: 0.9rem;
         }
         
         .form-group input,
         .form-group textarea,
         .form-group select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 1rem;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
         
         .form-group textarea {
             height: 150px;
             resize: vertical;
+            line-height: 1.5;
         }
         
         .nav-buttons {
-            text-align: center;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
             margin-top: 30px;
+            flex-wrap: wrap;
         }
         
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            border-radius: 6px;
             font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            font-weight: 500;
+            text-decoration: none;
         }
         
         .btn-primary {
             background: #3498db;
             color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        
+        .empty-state p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .section-header h2 {
+            margin: 0;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .faq-container {
+                padding: 15px;
+            }
+            
+            .faq-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .faq-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .question-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .question-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            
+            .kb-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .faq-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-actions {
+                flex-wrap: wrap;
+            }
+            
+            .btn-sm {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -231,7 +504,7 @@
     <div class="faq-container">
         <div class="faq-header">
             <h1><i class="fas fa-brain"></i> FAQ Auto-learning Manager</h1>
-            <p>Your AI assistant is learning from guest questions. Review and manage FAQs here.</p>
+            <p>Your AI assistant learns from guest questions. Review frequent questions and add answers here.</p>
         </div>
         
         <!-- Stats Dashboard -->
@@ -241,8 +514,10 @@
         
         <!-- Frequent Questions Needing Review -->
         <div class="section">
-            <h2><i class="fas fa-flag"></i> Frequent Questions Needing Review</h2>
-            <p>These questions have been asked multiple times by guests. Add answers to help future guests.</p>
+            <div class="section-header">
+                <h2><i class="fas fa-flag"></i> Frequent Questions Needing Review</h2>
+                <small>Questions asked 3+ times by guests</small>
+            </div>
             <div class="question-list" id="reviewList">
                 <!-- Loaded by JavaScript -->
             </div>
@@ -250,20 +525,26 @@
         
         <!-- Knowledge Base -->
         <div class="section">
-            <h2><i class="fas fa-book"></i> Knowledge Base</h2>
-            <p>Questions with answers that your AI assistant can automatically respond to.</p>
-            <button class="btn btn-primary" onclick="showAddFAQModal()">
-                <i class="fas fa-plus"></i> Add New FAQ
-            </button>
-            <div id="knowledgeBase">
+            <div class="section-header">
+                <div>
+                    <h2><i class="fas fa-book"></i> Knowledge Base</h2>
+                    <small>Questions with answers that your AI can respond to automatically</small>
+                </div>
+                <button class="btn btn-primary" onclick="showAddFAQModal()">
+                    <i class="fas fa-plus"></i> Add New FAQ
+                </button>
+            </div>
+            <div class="knowledge-base-container" id="knowledgeBase">
                 <!-- Loaded by JavaScript -->
             </div>
         </div>
         
-        <!-- All Tracked Questions -->
+        <!-- Recent Guest Questions -->
         <div class="section">
-            <h2><i class="fas fa-history"></i> Recent Guest Questions</h2>
-            <p>All questions asked by guests (last 1000).</p>
+            <div class="section-header">
+                <h2><i class="fas fa-history"></i> Recent Guest Questions</h2>
+                <small>Last 50 questions asked by guests</small>
+            </div>
             <div class="question-list" id="allQuestions">
                 <!-- Loaded by JavaScript -->
             </div>
@@ -275,6 +556,9 @@
             </button>
             <button class="btn btn-info" onclick="window.location.href='/'">
                 <i class="fas fa-robot"></i> Test Chat
+            </button>
+            <button class="btn" onclick="clearAllFAQData()" style="background: #95a5a6; color: white;">
+                <i class="fas fa-trash"></i> Clear FAQ Data
             </button>
         </div>
     </div>
@@ -308,10 +592,10 @@
             </div>
             
             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn btn-primary" onclick="saveFAQ()">
+                <button class="btn btn-primary" onclick="saveFAQ()" style="flex: 1;">
                     <i class="fas fa-save"></i> Save FAQ
                 </button>
-                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">
+                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white; flex: 1;">
                     Cancel
                 </button>
             </div>
@@ -331,184 +615,245 @@
             
             // Load statistics
             loadStats() {
-                const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
-                const faqStats = JSON.parse(localStorage.getItem('rental_ai_faq_stats') || '{}');
-                const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
-                const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
-                
-                const statsHtml = `
-                    <div class="stat-card">
-                        <div class="stat-label">Total Questions Tracked</div>
-                        <div class="stat-number">${faqLog.length}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Knowledge Base FAQs</div>
-                        <div class="stat-number">${knowledgeBase.length}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Needing Review</div>
-                        <div class="stat-number">${reviewList.filter(q => !q.reviewed).length}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Frequent Questions</div>
-                        <div class="stat-number">${faqStats.frequentQuestions ? faqStats.frequentQuestions.length : 0}</div>
-                    </div>
-                `;
-                
-                document.getElementById('statsDashboard').innerHTML = statsHtml;
+                try {
+                    const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
+                    const faqStats = JSON.parse(localStorage.getItem('rental_ai_faq_stats') || '{}');
+                    const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
+                    const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
+                    
+                    const statsHtml = `
+                        <div class="stat-card">
+                            <div class="stat-label">Total Questions Tracked</div>
+                            <div class="stat-number">${faqLog.length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Knowledge Base FAQs</div>
+                            <div class="stat-number">${knowledgeBase.length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Needing Review</div>
+                            <div class="stat-number">${reviewList.filter(q => !q.reviewed).length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Frequent Questions</div>
+                            <div class="stat-number">${faqStats.frequentQuestions ? faqStats.frequentQuestions.length : 0}</div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('statsDashboard').innerHTML = statsHtml;
+                } catch (error) {
+                    console.error('Error loading stats:', error);
+                    document.getElementById('statsDashboard').innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-label">Error Loading Data</div>
+                            <div class="stat-number">0</div>
+                        </div>
+                    `;
+                }
             },
             
             // Load questions needing review
             loadReviewList() {
-                const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]')
-                    .filter(q => !q.reviewed);
-                
-                if (reviewList.length === 0) {
-                    document.getElementById('reviewList').innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                            <p>No questions need review right now. Great job!</p>
+                try {
+                    const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]')
+                        .filter(q => !q.reviewed)
+                        .sort((a, b) => b.count - a.count);
+                    
+                    const container = document.getElementById('reviewList');
+                    if (!container) return;
+                    
+                    if (reviewList.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-check-circle"></i>
+                                <p>No questions need review right now. Great job!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const reviewHtml = reviewList.map(item => `
+                        <div class="question-item">
+                            <div class="question-text">
+                                ${this.escapeHtml(item.question)}
+                                <span class="question-count">${item.count}×</span>
+                            </div>
+                            <div class="question-actions">
+                                <button class="btn-sm btn-success" onclick="FAQManager.addAnswer('${this.escapeHtmlForJS(item.question)}')">
+                                    <i class="fas fa-reply"></i> Add Answer
+                                </button>
+                                <button class="btn-sm btn-warning" onclick="FAQManager.markReviewed('${this.escapeHtmlForJS(item.question)}')">
+                                    <i class="fas fa-check"></i> Reviewed
+                                </button>
+                                <button class="btn-sm btn-info" onclick="FAQManager.ignoreQuestion('${this.escapeHtmlForJS(item.question)}')">
+                                    <i class="fas fa-times"></i> Ignore
+                                </button>
+                            </div>
                         </div>
-                    `;
-                    return;
+                    `).join('');
+                    
+                    container.innerHTML = reviewHtml;
+                } catch (error) {
+                    console.error('Error loading review list:', error);
                 }
-                
-                const reviewHtml = reviewList.map(item => `
-                    <div class="question-item">
-                        <div class="question-text">
-                            ${item.question}
-                            <span class="question-count">${item.count}×</span>
-                        </div>
-                        <div class="question-actions">
-                            <button class="btn-sm btn-success" onclick="FAQManager.addAnswer('${this.escapeHtml(item.question)}')">
-                                <i class="fas fa-reply"></i> Add Answer
-                            </button>
-                            <button class="btn-sm btn-warning" onclick="FAQManager.markReviewed('${this.escapeHtml(item.question)}')">
-                                <i class="fas fa-check"></i> Mark Reviewed
-                            </button>
-                            <button class="btn-sm btn-info" onclick="FAQManager.ignoreQuestion('${this.escapeHtml(item.question)}')">
-                                <i class="fas fa-times"></i> Ignore
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-                
-                document.getElementById('reviewList').innerHTML = reviewHtml;
             },
             
             // Load knowledge base
             loadKnowledgeBase() {
-                const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]')
-                    .sort((a, b) => new Date(b.created) - new Date(a.created));
-                
-                if (knowledgeBase.length === 0) {
-                    document.getElementById('knowledgeBase').innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                            <i class="fas fa-book" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                            <p>No FAQs in knowledge base yet. Add some to help your AI assistant!</p>
+                try {
+                    const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]')
+                        .sort((a, b) => new Date(b.created) - new Date(a.created));
+                    
+                    const container = document.getElementById('knowledgeBase');
+                    if (!container) return;
+                    
+                    if (knowledgeBase.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-book"></i>
+                                <p>No FAQs in knowledge base yet. Add some to help your AI assistant!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const kbHtml = knowledgeBase.map(item => `
+                        <div class="knowledge-base-item">
+                            <div class="kb-question">${this.escapeHtml(item.question)}</div>
+                            <div class="kb-answer">${this.escapeHtml(item.answer)}</div>
+                            <div class="kb-meta">
+                                <span><i class="fas fa-tag"></i> ${item.category}</span>
+                                <span><i class="fas fa-chart-line"></i> Used ${item.uses || 0} times</span>
+                                <span><i class="fas fa-calendar"></i> ${new Date(item.created).toLocaleDateString()}</span>
+                                <button class="btn-sm btn-danger" onclick="FAQManager.deleteFAQ(${item.id})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
                         </div>
-                    `;
-                    return;
+                    `).join('');
+                    
+                    container.innerHTML = kbHtml;
+                } catch (error) {
+                    console.error('Error loading knowledge base:', error);
                 }
-                
-                const kbHtml = knowledgeBase.map(item => `
-                    <div class="knowledge-base-item">
-                        <div class="kb-question">${item.question}</div>
-                        <div class="kb-answer">${item.answer}</div>
-                        <div class="kb-meta">
-                            <span><i class="fas fa-tag"></i> ${item.category}</span>
-                            <span><i class="fas fa-chart-line"></i> Used ${item.uses || 0} times</span>
-                            <span><i class="fas fa-calendar"></i> ${new Date(item.created).toLocaleDateString()}</span>
-                            <button class="btn-sm" onclick="FAQManager.deleteFAQ(${item.id})" style="background: #e74c3c; color: white;">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-                
-                document.getElementById('knowledgeBase').innerHTML = kbHtml;
             },
             
             // Load all tracked questions
             loadAllQuestions() {
-                const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]')
-                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                    .slice(0, 50); // Show only recent 50
-                
-                if (faqLog.length === 0) {
-                    document.getElementById('allQuestions').innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                            <p>No questions tracked yet. Questions will appear here as guests ask them.</p>
+                try {
+                    const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]')
+                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                        .slice(0, 50);
+                    
+                    const container = document.getElementById('allQuestions');
+                    if (!container) return;
+                    
+                    if (faqLog.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <p>No questions tracked yet. Questions will appear here as guests ask them.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const questionsHtml = faqLog.map(item => `
+                        <div class="question-item">
+                            <div class="question-text">${this.escapeHtml(item.question)}</div>
+                            <div class="question-actions">
+                                <span style="color: #7f8c8d; font-size: 0.8rem;">
+                                    ${new Date(item.timestamp).toLocaleString()}
+                                </span>
+                            </div>
                         </div>
-                    `;
-                    return;
+                    `).join('');
+                    
+                    container.innerHTML = questionsHtml;
+                } catch (error) {
+                    console.error('Error loading all questions:', error);
                 }
-                
-                const questionsHtml = faqLog.map(item => `
-                    <div class="question-item">
-                        <div class="question-text">${item.question}</div>
-                        <div class="question-actions">
-                            <span style="color: #7f8c8d; font-size: 0.8rem;">
-                                ${new Date(item.timestamp).toLocaleString()}
-                            </span>
-                        </div>
-                    </div>
-                `).join('');
-                
-                document.getElementById('allQuestions').innerHTML = questionsHtml;
             },
             
             // Add answer to a frequent question
             addAnswer(question) {
                 document.getElementById('faqQuestion').value = question;
                 document.getElementById('addFAQModal').style.display = 'flex';
+                document.getElementById('faqQuestion').focus();
             },
             
             // Mark question as reviewed
             markReviewed(question) {
-                const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
-                const updatedList = reviewList.map(item => {
-                    if (item.question === question) {
-                        return { ...item, reviewed: true };
+                if (confirm('Mark this question as reviewed?')) {
+                    try {
+                        const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
+                        const updatedList = reviewList.map(item => {
+                            if (item.question === question) {
+                                return { ...item, reviewed: true };
+                            }
+                            return item;
+                        });
+                        
+                        localStorage.setItem('rental_ai_review_list', JSON.stringify(updatedList));
+                        this.loadAllData();
+                        this.showMessage('Question marked as reviewed', 'success');
+                    } catch (error) {
+                        console.error('Error marking as reviewed:', error);
+                        this.showMessage('Error updating question', 'error');
                     }
-                    return item;
-                });
-                
-                localStorage.setItem('rental_ai_review_list', JSON.stringify(updatedList));
-                this.loadAllData();
-                
-                this.showMessage('Question marked as reviewed', 'success');
+                }
             },
             
             // Ignore question (don't show again)
             ignoreQuestion(question) {
-                const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
-                const updatedList = reviewList.filter(item => item.question !== question);
-                
-                localStorage.setItem('rental_ai_review_list', JSON.stringify(updatedList));
-                this.loadAllData();
-                
-                this.showMessage('Question ignored', 'info');
+                if (confirm('Ignore this question? It will be removed from the review list.')) {
+                    try {
+                        const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
+                        const updatedList = reviewList.filter(item => item.question !== question);
+                        
+                        localStorage.setItem('rental_ai_review_list', JSON.stringify(updatedList));
+                        this.loadAllData();
+                        this.showMessage('Question ignored', 'info');
+                    } catch (error) {
+                        console.error('Error ignoring question:', error);
+                        this.showMessage('Error ignoring question', 'error');
+                    }
+                }
             },
             
             // Delete FAQ from knowledge base
             deleteFAQ(id) {
                 if (confirm('Are you sure you want to delete this FAQ?')) {
-                    const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
-                    const updatedKB = knowledgeBase.filter(item => item.id !== id);
-                    
-                    localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(updatedKB));
-                    this.loadAllData();
-                    
-                    this.showMessage('FAQ deleted', 'success');
+                    try {
+                        const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
+                        const updatedKB = knowledgeBase.filter(item => item.id !== id);
+                        
+                        localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(updatedKB));
+                        this.loadAllData();
+                        this.showMessage('FAQ deleted', 'success');
+                    } catch (error) {
+                        console.error('Error deleting FAQ:', error);
+                        this.showMessage('Error deleting FAQ', 'error');
+                    }
                 }
             },
             
             // Utility: Escape HTML for safety
             escapeHtml(text) {
+                if (!text) return '';
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            },
+            
+            // Utility: Escape for JavaScript strings
+            escapeHtmlForJS(text) {
+                if (!text) return '';
+                return text
+                    .replace(/\\/g, '\\\\')
+                    .replace(/'/g, "\\'")
+                    .replace(/"/g, '\\"')
+                    .replace(/\n/g, '\\n')
+                    .replace(/\r/g, '\\r');
             },
             
             // Show temporary message
@@ -526,10 +871,11 @@
                     color: white;
                     padding: 12px 20px;
                     border-radius: 8px;
-                    z-index: 1000;
+                    z-index: 2000;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                     max-width: 300px;
                     word-wrap: break-word;
+                    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
                 `;
                 message.textContent = text;
                 document.body.appendChild(message);
@@ -542,12 +888,31 @@
             }
         };
         
+        // Clear all FAQ data
+        function clearAllFAQData() {
+            if (confirm('⚠️ WARNING: This will delete ALL FAQ tracking data, including questions, stats, and knowledge base. This cannot be undone! Are you sure?')) {
+                try {
+                    localStorage.removeItem('rental_ai_faq_log');
+                    localStorage.removeItem('rental_ai_faq_stats');
+                    localStorage.removeItem('rental_ai_review_list');
+                    localStorage.removeItem('rental_ai_knowledge_base');
+                    
+                    FAQManager.loadAllData();
+                    FAQManager.showMessage('All FAQ data cleared successfully', 'success');
+                } catch (error) {
+                    console.error('Error clearing FAQ data:', error);
+                    FAQManager.showMessage('Error clearing data', 'error');
+                }
+            }
+        }
+        
         // Global functions for modal
         function showAddFAQModal() {
             document.getElementById('faqQuestion').value = '';
             document.getElementById('faqAnswer').value = '';
             document.getElementById('faqCategory').value = 'general';
             document.getElementById('addFAQModal').style.display = 'flex';
+            document.getElementById('faqQuestion').focus();
         }
         
         function closeModal() {
@@ -564,35 +929,54 @@
                 return;
             }
             
-            // Add to knowledge base
-            const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
-            knowledgeBase.push({
-                id: Date.now(),
-                question: question,
-                answer: answer,
-                category: category,
-                created: new Date().toISOString(),
-                uses: 0
-            });
-            
-            localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-            
-            // Mark as reviewed if it was in review list
-            const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
-            const updatedList = reviewList.map(item => {
-                if (item.question === question) {
-                    return { ...item, reviewed: true };
-                }
-                return item;
-            });
-            
-            localStorage.setItem('rental_ai_review_list', JSON.stringify(updatedList));
-            
-            // Close modal and refresh
-            closeModal();
-            FAQManager.loadAllData();
-            FAQManager.showMessage('FAQ added to knowledge base!', 'success');
+            try {
+                // Add to knowledge base
+                const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
+                knowledgeBase.push({
+                    id: Date.now(),
+                    question: question,
+                    answer: answer,
+                    category: category,
+                    created: new Date().toISOString(),
+                    uses: 0
+                });
+                
+                localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
+                
+                // Mark as reviewed if it was in review list
+                const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
+                const updatedList = reviewList.map(item => {
+                    if (item.question === question) {
+                        return { ...item, reviewed: true };
+                    }
+                    return item;
+                });
+                
+                localStorage.setItem('rental_ai_review_list', JSON.stringify(updatedList));
+                
+                // Close modal and refresh
+                closeModal();
+                FAQManager.loadAllData();
+                FAQManager.showMessage('FAQ added to knowledge base!', 'success');
+            } catch (error) {
+                console.error('Error saving FAQ:', error);
+                FAQManager.showMessage('Error saving FAQ', 'error');
+            }
         }
+        
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('addFAQModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
