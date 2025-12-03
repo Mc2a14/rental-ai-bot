@@ -44,7 +44,12 @@ const FAQTracker = {
     detectCategory(question) {
         const q = question.toLowerCase();
         
-        if (q.includes('wifi') || q.includes('internet') || q.includes('wi-fi')) {
+        // ADDED: Trash/Garbage category first
+        if (q.includes('trash') || q.includes('garbage') || q.includes('rubbish') || 
+            q.includes('waste') || q.includes('dispose') || q.includes('bin') || 
+            q.includes('bags') || q.includes('dumpster')) {
+            return 'trash';
+        } else if (q.includes('wifi') || q.includes('internet') || q.includes('wi-fi')) {
             return 'wifi';
         } else if (q.includes('check') && (q.includes('in') || q.includes('out'))) {
             return 'checkin';
@@ -58,6 +63,12 @@ const FAQTracker = {
             return 'emergency';
         } else if (q.includes('beach') || q.includes('playa') || q.includes('ocean') || q.includes('sea')) {
             return 'beach';
+        } else if (q.includes('parking') || q.includes('car') || q.includes('vehicle')) {
+            return 'parking';
+        } else if (q.includes('key') || q.includes('lock') || q.includes('door') || q.includes('access')) {
+            return 'access';
+        } else if (q.includes('clean') || q.includes('cleaning') || q.includes('towel') || q.includes('linen')) {
+            return 'cleaning';
         } else {
             return 'general';
         }
@@ -113,7 +124,8 @@ const FAQTracker = {
                     count: q.count,
                     firstSeen: new Date().toISOString(),
                     lastSeen: new Date().toISOString(),
-                    reviewed: false
+                    reviewed: false,
+                    category: this.detectCategory(q.question)
                 });
             }
         });
@@ -149,11 +161,12 @@ const FAQTracker = {
             category: category,
             created: new Date().toISOString(),
             uses: 0,
-            confidence: 1.0
+            confidence: 1.0,
+            lastUsed: new Date().toISOString()
         });
         
         localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-        console.log(`✅ Added to knowledge base: "${question}"`);
+        console.log(`✅ Added to knowledge base: "${question}" (Category: ${category})`);
     },
     
     // IMPROVED: Find answer in knowledge base
@@ -166,6 +179,12 @@ const FAQTracker = {
         
         // Define comprehensive synonym groups for common rental topics
         const synonymGroups = {
+            // Trash/Garbage - EXPANDED
+            'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 
+                     'throw away', 'dispose', 'bin', 'dump', 'bags', 'full bags',
+                     'garbage bags', 'trash bags', 'where does', 'where do', 'where to',
+                     'disposal', 'dumpster', 'take out', 'put out'],
+            
             // Location/Places
             'beach': ['beach', 'playa', 'shore', 'coast', 'seaside', 'ocean', 'sand', 'waves'],
             'pool': ['pool', 'swimming', 'jacuzzi', 'hot tub', 'spa', 'swim'],
@@ -182,7 +201,6 @@ const FAQTracker = {
             'time': ['time', 'hour', 'when', 'schedule', 'clock'],
             
             // Housekeeping
-            'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 'throw away', 'dispose'],
             'clean': ['clean', 'cleaning', 'tidy', 'maid', 'housekeeping', 'towels', 'linens'],
             'key': ['key', 'lock', 'door', 'enter', 'access', 'code'],
             
@@ -195,19 +213,22 @@ const FAQTracker = {
             'how': ['how', 'operate', 'use', 'work', 'function'],
             'where': ['where', 'location', 'place', 'find', 'locate'],
             'what': ['what', 'which', 'tell me about', 'information'],
-            'can': ['can', 'could', 'may', 'able', 'possible', 'allow']
+            'can': ['can', 'could', 'may', 'able', 'possible', 'allow'],
+            'please': ['please', 'could you', 'can you', 'would you']
         };
         
         // Common question patterns to normalize
         const questionPatterns = [
             { pattern: /^(what is|what's) (the|a|an)?/i, replace: '' },
             { pattern: /^(how do i|how to|how can i)/i, replace: '' },
-            { pattern: /^(where is|where are|where can i)/i, replace: '' },
+            { pattern: /^(where is|where are|where can i|where should i|where do i)/i, replace: '' },
             { pattern: /^(when is|when are|when can i)/i, replace: '' },
             { pattern: /^(do you have|is there|are there)/i, replace: '' },
             { pattern: /^(can i|may i|could i)/i, replace: '' },
-            { pattern: /^(tell me about|i need|i want)/i, replace: '' },
-            { pattern: /[?,.!]/g, replace: '' }
+            { pattern: /^(tell me about|i need|i want|i\'m looking for)/i, replace: '' },
+            { pattern: /^(please tell me|could you tell me|can you tell me)/i, replace: '' },
+            { pattern: /[?,.!]/g, replace: '' },
+            { pattern: /\s+/g, replace: ' ' }
         ];
         
         // Normalize the question
@@ -249,9 +270,10 @@ const FAQTracker = {
                     entryWords.has(word) && word.length > 2
                 );
                 
-                // Calculate similarity score
+                // Calculate similarity score - FIXED: Prevent division by zero
                 const union = new Set([...questionWords, ...entryWords]);
-                const similarity = intersection.size / union.size;
+                const unionSize = union.size || 1; // Prevent division by zero
+                const similarity = intersection.length / unionSize;
                 score = Math.min(similarity * 100, 80);
                 
                 // Boost for important keyword matches
@@ -265,6 +287,13 @@ const FAQTracker = {
                 if (entry.category && this.detectCategory(q) === entry.category) {
                     score += 15;
                 }
+                
+                // Boost for question words match
+                const questionWordsList = ['where', 'what', 'how', 'when', 'why', 'who'];
+                const matchingQuestionWords = questionWordsList.filter(word => 
+                    q.includes(word) && entryQ.includes(word)
+                );
+                score += matchingQuestionWords.length * 10;
             }
             
             // Additional boosting factors
@@ -273,13 +302,16 @@ const FAQTracker = {
             if (lengthDiff < 10) score += 5;
             
             // Common word boost
-            const commonWords = ['the', 'and', 'for', 'with', 'from'];
+            const commonWords = ['the', 'and', 'for', 'with', 'from', 'to', 'a', 'an', 'in', 'on', 'at'];
             const commonMatches = commonWords.filter(word => 
                 normalizedQ.includes(word) && normalizedEntryQ.includes(word)
             );
             score += commonMatches.length * 2;
             
-            return { entry, score, normalizedEntryQ };
+            // Usage boost - more used answers get slightly higher score
+            score += Math.min((entry.uses || 0) * 0.5, 10);
+            
+            return { entry, score: Math.round(score), normalizedEntryQ };
         });
         
         // Sort by score (highest first)
@@ -290,7 +322,7 @@ const FAQTracker = {
         if (topMatches.length > 0) {
             console.log('🔍 Top FAQ Matches:');
             topMatches.forEach((match, i) => {
-                console.log(`  ${i+1}. "${match.entry.question}" → ${Math.round(match.score)}%`);
+                console.log(`  ${i+1}. "${match.entry.question}" → ${match.score}%`);
             });
         }
         
@@ -300,38 +332,91 @@ const FAQTracker = {
         
         if (bestMatch && bestMatch.score >= threshold) {
             bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
+            bestMatch.entry.lastUsed = new Date().toISOString();
             localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-            console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${Math.round(bestMatch.score)}%)`);
+            console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${bestMatch.score}%)`);
             return bestMatch.entry.answer;
         }
         
-        console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? Math.round(scoredEntries[0].score) : 0}%)`);
+        console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? scoredEntries[0].score : 0}%)`);
         return null;
     },
     
-   // Helper: Get expanded words with synonyms
+    // Helper: Get expanded words with synonyms
     getExpandedWords(text, synonymGroups) {
-        const words = text.split(/\s+/).filter(word => word.length > 2);
+        if (!text || text.trim().length === 0) return new Set();
+        
+        const words = text.toLowerCase().split(/\s+/).filter(word => word.length > 1);
         const expandedSet = new Set();
         
         words.forEach(word => {
-            expandedSet.add(word);
+            // Clean the word
+            const cleanWord = word.replace(/[^a-z]/g, '');
+            if (cleanWord.length < 2) return;
+            
+            expandedSet.add(cleanWord);
             
             // Add synonyms
             for (const [key, synonyms] of Object.entries(synonymGroups)) {
-                if (synonyms.includes(word)) {
-                    synonyms.forEach(synonym => expandedSet.add(synonym));
+                if (synonyms.includes(cleanWord)) {
+                    synonyms.forEach(synonym => {
+                        if (synonym.length > 1) expandedSet.add(synonym);
+                    });
                 }
             }
             
             // Add stemmed versions (simple)
-            if (word.endsWith('s')) expandedSet.add(word.slice(0, -1));
-            if (word.endsWith('ing')) expandedSet.add(word.slice(0, -3));
-            if (word.endsWith('ed')) expandedSet.add(word.slice(0, -2));
+            if (cleanWord.endsWith('s') && cleanWord.length > 3) expandedSet.add(cleanWord.slice(0, -1));
+            if (cleanWord.endsWith('ing') && cleanWord.length > 4) expandedSet.add(cleanWord.slice(0, -3));
+            if (cleanWord.endsWith('ed') && cleanWord.length > 3) expandedSet.add(cleanWord.slice(0, -2));
         });
         
         return expandedSet;
     },
+    
+    // ADDED: Auto-learn from successful AI answers
+    autoLearnFromAnswer(question, aiAnswer) {
+        try {
+            const knowledgeBase = this.getKnowledgeBase();
+            const q = question.toLowerCase().trim();
+            
+            // Check if this question already exists in knowledge base
+            const existingEntry = knowledgeBase.find(entry => 
+                entry.question.toLowerCase().trim() === q
+            );
+            
+            if (existingEntry) {
+                // Update existing entry if AI answer is different
+                if (existingEntry.answer !== aiAnswer) {
+                    existingEntry.answer = aiAnswer;
+                    existingEntry.lastUpdated = new Date().toISOString();
+                    localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
+                    console.log(`🔄 Updated existing FAQ entry: "${question}"`);
+                }
+                return;
+            }
+            
+            // Only auto-learn if this is a frequently asked question
+            const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
+            const similarQuestions = faqLog.filter(entry => 
+                entry.question.toLowerCase().includes(q.substring(0, 10)) || 
+                q.includes(entry.question.toLowerCase().substring(0, 10))
+            );
+            
+            if (similarQuestions.length >= 2) {
+                // Add to knowledge base as auto-learned
+                this.addToKnowledgeBase(
+                    question,
+                    aiAnswer,
+                    this.detectCategory(question)
+                );
+                console.log(`🤖 Auto-learned from AI answer: "${question.substring(0, 50)}..."`);
+            }
+            
+        } catch (error) {
+            console.error('Error in auto-learn:', error);
+        }
+    }
 };
 // ================================================
 // MAIN CHAT CLASS
@@ -1210,7 +1295,7 @@ class RentalAIChat {
         if (!message) return;
 
         // TRACK QUESTION FOR FAQ AUTO-LEARNING
-        FAQTracker.trackQuestion(message); // ADDED THIS LINE
+        FAQTracker.trackQuestion(message);
         
         messageInput.value = '';
         this.updateCharCount();
@@ -1223,7 +1308,7 @@ class RentalAIChat {
             const currentLanguage = this.getCurrentLanguage();
             
             // FIRST: Check if we have an FAQ answer in knowledge base
-            const faqAnswer = FAQTracker.findAnswer(message); // ADDED THIS CHECK
+            const faqAnswer = FAQTracker.findAnswer(message);
             
             if (faqAnswer) {
                 console.log("✅ Found FAQ answer in knowledge base");
@@ -1232,7 +1317,7 @@ class RentalAIChat {
                 return; // Skip AI API call
             }
             
-            // Get FRESH host configuration every time (don't rely on cached this.hostConfig)
+            // Get FRESH host configuration every time
             const hostConfig = this.getHostConfig();
             
             // Prepare system messages with recommendations AND appliances for relevant queries
@@ -1245,7 +1330,7 @@ class RentalAIChat {
                 'sightseeing', 'place to visit', 'what to do', 'see',
                 'visit', 'explore', 'destination'];
             
-            // ADDED: Check if question is about appliances
+            // Check if question is about appliances
             const applianceKeywords = ['appliance', 'oven', 'microwave', 'stove', 'cooktop',
                 'washer', 'dryer', 'laundry', 'washing machine',
                 'dishwasher', 'refrigerator', 'fridge', 'freezer',
@@ -1260,7 +1345,7 @@ class RentalAIChat {
                 systemMessage += `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
             }
             
-            // ADDED: Include appliances context for appliance questions
+            // Include appliances context for appliance questions
             if (anyKeywordInMessage(message, applianceKeywords) && this.hostAppliances.length > 0) {
                 if (systemMessage) systemMessage += "\n\n";
                 systemMessage += `When users ask about appliances, use these instructions:\n\n${this.getAppliancesText()}`;
@@ -1274,8 +1359,12 @@ class RentalAIChat {
                 hasRecommendations: this.hostRecommendations.length,
                 hasAppliances: this.hostAppliances.length,
                 hasSystemMessage: !!systemMessage,
-                checkedFAQ: true // ADDED
+                checkedFAQ: true
             });
+
+            // Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
@@ -1287,8 +1376,11 @@ class RentalAIChat {
                     language: currentLanguage,
                     hostConfig: hostConfig,
                     systemMessage: systemMessage
-                })
+                }),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             const data = await response.json();
             this.hideTypingIndicator();
@@ -1298,6 +1390,9 @@ class RentalAIChat {
                 console.log('🌍 Response language:', data.detectedLanguage);
                 console.log('🏠 Using custom config:', data.usingCustomConfig);
                 console.log('🛠️ Using appliances data:', data.usingAppliances || false);
+                
+                // Auto-learn from successful AI answers for frequently asked questions
+                FAQTracker.autoLearnFromAnswer(message, data.response);
                 
                 // Show notification if using custom config
                 if (data.usingCustomConfig && hostConfig) {
@@ -1312,10 +1407,19 @@ class RentalAIChat {
 
         } catch (error) {
             this.hideTypingIndicator();
-            this.addMessage(
-                "Sorry, I'm experiencing connection issues. Please check your internet connection and try again.",
-                'bot'
-            );
+            
+            if (error.name === 'AbortError') {
+                this.addMessage(
+                    "The request took too long. Please try again with a simpler question.",
+                    'bot'
+                );
+            } else {
+                this.addMessage(
+                    "Sorry, I'm experiencing connection issues. Please check your internet connection and try again.",
+                    'bot'
+                );
+            }
+            console.error('Network error:', error);
         }
     }
 
@@ -1361,6 +1465,9 @@ class RentalAIChat {
         formatted = formatted.replace(/Check-out:/g, '<strong>🕒 Check-out:</strong>');
         formatted = formatted.replace(/WiFi:/g, '<strong>📶 WiFi:</strong>');
         formatted = formatted.replace(/Parking:/g, '<strong>🚗 Parking:</strong>');
+        // ADDED: Trash/Garbage formatting
+        formatted = formatted.replace(/Trash:/g, '<strong>🗑️ Trash:</strong>');
+        formatted = formatted.replace(/Garbage:/g, '<strong>🗑️ Garbage:</strong>');
         // ADDED: Appliance formatting
         formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
         formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
@@ -1410,7 +1517,9 @@ function debugConfig() {
     const config = localStorage.getItem('rentalAIPropertyConfig');
     const recommendations = localStorage.getItem('rental_ai_recommendations');
     const appliances = localStorage.getItem('rental_ai_appliances');
-    const faqLog = localStorage.getItem('rental_ai_faq_log'); // ADDED
+    const faqLog = localStorage.getItem('rental_ai_faq_log');
+    const faqStats = localStorage.getItem('rental_ai_faq_stats');
+    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
     
     if (config) {
         const parsed = JSON.parse(config);
@@ -1418,16 +1527,24 @@ function debugConfig() {
         
         let alertText = `Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`;
         
-        // ADDED: Show appliance count
         if (appliances) {
             const applianceList = JSON.parse(appliances);
             alertText += `\nAppliances: ${applianceList.length} configured`;
         }
         
-        // ADDED: Show FAQ stats
         if (faqLog) {
             const faqList = JSON.parse(faqLog);
             alertText += `\nQuestions Tracked: ${faqList.length}`;
+        }
+        
+        if (faqStats) {
+            const stats = JSON.parse(faqStats);
+            alertText += `\nFrequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}`;
+        }
+        
+        if (knowledgeBase) {
+            const kb = JSON.parse(knowledgeBase);
+            alertText += `\nFAQ Knowledge Base: ${kb.length} entries`;
         }
         
         alert(alertText);
@@ -1442,8 +1559,9 @@ function debugFullConfig() {
     const config = localStorage.getItem('rentalAIPropertyConfig');
     const recommendations = localStorage.getItem('rental_ai_recommendations');
     const appliances = localStorage.getItem('rental_ai_appliances');
-    const faqLog = localStorage.getItem('rental_ai_faq_log'); // ADDED
-    const faqStats = localStorage.getItem('rental_ai_faq_stats'); // ADDED
+    const faqLog = localStorage.getItem('rental_ai_faq_log');
+    const faqStats = localStorage.getItem('rental_ai_faq_stats');
+    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
     
     if (config) {
         const parsed = JSON.parse(config);
@@ -1463,7 +1581,6 @@ function debugFullConfig() {
         const recs = recommendations ? JSON.parse(recommendations) : [];
         debugInfo += `Recommendations: ${recs.length} places\n`;
         
-        // ADDED: Appliance information
         const applianceList = appliances ? JSON.parse(appliances) : [];
         debugInfo += `Appliances: ${applianceList.length} configured\n`;
         if (applianceList.length > 0) {
@@ -1472,7 +1589,6 @@ function debugFullConfig() {
             });
         }
         
-        // ADDED: FAQ Statistics
         if (faqLog) {
             const faqList = JSON.parse(faqLog);
             debugInfo += `\nFAQ Tracking:\n`;
@@ -1482,6 +1598,15 @@ function debugFullConfig() {
         if (faqStats) {
             const stats = JSON.parse(faqStats);
             debugInfo += `  Frequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}\n`;
+        }
+        
+        if (knowledgeBase) {
+            const kb = JSON.parse(knowledgeBase);
+            debugInfo += `  Knowledge Base Entries: ${kb.length}\n`;
+            kb.slice(0, 5).forEach((entry, index) => {
+                debugInfo += `    ${index + 1}. "${entry.question.substring(0, 30)}..." (Uses: ${entry.uses || 0})\n`;
+            });
+            if (kb.length > 5) debugInfo += `    ... and ${kb.length - 5} more\n`;
         }
         
         alert(debugInfo);
@@ -1494,6 +1619,19 @@ function debugFullConfig() {
 // ADDED: FAQ Manager shortcut
 function openFAQManager() {
     window.open('/faq-manage.html', '_blank');
+}
+
+// ADDED: Test FAQ matching
+function testFAQMatch(question) {
+    console.log('🧪 Testing FAQ match for:', question);
+    const result = FAQTracker.findAnswer(question);
+    if (result) {
+        console.log('✅ Found match:', result.substring(0, 100) + '...');
+        return result;
+    } else {
+        console.log('❌ No match found');
+        return null;
+    }
 }
 
 // Initialize chat when page loads
