@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FAQ Auto-learning Manager - Rental AI Assistant</title>
     <link rel="stylesheet" href="./style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
         }
         
         body {
@@ -21,37 +25,17 @@
             position: relative;
         }
         
-        /* iOS Safari 11.2+ */
-        @supports (padding-top: constant(safe-area-inset-top)) {
-            body {
-                padding-top: constant(safe-area-inset-top);
-                padding-left: constant(safe-area-inset-left);
-                padding-right: constant(safe-area-inset-right);
-                padding-bottom: constant(safe-area-inset-bottom);
-            }
-        }
-
-        /* iOS Safari 11.2+ */
-        @supports (padding-top: env(safe-area-inset-top)) {
-            body {
-                padding-top: env(safe-area-inset-top);
-                padding-left: env(safe-area-inset-left);
-                padding-right: env(safe-area-inset-right);
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-        }
-        
         .faq-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
         }
         
         /* FIXED: Header without sticky positioning to prevent cutoff */
         .faq-header {
             text-align: center;
             margin-bottom: 30px;
-            padding-top: 10px;
             position: relative;
         }
         
@@ -62,6 +46,8 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border-left: 6px solid #3498db;
             margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
         }
         
         .faq-header h1 {
@@ -695,6 +681,26 @@
             background: linear-gradient(135deg, #3498db, #2980b9);
         }
         
+        /* Prevent cutoff with top safe area */
+        @media (max-height: 700px) {
+            .faq-header {
+                margin-bottom: 20px;
+            }
+            
+            .header-content {
+                padding: 20px;
+            }
+            
+            .faq-stats {
+                margin-bottom: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+        }
+        
         /* Responsive Design */
         @media (max-width: 992px) {
             .faq-container {
@@ -801,23 +807,22 @@
             .modal-content {
                 padding: 20px;
             }
-        }
-        
-        /* Fix for mobile viewport cutoff */
-        @media (max-width: 768px) {
-            .faq-header {
-                padding-top: 5px;
-            }
             
-            .header-content {
-                padding: 20px;
+            .faq-container {
+                padding: 10px;
             }
         }
         
-        /* Ensure content is always visible */
+        /* Prevent any shaking or jumping */
+        html, body {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: none;
+        }
+        
         .faq-container {
-            position: relative;
-            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
     </style>
 </head>
@@ -1551,25 +1556,9 @@
             }
         });
         
-        // Function to check for viewport issues
-        function checkViewportIssues() {
-            const header = document.querySelector('.faq-header');
-            if (header) {
-                const rect = header.getBoundingClientRect();
-                if (rect.top < 0) {
-                    // Header is being cut off
-                    document.body.style.paddingTop = `${Math.abs(rect.top) + 20}px`;
-                } else if (rect.top > 20 && document.body.style.paddingTop) {
-                    // Remove padding if not needed
-                    document.body.style.paddingTop = '';
-                }
-            }
-        }
-        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             FAQManager.loadAllData();
-            checkViewportIssues();
             
             // Auto-refresh every 30 seconds if page is visible
             setInterval(() => {
@@ -1585,10 +1574,6 @@
                     showAddFAQModal();
                 }
             });
-            
-            // Check for viewport issues on resize and scroll
-            window.addEventListener('resize', checkViewportIssues);
-            window.addEventListener('scroll', checkViewportIssues);
         });
     </script>
 </body>
