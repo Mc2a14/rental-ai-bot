@@ -311,6 +311,7 @@
         
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
         
         .form-group label {
@@ -410,6 +411,53 @@
             margin: 0;
         }
         
+        /* FAQ Suggestions */
+        .faq-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .suggestion-header {
+            padding: 10px;
+            background: #f8f9fa;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+        
+        .suggestion-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background: #f0f7ff;
+        }
+        
+        .suggestion-question {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .suggestion-answer {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             body {
@@ -480,23 +528,6 @@
                 font-size: 0.7rem;
                 padding: 4px 8px;
             }
-        }
-        
-        /* Loading animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -571,6 +602,7 @@
             <div class="form-group">
                 <label for="faqQuestion">Question *</label>
                 <input type="text" id="faqQuestion" placeholder="What guests ask...">
+                <div id="faqSuggestions" class="faq-suggestions"></div>
             </div>
             
             <div class="form-group">
@@ -588,6 +620,8 @@
                     <option value="rules">House Rules</option>
                     <option value="emergency">Emergency</option>
                     <option value="recommendations">Recommendations</option>
+                    <option value="beach">Beach</option>
+                    <option value="directions">Directions</option>
                 </select>
             </div>
             
@@ -888,6 +922,93 @@
             }
         };
         
+        // Find similar FAQs for suggestions
+        function findSimilarFAQs(question) {
+            try {
+                const knowledgeBase = JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
+                if (knowledgeBase.length === 0) return [];
+                
+                const q = question.toLowerCase().trim();
+                
+                // Score each FAQ for similarity
+                const scoredFAQs = knowledgeBase.map(faq => {
+                    const faqQ = faq.question.toLowerCase().trim();
+                    let score = 0;
+                    
+                    // 1. Exact match
+                    if (q === faqQ) {
+                        score = 100;
+                    }
+                    // 2. Contains match
+                    else if (q.includes(faqQ) || faqQ.includes(q)) {
+                        score = 80;
+                    }
+                    // 3. Word overlap
+                    else {
+                        const questionWords = new Set(q.split(/\s+/).filter(w => w.length > 3));
+                        const faqWords = new Set(faqQ.split(/\s+/).filter(w => w.length > 3));
+                        
+                        const intersection = [...questionWords].filter(word => faqWords.has(word));
+                        score = (intersection.length / Math.max(questionWords.size, faqWords.size)) * 100;
+                    }
+                    
+                    // Boost for keyword matches
+                    const keywords = ['beach', 'playa', 'restaurant', 'wifi', 'check', 'appliance', 'oven', 'how', 'what', 'where'];
+                    const commonKeywords = keywords.filter(keyword => 
+                        q.includes(keyword) && faqQ.includes(keyword)
+                    );
+                    score += commonKeywords.length * 5;
+                    
+                    return { faq, score };
+                });
+                
+                // Sort by score and return top matches
+                return scoredFAQs
+                    .filter(item => item.score >= 20)
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 5)
+                    .map(item => item.faq);
+            } catch (error) {
+                console.error('Error finding similar FAQs:', error);
+                return [];
+            }
+        }
+        
+        // Show FAQ suggestions when typing
+        function showFAQSuggestions(question) {
+            const suggestionsDiv = document.getElementById('faqSuggestions');
+            if (!suggestionsDiv) return;
+            
+            if (question.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            const similarFAQs = findSimilarFAQs(question);
+            
+            if (similarFAQs.length > 0) {
+                suggestionsDiv.innerHTML = `
+                    <div class="suggestion-header">Similar FAQs found:</div>
+                    ${similarFAQs.map(faq => `
+                        <div class="suggestion-item" onclick="useExistingFAQ('${FAQManager.escapeHtmlForJS(faq.question)}', '${FAQManager.escapeHtmlForJS(faq.answer)}')">
+                            <div class="suggestion-question">${FAQManager.escapeHtml(faq.question)}</div>
+                            <div class="suggestion-answer">${FAQManager.escapeHtml(faq.answer.substring(0, 80))}...</div>
+                        </div>
+                    `).join('')}
+                `;
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+        
+        // Use existing FAQ
+        function useExistingFAQ(question, answer) {
+            document.getElementById('faqQuestion').value = question;
+            document.getElementById('faqAnswer').value = answer;
+            document.getElementById('faqSuggestions').style.display = 'none';
+        }
+        
         // Clear all FAQ data
         function clearAllFAQData() {
             if (confirm('⚠️ WARNING: This will delete ALL FAQ tracking data, including questions, stats, and knowledge base. This cannot be undone! Are you sure?')) {
@@ -913,10 +1034,17 @@
             document.getElementById('faqCategory').value = 'general';
             document.getElementById('addFAQModal').style.display = 'flex';
             document.getElementById('faqQuestion').focus();
+            
+            // Setup suggestions for this modal
+            const questionInput = document.getElementById('faqQuestion');
+            questionInput.addEventListener('input', function() {
+                showFAQSuggestions(this.value);
+            });
         }
         
         function closeModal() {
             document.getElementById('addFAQModal').style.display = 'none';
+            document.getElementById('faqSuggestions').style.display = 'none';
         }
         
         function saveFAQ() {
@@ -975,6 +1103,18 @@
         document.getElementById('addFAQModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
+            }
+        });
+        
+        // Close suggestions when clicking elsewhere
+        document.addEventListener('click', function(e) {
+            const suggestionsDiv = document.getElementById('faqSuggestions');
+            const questionInput = document.getElementById('faqQuestion');
+            
+            if (suggestionsDiv && suggestionsDiv.style.display === 'block' && 
+                !suggestionsDiv.contains(e.target) && 
+                !questionInput.contains(e.target)) {
+                suggestionsDiv.style.display = 'none';
             }
         });
         
