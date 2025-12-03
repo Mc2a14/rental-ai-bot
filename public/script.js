@@ -1,7 +1,6 @@
 // ================================================
 // FAQ AUTO-LEARNING SYSTEM - ADDED
 // ================================================
-
 const FAQTracker = {
     // Track a new question
     trackQuestion(question, propertyId = 'default') {
@@ -57,6 +56,8 @@ const FAQTracker = {
             return 'recommendations';
         } else if (q.includes('emergency') || q.includes('contact') || q.includes('help')) {
             return 'emergency';
+        } else if (q.includes('beach') || q.includes('playa') || q.includes('ocean') || q.includes('sea')) {
+            return 'beach';
         } else {
             return 'general';
         }
@@ -129,8 +130,6 @@ const FAQTracker = {
     
     // Show notification in admin
     showNotificationIfNeeded(count) {
-        // Could trigger a visual notification in admin panel
-        // For now, just log
         console.log(`💡 ${count} frequent questions need review. Visit /faq-manage.html`);
     },
     
@@ -157,24 +156,92 @@ const FAQTracker = {
         console.log(`✅ Added to knowledge base: "${question}"`);
     },
     
-    // Find answer in knowledge base
+    // IMPROVED: Find answer in knowledge base
     findAnswer(question) {
         const knowledgeBase = this.getKnowledgeBase();
-        const q = question.toLowerCase();
+        if (knowledgeBase.length === 0) return null;
         
-        // Simple keyword matching (can be improved later)
-        for (const entry of knowledgeBase) {
-            const entryQ = entry.question.toLowerCase();
+        const q = question.toLowerCase().trim();
+        
+        // Remove common filler words for better matching
+        const cleanedQuestion = this.cleanQuestion(q);
+        
+        // Score each FAQ entry
+        const scoredEntries = knowledgeBase.map(entry => {
+            const entryQ = entry.question.toLowerCase().trim();
+            const cleanedEntry = this.cleanQuestion(entryQ);
             
-            // Check for direct match or keyword inclusion
-            if (q.includes(entryQ) || entryQ.includes(q)) {
-                entry.uses = (entry.uses || 0) + 1;
-                localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-                return entry.answer;
+            let score = 0;
+            
+            // 1. Exact match (highest priority)
+            if (q === entryQ) {
+                score = 100;
             }
+            // 2. Contains match
+            else if (q.includes(entryQ) || entryQ.includes(q)) {
+                score = 80;
+            }
+            // 3. Word overlap (medium priority)
+            else {
+                const questionWords = new Set(cleanedQuestion.split(/\s+/));
+                const entryWords = new Set(cleanedEntry.split(/\s+/));
+                
+                const intersection = [...questionWords].filter(word => 
+                    entryWords.has(word) && word.length > 3
+                );
+                
+                const overlapPercent = (intersection.length / Math.max(questionWords.size, entryWords.size)) * 100;
+                score = Math.min(overlapPercent, 70);
+            }
+            
+            // Boost score if we have keywords in common
+            const keywords = ['beach', 'playa', 'restaurant', 'wifi', 'check', 'appliance', 'oven', 
+                             'microwave', 'washer', 'dryer', 'thermostat', 'ac', 'heating', 
+                             'cooling', 'pool', 'jacuzzi', 'hot tub', 'bbq', 'grill'];
+            const commonKeywords = keywords.filter(keyword => 
+                q.includes(keyword) && entryQ.includes(keyword)
+            );
+            
+            score += commonKeywords.length * 15;
+            
+            return { entry, score };
+        });
+        
+        // Sort by score (highest first)
+        scoredEntries.sort((a, b) => b.score - a.score);
+        
+        console.log('🔍 FAQ Matching Scores for:', question.substring(0, 50));
+        scoredEntries.slice(0, 3).forEach((s, i) => {
+            console.log(`  ${i+1}. "${s.entry.question.substring(0, 40)}..." → ${Math.round(s.score)}%`);
+        });
+        
+        // If best match has decent score, use it
+        const bestMatch = scoredEntries[0];
+        if (bestMatch && bestMatch.score >= 30) {
+            bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
+            localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
+            console.log(`✅ FAQ Match Found: "${bestMatch.entry.question}" (score: ${Math.round(bestMatch.score)}%)`);
+            return bestMatch.entry.answer;
         }
         
+        console.log('❌ No good FAQ match found (best score:', scoredEntries[0] ? Math.round(scoredEntries[0].score) : 0, '%)');
         return null;
+    },
+    
+    // Helper: Clean question for better matching
+    cleanQuestion(text) {
+        // Remove common filler words
+        const fillerWords = ['the', 'a', 'an', 'is', 'are', 'there', 'this', 'that', 'these', 
+                            'those', 'what', 'where', 'when', 'why', 'how', 'do', 'does', 
+                            'did', 'can', 'could', 'would', 'should', 'will', 'please',
+                            'i', 'you', 'we', 'they', 'he', 'she', 'it', 'my', 'your',
+                            'our', 'their', 'his', 'her', 'its', 'me', 'us', 'them'];
+        
+        const words = text.split(/\s+/).filter(word => 
+            word.length > 2 && !fillerWords.includes(word)
+        );
+        
+        return words.join(' ');
     }
 };
 
