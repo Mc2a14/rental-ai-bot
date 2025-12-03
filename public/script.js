@@ -162,88 +162,176 @@ const FAQTracker = {
         if (knowledgeBase.length === 0) return null;
         
         const q = question.toLowerCase().trim();
+        console.log('🔍 FAQ Search for:', q);
         
-        // Remove common filler words for better matching
-        const cleanedQuestion = this.cleanQuestion(q);
+        // Define comprehensive synonym groups for common rental topics
+        const synonymGroups = {
+            // Location/Places
+            'beach': ['beach', 'playa', 'shore', 'coast', 'seaside', 'ocean', 'sand', 'waves'],
+            'pool': ['pool', 'swimming', 'jacuzzi', 'hot tub', 'spa', 'swim'],
+            'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro'],
+            
+            // Amenities
+            'wifi': ['wifi', 'internet', 'wireless', 'network', 'connection', 'online', 'web'],
+            'parking': ['parking', 'car', 'vehicle', 'park', 'spot', 'garage'],
+            'kitchen': ['kitchen', 'cook', 'stove', 'oven', 'fridge', 'refrigerator'],
+            
+            // Check-in/out
+            'checkin': ['check in', 'check-in', 'arrive', 'arrival', 'enter', 'come', 'get here'],
+            'checkout': ['check out', 'check-out', 'leave', 'depart', 'exit', 'go', 'vacate'],
+            'time': ['time', 'hour', 'when', 'schedule', 'clock'],
+            
+            // Housekeeping
+            'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 'throw away', 'dispose'],
+            'clean': ['clean', 'cleaning', 'tidy', 'maid', 'housekeeping', 'towels', 'linens'],
+            'key': ['key', 'lock', 'door', 'enter', 'access', 'code'],
+            
+            // Appliances
+            'tv': ['tv', 'television', 'netflix', 'youtube', 'movie', 'watch'],
+            'ac': ['ac', 'air conditioning', 'heating', 'cooling', 'thermostat', 'temperature'],
+            'washer': ['washer', 'laundry', 'dryer', 'clothes', 'wash'],
+            
+            // General
+            'how': ['how', 'operate', 'use', 'work', 'function'],
+            'where': ['where', 'location', 'place', 'find', 'locate'],
+            'what': ['what', 'which', 'tell me about', 'information'],
+            'can': ['can', 'could', 'may', 'able', 'possible', 'allow']
+        };
+        
+        // Common question patterns to normalize
+        const questionPatterns = [
+            { pattern: /^(what is|what's) (the|a|an)?/i, replace: '' },
+            { pattern: /^(how do i|how to|how can i)/i, replace: '' },
+            { pattern: /^(where is|where are|where can i)/i, replace: '' },
+            { pattern: /^(when is|when are|when can i)/i, replace: '' },
+            { pattern: /^(do you have|is there|are there)/i, replace: '' },
+            { pattern: /^(can i|may i|could i)/i, replace: '' },
+            { pattern: /^(tell me about|i need|i want)/i, replace: '' },
+            { pattern: /[?,.!]/g, replace: '' }
+        ];
+        
+        // Normalize the question
+        let normalizedQ = q;
+        questionPatterns.forEach(pattern => {
+            normalizedQ = normalizedQ.replace(pattern.pattern, pattern.replace);
+        });
+        normalizedQ = normalizedQ.trim();
         
         // Score each FAQ entry
         const scoredEntries = knowledgeBase.map(entry => {
             const entryQ = entry.question.toLowerCase().trim();
-            const cleanedEntry = this.cleanQuestion(entryQ);
+            let normalizedEntryQ = entryQ;
+            
+            // Normalize FAQ question too
+            questionPatterns.forEach(pattern => {
+                normalizedEntryQ = normalizedEntryQ.replace(pattern.pattern, pattern.replace);
+            });
+            normalizedEntryQ = normalizedEntryQ.trim();
             
             let score = 0;
             
             // 1. Exact match (highest priority)
-            if (q === entryQ) {
+            if (normalizedQ === normalizedEntryQ || q === entryQ) {
                 score = 100;
             }
-            // 2. Contains match
-            else if (q.includes(entryQ) || entryQ.includes(q)) {
-                score = 80;
+            // 2. Contains match (direct)
+            else if (normalizedQ.includes(normalizedEntryQ) || normalizedEntryQ.includes(normalizedQ)) {
+                score = 85;
             }
-            // 3. Word overlap (medium priority)
+            // 3. Smart word matching with synonyms
             else {
-                const questionWords = new Set(cleanedQuestion.split(/\s+/));
-                const entryWords = new Set(cleanedEntry.split(/\s+/));
+                // Get all words from both questions (with synonyms expanded)
+                const questionWords = this.getExpandedWords(normalizedQ, synonymGroups);
+                const entryWords = this.getExpandedWords(normalizedEntryQ, synonymGroups);
                 
+                // Calculate word overlap
                 const intersection = [...questionWords].filter(word => 
-                    entryWords.has(word) && word.length > 3
+                    entryWords.has(word) && word.length > 2
                 );
                 
-                const overlapPercent = (intersection.length / Math.max(questionWords.size, entryWords.size)) * 100;
-                score = Math.min(overlapPercent, 70);
+                // Calculate similarity score
+                const union = new Set([...questionWords, ...entryWords]);
+                const similarity = intersection.size / union.size;
+                score = Math.min(similarity * 100, 80);
+                
+                // Boost for important keyword matches
+                const importantKeywords = ['emergency', 'fire', 'police', 'hospital', 'doctor', 'urgent'];
+                const importantMatches = importantKeywords.filter(keyword => 
+                    q.includes(keyword) && entryQ.includes(keyword)
+                );
+                score += importantMatches.length * 20;
+                
+                // Boost for category matches
+                if (entry.category && this.detectCategory(q) === entry.category) {
+                    score += 15;
+                }
             }
             
-            // Boost score if we have keywords in common
-            const keywords = ['beach', 'playa', 'restaurant', 'wifi', 'check', 'appliance', 'oven', 
-                             'microwave', 'washer', 'dryer', 'thermostat', 'ac', 'heating', 
-                             'cooling', 'pool', 'jacuzzi', 'hot tub', 'bbq', 'grill'];
-            const commonKeywords = keywords.filter(keyword => 
-                q.includes(keyword) && entryQ.includes(keyword)
+            // Additional boosting factors
+            // Length similarity boost
+            const lengthDiff = Math.abs(normalizedQ.length - normalizedEntryQ.length);
+            if (lengthDiff < 10) score += 5;
+            
+            // Common word boost
+            const commonWords = ['the', 'and', 'for', 'with', 'from'];
+            const commonMatches = commonWords.filter(word => 
+                normalizedQ.includes(word) && normalizedEntryQ.includes(word)
             );
+            score += commonMatches.length * 2;
             
-            score += commonKeywords.length * 15;
-            
-            return { entry, score };
+            return { entry, score, normalizedEntryQ };
         });
         
         // Sort by score (highest first)
         scoredEntries.sort((a, b) => b.score - a.score);
         
-        console.log('🔍 FAQ Matching Scores for:', question.substring(0, 50));
-        scoredEntries.slice(0, 3).forEach((s, i) => {
-            console.log(`  ${i+1}. "${s.entry.question.substring(0, 40)}..." → ${Math.round(s.score)}%`);
-        });
+        // Debug logging
+        const topMatches = scoredEntries.filter(s => s.score > 0).slice(0, 5);
+        if (topMatches.length > 0) {
+            console.log('🔍 Top FAQ Matches:');
+            topMatches.forEach((match, i) => {
+                console.log(`  ${i+1}. "${match.entry.question}" → ${Math.round(match.score)}%`);
+            });
+        }
         
         // If best match has decent score, use it
         const bestMatch = scoredEntries[0];
-        if (bestMatch && bestMatch.score >= 30) {
+        const threshold = q.length < 10 ? 40 : 30; // Lower threshold for short questions
+        
+        if (bestMatch && bestMatch.score >= threshold) {
             bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
             localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-            console.log(`✅ FAQ Match Found: "${bestMatch.entry.question}" (score: ${Math.round(bestMatch.score)}%)`);
+            console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${Math.round(bestMatch.score)}%)`);
             return bestMatch.entry.answer;
         }
         
-        console.log('❌ No good FAQ match found (best score:', scoredEntries[0] ? Math.round(scoredEntries[0].score) : 0, '%)');
+        console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? Math.round(scoredEntries[0].score) : 0}%)`);
         return null;
     },
     
-    // Helper: Clean question for better matching
-    cleanQuestion(text) {
-        // Remove common filler words
-        const fillerWords = ['the', 'a', 'an', 'is', 'are', 'there', 'this', 'that', 'these', 
-                            'those', 'what', 'where', 'when', 'why', 'how', 'do', 'does', 
-                            'did', 'can', 'could', 'would', 'should', 'will', 'please',
-                            'i', 'you', 'we', 'they', 'he', 'she', 'it', 'my', 'your',
-                            'our', 'their', 'his', 'her', 'its', 'me', 'us', 'them'];
+   // Helper: Get expanded words with synonyms
+    getExpandedWords(text, synonymGroups) {
+        const words = text.split(/\s+/).filter(word => word.length > 2);
+        const expandedSet = new Set();
         
-        const words = text.split(/\s+/).filter(word => 
-            word.length > 2 && !fillerWords.includes(word)
-        );
+        words.forEach(word => {
+            expandedSet.add(word);
+            
+            // Add synonyms
+            for (const [key, synonyms] of Object.entries(synonymGroups)) {
+                if (synonyms.includes(word)) {
+                    synonyms.forEach(synonym => expandedSet.add(synonym));
+                }
+            }
+            
+            // Add stemmed versions (simple)
+            if (word.endsWith('s')) expandedSet.add(word.slice(0, -1));
+            if (word.endsWith('ing')) expandedSet.add(word.slice(0, -3));
+            if (word.endsWith('ed')) expandedSet.add(word.slice(0, -2));
+        });
         
-        return words.join(' ');
-    }
-};
+        return expandedSet;
+    },
 
 // ================================================
 // MAIN CHAT CLASS
