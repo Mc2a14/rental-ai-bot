@@ -669,13 +669,15 @@ class PropertySetup {
         const nameInput = document.getElementById('appliance-name');
         const typeInput = document.getElementById('appliance-type');
         const instructionsInput = document.getElementById('appliance-instructions');
-        const photoInput = document.getElementById('appliance-photo');
         const troubleshootingInput = document.getElementById('appliance-troubleshooting');
+        
+        // Photo input might not exist (it's hidden/removed) - handle safely
+        const photoInput = document.getElementById('appliance-photo');
 
         const name = nameInput.value.trim();
         const type = typeInput.value;
         const instructions = instructionsInput.value.trim();
-        const photo = photoInput.value.trim();
+        const photo = photoInput ? photoInput.value.trim() : ''; // Handle null case
         const troubleshooting = troubleshootingInput.value.trim();
 
         if (!name || !instructions) {
@@ -699,8 +701,12 @@ class PropertySetup {
         // Clear form
         nameInput.value = '';
         instructionsInput.value = '';
-        photoInput.value = '';
         troubleshootingInput.value = '';
+        
+        // Only clear photo if it exists
+        if (photoInput) {
+            photoInput.value = '';
+        }
 
         this.showTempMessage('Appliance added successfully!', 'success');
         console.log("✅ Appliance added:", newAppliance);
