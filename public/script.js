@@ -276,12 +276,14 @@ const FAQTracker = {
                 const similarity = intersection.length / unionSize;
                 score = Math.min(similarity * 100, 80);
                 
-                // ENHANCED KEYWORD WEIGHTING SYSTEM
+                                // ENHANCED KEYWORD WEIGHTING SYSTEM
                 const keywordCategories = {
                     // High importance - specific topics that shouldn't cross-match
                     'wifi': ['wifi', 'internet', 'password', 'network', 'connection', 'wi-fi'],
                     'checkin': ['checkin', 'check-in', 'checkout', 'check-out', 'arrival', 'departure', 'time', 'schedule'],
                     'emergency': ['emergency', 'urgent', 'contact', 'number', 'phone', 'fire', 'police', 'hospital', 'doctor', 'ambulance'],
+                    // ADD THIS LINE:
+                    'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro', 'restaurants', 'nearby', 'local'],
                     'beach': ['beach', 'playa', 'shore', 'ocean', 'sea', 'sand'],
                     'parking': ['parking', 'car', 'vehicle', 'garage', 'spot', 'space'],
                     'appliances': ['appliance', 'oven', 'microwave', 'washer', 'dryer', 'stove', 'fridge', 'refrigerator'],
@@ -323,7 +325,7 @@ const FAQTracker = {
                     }
                 }
                 
-                // Specific keyword penalties (prevent WiFi matching with emergency)
+                               // Specific keyword penalties (prevent cross-matching)
                 if (q.includes('wifi') && entryQ.includes('emergency')) {
                     score -= 50; // Heavy penalty for WiFi matching with emergency
                 }
@@ -335,6 +337,13 @@ const FAQTracker = {
                 }
                 if (q.includes('emergency') && (entryQ.includes('checkin') || entryQ.includes('check-out'))) {
                     score -= 40;
+                }
+                // ADD THESE NEW LINES:
+                if ((q.includes('restaurant') || q.includes('food') || q.includes('eat') || q.includes('dining')) && entryQ.includes('emergency')) {
+                    score -= 45;
+                }
+                if (q.includes('emergency') && (entryQ.includes('restaurant') || entryQ.includes('food') || entryQ.includes('eat') || entryQ.includes('dining'))) {
+                    score -= 45;
                 }
                 
                 // Bonus for matching specific important keywords
@@ -399,7 +408,7 @@ const FAQTracker = {
         
         // If best match has decent score, use it
         const bestMatch = scoredEntries[0];
-        const threshold = q.length < 10 ? 70 : 60; // Higher threshold for better accuracy
+        const threshold = 70; // Increase to 70% for all questions
         
         if (bestMatch && bestMatch.score >= threshold) {
             bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
