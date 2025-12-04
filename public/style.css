@@ -65,6 +65,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: auto; /* Changed from hidden to auto */
+    /* ADD THIS TEMPORARY LINE: */
+    border: 3px solid red !important;
 }
 
 /* Header */
