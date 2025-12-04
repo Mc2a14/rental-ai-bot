@@ -169,260 +169,245 @@ const FAQTracker = {
         console.log(`✅ Added to knowledge base: "${question}" (Category: ${category})`);
     },
     
-    // IMPROVED: Find answer in knowledge base
-    findAnswer(question) {
-        const knowledgeBase = this.getKnowledgeBase();
-        if (knowledgeBase.length === 0) return null;
+   // IMPROVED: Find answer in knowledge base
+findAnswer(question) {
+    const knowledgeBase = this.getKnowledgeBase();
+    if (knowledgeBase.length === 0) return null;
+    
+    const q = question.toLowerCase().trim();
+    console.log('🔍 FAQ Search for:', q);
+    
+    // Define comprehensive synonym groups for common rental topics
+    const synonymGroups = {
+        // Trash/Garbage - EXPANDED
+        'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 
+                 'throw away', 'dispose', 'bin', 'dump', 'bags', 'full bags',
+                 'garbage bags', 'trash bags', 'where does', 'where do', 'where to',
+                 'disposal', 'dumpster', 'take out', 'put out'],
         
-        const q = question.toLowerCase().trim();
-        console.log('🔍 FAQ Search for:', q);
+        // Location/Places
+        'beach': ['beach', 'playa', 'shore', 'coast', 'seaside', 'ocean', 'sand', 'waves'],
+        'pool': ['pool', 'swimming', 'jacuzzi', 'hot tub', 'spa', 'swim'],
+        'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro'],
         
-        // Define comprehensive synonym groups for common rental topics
-        const synonymGroups = {
-            // Trash/Garbage - EXPANDED
-            'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 
-                     'throw away', 'dispose', 'bin', 'dump', 'bags', 'full bags',
-                     'garbage bags', 'trash bags', 'where does', 'where do', 'where to',
-                     'disposal', 'dumpster', 'take out', 'put out'],
-            
-            // Location/Places
-            'beach': ['beach', 'playa', 'shore', 'coast', 'seaside', 'ocean', 'sand', 'waves'],
-            'pool': ['pool', 'swimming', 'jacuzzi', 'hot tub', 'spa', 'swim'],
-            'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro'],
-            
-            // Amenities
-            'wifi': ['wifi', 'internet', 'wireless', 'network', 'connection', 'online', 'web'],
-            'parking': ['parking', 'car', 'vehicle', 'park', 'spot', 'garage'],
-            'kitchen': ['kitchen', 'cook', 'stove', 'oven', 'fridge', 'refrigerator'],
-            
-            // Check-in/out
-            'checkin': ['check in', 'check-in', 'arrive', 'arrival', 'enter', 'come', 'get here'],
-            'checkout': ['check out', 'check-out', 'leave', 'depart', 'exit', 'go', 'vacate'],
-            'time': ['time', 'hour', 'when', 'schedule', 'clock'],
-            
-            // Housekeeping
-            'clean': ['clean', 'cleaning', 'tidy', 'maid', 'housekeeping', 'towels', 'linens'],
-            'key': ['key', 'lock', 'door', 'enter', 'access', 'code'],
-            
-            // Appliances
-            'tv': ['tv', 'television', 'netflix', 'youtube', 'movie', 'watch'],
-            'ac': ['ac', 'air conditioning', 'heating', 'cooling', 'thermostat', 'temperature'],
-            'washer': ['washer', 'laundry', 'dryer', 'clothes', 'wash'],
-            
-            // General
-            'how': ['how', 'operate', 'use', 'work', 'function'],
-            'where': ['where', 'location', 'place', 'find', 'locate'],
-            'what': ['what', 'which', 'tell me about', 'information'],
-            'can': ['can', 'could', 'may', 'able', 'possible', 'allow'],
-            'please': ['please', 'could you', 'can you', 'would you']
-        };
+        // Amenities
+        'wifi': ['wifi', 'internet', 'wireless', 'network', 'connection', 'online', 'web'],
+        'parking': ['parking', 'car', 'vehicle', 'park', 'spot', 'garage'],
+        'kitchen': ['kitchen', 'cook', 'stove', 'oven', 'fridge', 'refrigerator'],
         
-        // Common question patterns to normalize
-        const questionPatterns = [
-            { pattern: /^(what is|what's) (the|a|an)?/i, replace: '' },
-            { pattern: /^(how do i|how to|how can i)/i, replace: '' },
-            { pattern: /^(where is|where are|where can i|where should i|where do i)/i, replace: '' },
-            { pattern: /^(when is|when are|when can i)/i, replace: '' },
-            { pattern: /^(do you have|is there|are there)/i, replace: '' },
-            { pattern: /^(can i|may i|could i)/i, replace: '' },
-            { pattern: /^(tell me about|i need|i want|i\'m looking for)/i, replace: '' },
-            { pattern: /^(please tell me|could you tell me|can you tell me)/i, replace: '' },
-            { pattern: /[?,.!]/g, replace: '' },
-            { pattern: /\s+/g, replace: ' ' }
-        ];
+        // Check-in/out
+        'checkin': ['check in', 'check-in', 'arrive', 'arrival', 'enter', 'come', 'get here'],
+        'checkout': ['check out', 'check-out', 'leave', 'depart', 'exit', 'go', 'vacate'],
+        'time': ['time', 'hour', 'when', 'schedule', 'clock'],
         
-        // Normalize the question
-        let normalizedQ = q;
+        // Housekeeping
+        'clean': ['clean', 'cleaning', 'tidy', 'maid', 'housekeeping', 'towels', 'linens'],
+        'key': ['key', 'lock', 'door', 'enter', 'access', 'code'],
+        
+        // Appliances
+        'tv': ['tv', 'television', 'netflix', 'youtube', 'movie', 'watch'],
+        'ac': ['ac', 'air conditioning', 'heating', 'cooling', 'thermostat', 'temperature'],
+        'washer': ['washer', 'laundry', 'dryer', 'clothes', 'wash'],
+        
+        // General
+        'how': ['how', 'operate', 'use', 'work', 'function'],
+        'where': ['where', 'location', 'place', 'find', 'locate'],
+        'what': ['what', 'which', 'tell me about', 'information'],
+        'can': ['can', 'could', 'may', 'able', 'possible', 'allow'],
+        'please': ['please', 'could you', 'can you', 'would you']
+    };
+    
+    // Common question patterns to normalize
+    const questionPatterns = [
+        { pattern: /^(what is|what's) (the|a|an)?/i, replace: '' },
+        { pattern: /^(how do i|how to|how can i)/i, replace: '' },
+        { pattern: /^(where is|where are|where can i|where should i|where do i)/i, replace: '' },
+        { pattern: /^(when is|when are|when can i)/i, replace: '' },
+        { pattern: /^(do you have|is there|are there)/i, replace: '' },
+        { pattern: /^(can i|may i|could i)/i, replace: '' },
+        { pattern: /^(tell me about|i need|i want|i\'m looking for)/i, replace: '' },
+        { pattern: /^(please tell me|could you tell me|can you tell me)/i, replace: '' },
+        { pattern: /[?,.!]/g, replace: '' },
+        { pattern: /\s+/g, replace: ' ' }
+    ];
+    
+    // Normalize the question
+    let normalizedQ = q;
+    questionPatterns.forEach(pattern => {
+        normalizedQ = normalizedQ.replace(pattern.pattern, pattern.replace);
+    });
+    normalizedQ = normalizedQ.trim();
+    
+    // CRITICAL: Define appliance groups that shouldn't cross-match
+    const applianceGroups = {
+        'oven_microwave': ['oven', 'microwave', 'stove', 'cooktop', 'bake', 'cook', 'heat'],
+        'washer_dryer': ['washer', 'dryer', 'laundry', 'clothes', 'wash', 'detergent', 'spin'],
+        'refrigerator': ['refrigerator', 'fridge', 'freezer', 'cool', 'chill', 'ice'],
+        'thermostat': ['thermostat', 'temperature', 'heat', 'cool', 'ac', 'air conditioning', 'climate'],
+        'tv': ['tv', 'television', 'remote', 'channel', 'netflix', 'stream', 'watch']
+    };
+    
+    // Identify which appliance group the user is asking about
+    let userApplianceGroup = null;
+    for (const [group, keywords] of Object.entries(applianceGroups)) {
+        if (keywords.some(keyword => normalizedQ.includes(keyword))) {
+            userApplianceGroup = group;
+            break;
+        }
+    }
+    
+    // Score each FAQ entry
+    const scoredEntries = knowledgeBase.map(entry => {
+        const entryQ = entry.question.toLowerCase().trim();
+        let normalizedEntryQ = entryQ;
+        
+        // Normalize FAQ question too
         questionPatterns.forEach(pattern => {
-            normalizedQ = normalizedQ.replace(pattern.pattern, pattern.replace);
+            normalizedEntryQ = normalizedEntryQ.replace(pattern.pattern, pattern.replace);
         });
-        normalizedQ = normalizedQ.trim();
+        normalizedEntryQ = normalizedEntryQ.trim();
         
-               // Score each FAQ entry with ENHANCED KEYWORD WEIGHTING
-        const scoredEntries = knowledgeBase.map(entry => {
-            const entryQ = entry.question.toLowerCase().trim();
-            let normalizedEntryQ = entryQ;
+        let score = 0;
+        
+        // DEBUG LOGGING
+        console.log(`  Comparing: User="${normalizedQ}" vs FAQ="${normalizedEntryQ}"`);
+        
+        // 1. Exact match (highest priority)
+        if (normalizedQ === normalizedEntryQ) {
+            console.log('    ✅ Exact match!');
+            score = 100;
+        }
+        // 2. Check original (non-normalized) match
+        else if (q === entryQ) {
+            console.log('    ✅ Original text match!');
+            score = 100;
+        }
+        // 3. Smart word matching
+        else {
+            // Get all words from both questions
+            const questionWords = this.getExpandedWords(normalizedQ, synonymGroups);
+            const entryWords = this.getExpandedWords(normalizedEntryQ, synonymGroups);
             
-            // Normalize FAQ question too
-            questionPatterns.forEach(pattern => {
-                normalizedEntryQ = normalizedEntryQ.replace(pattern.pattern, pattern.replace);
-            });
-            normalizedEntryQ = normalizedEntryQ.trim();
+            // Calculate word overlap
+            const intersection = [...questionWords].filter(word => 
+                entryWords.has(word) && word.length > 2
+            );
             
-            let score = 0;
+            // Calculate similarity score
+            const union = new Set([...questionWords, ...entryWords]);
+            const unionSize = union.size || 1;
+            const similarity = intersection.length / unionSize;
+            score = Math.min(similarity * 100, 80);
             
-            // 1. Exact match (highest priority)
-            if (normalizedQ === normalizedEntryQ || q === entryQ) {
-                score = 100;
-            }
-            // 2. Contains match (direct)
-            else if (normalizedQ.includes(normalizedEntryQ) || normalizedEntryQ.includes(normalizedQ)) {
-                score = 85;
-            }
-            // 3. Smart word matching with synonyms and category weighting
-            else {
-                // Get all words from both questions (with synonyms expanded)
-                const questionWords = this.getExpandedWords(normalizedQ, synonymGroups);
-                const entryWords = this.getExpandedWords(normalizedEntryQ, synonymGroups);
-                
-                // Calculate word overlap
-                const intersection = [...questionWords].filter(word => 
-                    entryWords.has(word) && word.length > 2
-                );
-                
-                // Calculate similarity score - FIXED: Prevent division by zero
-                const union = new Set([...questionWords, ...entryWords]);
-                const unionSize = union.size || 1; // Prevent division by zero
-                const similarity = intersection.length / unionSize;
-                score = Math.min(similarity * 100, 80);
-                
-                                // ENHANCED KEYWORD WEIGHTING SYSTEM
-                const keywordCategories = {
-                    // High importance - specific topics that shouldn't cross-match
-                    'wifi': ['wifi', 'internet', 'password', 'network', 'connection', 'wi-fi'],
-                    'checkin': ['checkin', 'check-in', 'checkout', 'check-out', 'arrival', 'departure', 'time', 'schedule'],
-                    'emergency': ['emergency', 'urgent', 'contact', 'number', 'phone', 'fire', 'police', 'hospital', 'doctor', 'ambulance'],
-                    // ADD THIS LINE:
-                    'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro', 'restaurants', 'nearby', 'local'],
-                    'beach': ['beach', 'playa', 'shore', 'ocean', 'sea', 'sand'],
-                    'parking': ['parking', 'car', 'vehicle', 'garage', 'spot', 'space'],
-                    'appliances': ['appliance', 'oven', 'microwave', 'washer', 'dryer', 'stove', 'fridge', 'refrigerator'],
-                    'keys': ['key', 'keys', 'access', 'door', 'lock', 'code', 'entry'],
-                    'trash': ['trash', 'garbage', 'recycle', 'disposal', 'waste']
-                };
-                
-                // Medium importance - general terms
-                const mediumKeywords = ['where', 'what', 'how', 'when', 'why', 'who', 'can', 'do', 'is', 'are', 'the'];
-                
-                // Identify the main category of the user's question
-                let userQuestionCategory = null;
-                for (const [category, keywords] of Object.entries(keywordCategories)) {
-                    if (keywords.some(keyword => q.includes(keyword))) {
-                        userQuestionCategory = category;
+            console.log(`    Similarity: ${similarity * 100}% → base score: ${score}`);
+            
+            // CRITICAL: APPLIANCE GROUP MATCHING
+            if (userApplianceGroup) {
+                // Identify which appliance group the FAQ entry is about
+                let entryApplianceGroup = null;
+                for (const [group, keywords] of Object.entries(applianceGroups)) {
+                    if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
+                        entryApplianceGroup = group;
                         break;
                     }
                 }
                 
-                // Identify the main category of the FAQ entry
-                let faqCategory = null;
-                for (const [category, keywords] of Object.entries(keywordCategories)) {
-                    if (keywords.some(keyword => entryQ.includes(keyword))) {
-                        faqCategory = category;
-                        break;
-                    }
-                }
-                
-                // CATEGORY MATCHING LOGIC
-                if (userQuestionCategory && faqCategory) {
-                    if (userQuestionCategory === faqCategory) {
-                        // Same category = BIG bonus
-                        score += 40;
-                        console.log(`🎯 Category match: ${userQuestionCategory} (${score}%)`);
+                if (entryApplianceGroup) {
+                    if (userApplianceGroup === entryApplianceGroup) {
+                        // Same appliance group = bonus
+                        score += 25;
+                        console.log(`    ✅ Same appliance group: ${userApplianceGroup} (+25)`);
                     } else {
-                        // Different categories = BIG penalty (prevent cross-matching)
-                        score -= 35;
-                        console.log(`⚠️ Category mismatch: ${userQuestionCategory} vs ${faqCategory} (${score}%)`);
+                        // DIFFERENT appliance groups = heavy penalty!
+                        score -= 50;
+                        console.log(`    ❌ Different appliance groups: ${userApplianceGroup} vs ${entryApplianceGroup} (-50)`);
                     }
                 }
-                
-                               // Specific keyword penalties (prevent cross-matching)
-                if (q.includes('wifi') && entryQ.includes('emergency')) {
-                    score -= 50; // Heavy penalty for WiFi matching with emergency
-                }
-                if (q.includes('emergency') && entryQ.includes('wifi')) {
-                    score -= 50;
-                }
-                if ((q.includes('checkin') || q.includes('check-out')) && entryQ.includes('emergency')) {
-                    score -= 40;
-                }
-                if (q.includes('emergency') && (entryQ.includes('checkin') || entryQ.includes('check-out'))) {
-                    score -= 40;
-                }
-                // ADD THESE NEW LINES:
-                if ((q.includes('restaurant') || q.includes('food') || q.includes('eat') || q.includes('dining')) && entryQ.includes('emergency')) {
-                    score -= 45;
-                }
-                if (q.includes('emergency') && (entryQ.includes('restaurant') || entryQ.includes('food') || entryQ.includes('eat') || entryQ.includes('dining'))) {
-                    score -= 45;
-                }
-                
-                // Bonus for matching specific important keywords
-                Object.values(keywordCategories).flat().forEach(keyword => {
-                    if (q.includes(keyword) && entryQ.includes(keyword)) {
-                        score += 8; // Moderate bonus for matching specific keywords
-                    }
-                });
-                
-                // Small bonus for medium keyword matches
-                mediumKeywords.forEach(keyword => {
-                    if (q.includes(keyword) && entryQ.includes(keyword)) {
-                        score += 2; // Small bonus for general word matches
-                    }
-                });
-                
-                // Boost for category matches (using your existing system)
-                if (entry.category && this.detectCategory(q) === entry.category) {
-                    score += 15;
-                }
-                
-                // Boost for question words match
-                const questionWordsList = ['where', 'what', 'how', 'when', 'why', 'who'];
-                const matchingQuestionWords = questionWordsList.filter(word => 
-                    q.includes(word) && entryQ.includes(word)
-                );
-                score += matchingQuestionWords.length * 10;
-                
-                // Additional boosting factors
-                // Length similarity boost
-                const lengthDiff = Math.abs(normalizedQ.length - normalizedEntryQ.length);
-                if (lengthDiff < 10) score += 5;
-                
-                // Common word boost
-                const commonWords = ['the', 'and', 'for', 'with', 'from', 'to', 'a', 'an', 'in', 'on', 'at'];
-                const commonMatches = commonWords.filter(word => 
-                    normalizedQ.includes(word) && normalizedEntryQ.includes(word)
-                );
-                score += commonMatches.length * 2;
-                
-                // Usage boost - more used answers get slightly higher score
-                score += Math.min((entry.uses || 0) * 0.5, 10);
             }
             
-            // Ensure score is within bounds
-            score = Math.max(0, Math.min(100, Math.round(score)));
+            // Existing category matching logic
+            const keywordCategories = {
+                'wifi': ['wifi', 'internet', 'password', 'network', 'connection', 'wi-fi'],
+                'checkin': ['checkin', 'check-in', 'checkout', 'check-out', 'arrival', 'departure', 'time', 'schedule'],
+                'emergency': ['emergency', 'urgent', 'contact', 'number', 'phone', 'fire', 'police', 'hospital', 'doctor', 'ambulance'],
+                'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro', 'restaurants', 'nearby', 'local'],
+                'beach': ['beach', 'playa', 'shore', 'ocean', 'sea', 'sand'],
+                'parking': ['parking', 'car', 'vehicle', 'garage', 'spot', 'space'],
+                'keys': ['key', 'keys', 'access', 'door', 'lock', 'code', 'entry'],
+                'trash': ['trash', 'garbage', 'recycle', 'disposal', 'waste']
+            };
             
-            return { entry, score, normalizedEntryQ };
+            // Identify categories
+            let userCategory = null;
+            let entryCategory = null;
+            
+            for (const [category, keywords] of Object.entries(keywordCategories)) {
+                if (keywords.some(keyword => normalizedQ.includes(keyword))) {
+                    userCategory = category;
+                }
+                if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
+                    entryCategory = category;
+                }
+            }
+            
+            // Apply category bonuses/penalties
+            if (userCategory && entryCategory) {
+                if (userCategory === entryCategory) {
+                    score += 15;
+                } else {
+                    score -= 25;
+                }
+            }
+            
+            // Usage boost
+            score += Math.min((entry.uses || 0) * 0.5, 10);
+        }
+        
+        // Ensure score is within bounds
+        score = Math.max(0, Math.min(100, Math.round(score)));
+        
+        console.log(`    Final score: ${score}%`);
+        
+        return { entry, score, normalizedEntryQ };
+    });
+    
+    // Sort by score (highest first)
+    scoredEntries.sort((a, b) => b.score - a.score);
+    
+    // Debug logging
+    const topMatches = scoredEntries.filter(s => s.score > 0).slice(0, 5);
+    if (topMatches.length > 0) {
+        console.log('🔍 Top FAQ Matches:');
+        topMatches.forEach((match, i) => {
+            console.log(`  ${i+1}. "${match.entry.question}" → ${match.score}%`);
         });
-        
-        // Sort by score (highest first)
-        scoredEntries.sort((a, b) => b.score - a.score);
-        
-        // Debug logging
-        const topMatches = scoredEntries.filter(s => s.score > 0).slice(0, 5);
-        if (topMatches.length > 0) {
-            console.log('🔍 Top FAQ Matches:');
-            topMatches.forEach((match, i) => {
-                console.log(`  ${i+1}. "${match.entry.question}" → ${match.score}%`);
-            });
-        }
-        
-        // If best match has decent score, use it
-        const bestMatch = scoredEntries[0];
-        const threshold = q.includes('oven') || q.includes('microwave') || 
-                  q.includes('washer') || q.includes('dryer') ? 
-                  85 : 70;
-        
-        if (bestMatch && bestMatch.score >= threshold) {
-            bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
-            bestMatch.entry.lastUsed = new Date().toISOString();
-            localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-            console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${bestMatch.score}%)`);
-            return bestMatch.entry.answer;
-        }
-        
-        console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? scoredEntries[0].score : 0}%)`);
-        return null;
-    },
+    }
+    
+    // Dynamic threshold based on question type
+    let threshold = 70; // Default
+    
+    // Check if this is an appliance question
+    const applianceKeywords = ['oven', 'microwave', 'washer', 'dryer', 'laundry', 'fridge', 'thermostat', 'tv'];
+    const isApplianceQuestion = applianceKeywords.some(keyword => q.includes(keyword));
+    
+    if (isApplianceQuestion) {
+        threshold = 80; // Higher threshold for appliances
+        console.log(`🔧 Appliance question detected - using higher threshold: ${threshold}%`);
+    }
+    
+    const bestMatch = scoredEntries[0];
+    
+    if (bestMatch && bestMatch.score >= threshold) {
+        bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
+        bestMatch.entry.lastUsed = new Date().toISOString();
+        localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
+        console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${bestMatch.score}%)`);
+        return bestMatch.entry.answer;
+    }
+    
+    console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? scoredEntries[0].score : 0}%, threshold: ${threshold}%)`);
+    return null;
+},
     
     // Helper: Get expanded words with synonyms
     getExpandedWords(text, synonymGroups) {
