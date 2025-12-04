@@ -57,13 +57,14 @@ body {
 .chat-container {
     width: 100%;
     max-width: 800px;
-    height: 90vh;
+    max-height: 90vh; /* Changed from height to max-height */
+    min-height: 500px; /* Added minimum height */
     background: var(--bg-chat);
     border-radius: 20px;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: auto; /* Changed from hidden to auto */
 }
 
 /* Header */
@@ -599,5 +600,37 @@ body {
     .clear-chat-btn {
         font-size: 0.65rem;
         padding: 4px 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-controls {
+        flex-wrap: wrap;
+    }
+    
+    .language-select {
+        min-width: 80px;
+    }
+    
+    .setup-btn,
+    .language-select,
+    .theme-toggle,
+    .clear-chat-btn {
+        font-size: 0.65rem;
+        padding: 4px 6px;
+    }
+}
+
+/* ================================================ */
+/* LAPTOP/DESKTOP FIXES */
+/* ================================================ */
+@media (min-width: 769px) {
+    body {
+        align-items: flex-start; /* Align to top instead of center */
+        padding-top: 30px; /* Add space at top */
+    }
+    
+    .chat-container {
+        max-height: 85vh; /* Slightly smaller max height for laptops */
     }
 }
