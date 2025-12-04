@@ -1,4 +1,110 @@
 // ================================================
+// PROPERTY-SPECIFIC LOADING
+// ================================================
+
+// Get property ID from URL
+function getPropertyFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('property');
+}
+
+// Load property-specific configuration
+function loadPropertyConfig() {
+    const propertyId = getPropertyFromURL();
+    
+    if (!propertyId) {
+        // No property specified - show default
+        console.log('No property specified in URL, using default');
+        return;
+    }
+    
+    console.log('Loading property:', propertyId);
+    
+    // Get properties from localStorage
+    const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+    const property = properties[propertyId];
+    
+    if (!property) {
+        console.error('Property not found:', propertyId);
+        showPropertyNotFound(propertyId);
+        return;
+    }
+    
+    // Update UI with property info
+    updatePropertyUI(property);
+    
+    // Load property-specific FAQs
+    loadPropertyFAQs(propertyId);
+}
+
+// Update UI with property information
+function updatePropertyUI(property) {
+    // Update header
+    const headerTitle = document.querySelector('.header-text h2');
+    const headerSubtitle = document.querySelector('.header-text p');
+    
+    if (headerTitle && property.name) {
+        headerTitle.textContent = property.name;
+    }
+    
+    if (headerSubtitle && property.address) {
+        headerSubtitle.textContent = property.address;
+    }
+    
+    // Update page title
+    if (property.name) {
+        document.title = `${property.name} - Rental AI Assistant`;
+    }
+    
+    console.log('Property loaded:', property.name);
+}
+
+// Show error if property not found
+function showPropertyNotFound(propertyId) {
+    const messages = document.querySelector('.chat-messages');
+    if (!messages) return;
+    
+    const errorMsg = document.createElement('div');
+    errorMsg.className = 'message bot-message';
+    errorMsg.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <p><strong>⚠️ Property Not Found</strong></p>
+            <p>The property link you used doesn't exist or has been deleted.</p>
+            <p>Please check your link or contact your host.</p>
+            <p><small>Property ID: ${propertyId}</small></p>
+        </div>
+    `;
+    
+    messages.insertBefore(errorMsg, messages.firstChild);
+}
+
+// Load property-specific FAQs (you'll need to adapt your FAQ system)
+function loadPropertyFAQs(propertyId) {
+    // This depends on how your FAQ system is structured
+    // You might need to modify your existing FAQ loading code
+    console.log('Loading FAQs for property:', propertyId);
+    
+    // Example: Load property-specific config
+    const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+    const property = properties[propertyId];
+    
+    if (property && property.config) {
+        // Load property config into your FAQ system
+        console.log('Property config available:', property.config);
+    }
+}
+
+// Initialize property loading
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a moment for everything to load
+    setTimeout(() => {
+        loadPropertyConfig();
+    }, 100);
+});
+// ================================================
 // FAQ AUTO-LEARNING SYSTEM - ADDED
 // ================================================
 const FAQTracker = {
