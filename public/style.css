@@ -65,8 +65,6 @@ body {
     display: flex;
     flex-direction: column;
     overflow: auto; /* Changed from hidden to auto */
-    /* ADD THIS TEMPORARY LINE: */
-    border: 3px solid red !important;
 }
 
 /* Header */
@@ -622,10 +620,6 @@ body {
         padding: 4px 6px;
     }
 }
-
-/* ================================================ */
-/* LAPTOP/DESKTOP FIXES */
-/* ================================================ */
 @media (min-width: 769px) {
     body {
         align-items: flex-start; /* Align to top instead of center */
@@ -634,5 +628,12 @@ body {
     
     .chat-container {
         max-height: 85vh; /* Slightly smaller max height for laptops */
+    }
+    
+    /* ADD THESE LINES: Make FAQ section scrollable on laptop */
+    .bot-message:first-child .message-content {
+        max-height: 400px; /* Limit FAQ height on laptop */
+        overflow-y: auto; /* Make it scrollable */
+        padding-right: 10px; /* Space for scrollbar */
     }
 }
