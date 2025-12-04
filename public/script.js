@@ -238,7 +238,7 @@ const FAQTracker = {
         });
         normalizedQ = normalizedQ.trim();
         
-        // Score each FAQ entry
+               // Score each FAQ entry with ENHANCED KEYWORD WEIGHTING
         const scoredEntries = knowledgeBase.map(entry => {
             const entryQ = entry.question.toLowerCase().trim();
             let normalizedEntryQ = entryQ;
@@ -259,7 +259,7 @@ const FAQTracker = {
             else if (normalizedQ.includes(normalizedEntryQ) || normalizedEntryQ.includes(normalizedQ)) {
                 score = 85;
             }
-            // 3. Smart word matching with synonyms
+            // 3. Smart word matching with synonyms and category weighting
             else {
                 // Get all words from both questions (with synonyms expanded)
                 const questionWords = this.getExpandedWords(normalizedQ, synonymGroups);
@@ -276,14 +276,82 @@ const FAQTracker = {
                 const similarity = intersection.length / unionSize;
                 score = Math.min(similarity * 100, 80);
                 
-                // Boost for important keyword matches
-                const importantKeywords = ['emergency', 'fire', 'police', 'hospital', 'doctor', 'urgent'];
-                const importantMatches = importantKeywords.filter(keyword => 
-                    q.includes(keyword) && entryQ.includes(keyword)
-                );
-                score += importantMatches.length * 20;
+                // ENHANCED KEYWORD WEIGHTING SYSTEM
+                const keywordCategories = {
+                    // High importance - specific topics that shouldn't cross-match
+                    'wifi': ['wifi', 'internet', 'password', 'network', 'connection', 'wi-fi'],
+                    'checkin': ['checkin', 'check-in', 'checkout', 'check-out', 'arrival', 'departure', 'time', 'schedule'],
+                    'emergency': ['emergency', 'urgent', 'contact', 'number', 'phone', 'fire', 'police', 'hospital', 'doctor', 'ambulance'],
+                    'beach': ['beach', 'playa', 'shore', 'ocean', 'sea', 'sand'],
+                    'parking': ['parking', 'car', 'vehicle', 'garage', 'spot', 'space'],
+                    'appliances': ['appliance', 'oven', 'microwave', 'washer', 'dryer', 'stove', 'fridge', 'refrigerator'],
+                    'keys': ['key', 'keys', 'access', 'door', 'lock', 'code', 'entry'],
+                    'trash': ['trash', 'garbage', 'recycle', 'disposal', 'waste']
+                };
                 
-                // Boost for category matches
+                // Medium importance - general terms
+                const mediumKeywords = ['where', 'what', 'how', 'when', 'why', 'who', 'can', 'do', 'is', 'are', 'the'];
+                
+                // Identify the main category of the user's question
+                let userQuestionCategory = null;
+                for (const [category, keywords] of Object.entries(keywordCategories)) {
+                    if (keywords.some(keyword => q.includes(keyword))) {
+                        userQuestionCategory = category;
+                        break;
+                    }
+                }
+                
+                // Identify the main category of the FAQ entry
+                let faqCategory = null;
+                for (const [category, keywords] of Object.entries(keywordCategories)) {
+                    if (keywords.some(keyword => entryQ.includes(keyword))) {
+                        faqCategory = category;
+                        break;
+                    }
+                }
+                
+                // CATEGORY MATCHING LOGIC
+                if (userQuestionCategory && faqCategory) {
+                    if (userQuestionCategory === faqCategory) {
+                        // Same category = BIG bonus
+                        score += 40;
+                        console.log(`🎯 Category match: ${userQuestionCategory} (${score}%)`);
+                    } else {
+                        // Different categories = BIG penalty (prevent cross-matching)
+                        score -= 35;
+                        console.log(`⚠️ Category mismatch: ${userQuestionCategory} vs ${faqCategory} (${score}%)`);
+                    }
+                }
+                
+                // Specific keyword penalties (prevent WiFi matching with emergency)
+                if (q.includes('wifi') && entryQ.includes('emergency')) {
+                    score -= 50; // Heavy penalty for WiFi matching with emergency
+                }
+                if (q.includes('emergency') && entryQ.includes('wifi')) {
+                    score -= 50;
+                }
+                if ((q.includes('checkin') || q.includes('check-out')) && entryQ.includes('emergency')) {
+                    score -= 40;
+                }
+                if (q.includes('emergency') && (entryQ.includes('checkin') || entryQ.includes('check-out'))) {
+                    score -= 40;
+                }
+                
+                // Bonus for matching specific important keywords
+                Object.values(keywordCategories).flat().forEach(keyword => {
+                    if (q.includes(keyword) && entryQ.includes(keyword)) {
+                        score += 8; // Moderate bonus for matching specific keywords
+                    }
+                });
+                
+                // Small bonus for medium keyword matches
+                mediumKeywords.forEach(keyword => {
+                    if (q.includes(keyword) && entryQ.includes(keyword)) {
+                        score += 2; // Small bonus for general word matches
+                    }
+                });
+                
+                // Boost for category matches (using your existing system)
                 if (entry.category && this.detectCategory(q) === entry.category) {
                     score += 15;
                 }
@@ -294,24 +362,27 @@ const FAQTracker = {
                     q.includes(word) && entryQ.includes(word)
                 );
                 score += matchingQuestionWords.length * 10;
+                
+                // Additional boosting factors
+                // Length similarity boost
+                const lengthDiff = Math.abs(normalizedQ.length - normalizedEntryQ.length);
+                if (lengthDiff < 10) score += 5;
+                
+                // Common word boost
+                const commonWords = ['the', 'and', 'for', 'with', 'from', 'to', 'a', 'an', 'in', 'on', 'at'];
+                const commonMatches = commonWords.filter(word => 
+                    normalizedQ.includes(word) && normalizedEntryQ.includes(word)
+                );
+                score += commonMatches.length * 2;
+                
+                // Usage boost - more used answers get slightly higher score
+                score += Math.min((entry.uses || 0) * 0.5, 10);
             }
             
-            // Additional boosting factors
-            // Length similarity boost
-            const lengthDiff = Math.abs(normalizedQ.length - normalizedEntryQ.length);
-            if (lengthDiff < 10) score += 5;
+            // Ensure score is within bounds
+            score = Math.max(0, Math.min(100, Math.round(score)));
             
-            // Common word boost
-            const commonWords = ['the', 'and', 'for', 'with', 'from', 'to', 'a', 'an', 'in', 'on', 'at'];
-            const commonMatches = commonWords.filter(word => 
-                normalizedQ.includes(word) && normalizedEntryQ.includes(word)
-            );
-            score += commonMatches.length * 2;
-            
-            // Usage boost - more used answers get slightly higher score
-            score += Math.min((entry.uses || 0) * 0.5, 10);
-            
-            return { entry, score: Math.round(score), normalizedEntryQ };
+            return { entry, score, normalizedEntryQ };
         });
         
         // Sort by score (highest first)
@@ -328,7 +399,7 @@ const FAQTracker = {
         
         // If best match has decent score, use it
         const bestMatch = scoredEntries[0];
-        const threshold = q.length < 10 ? 40 : 30; // Lower threshold for short questions
+        const threshold = q.length < 10 ? 70 : 60; // Higher threshold for better accuracy
         
         if (bestMatch && bestMatch.score >= threshold) {
             bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
