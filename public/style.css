@@ -603,23 +603,9 @@ body {
     }
 }
 
-@media (max-width: 480px) {
-    .header-controls {
-        flex-wrap: wrap;
-    }
-    
-    .language-select {
-        min-width: 80px;
-    }
-    
-    .setup-btn,
-    .language-select,
-    .theme-toggle,
-    .clear-chat-btn {
-        font-size: 0.65rem;
-        padding: 4px 6px;
-    }
-}
+/* ================================================ */
+/* LAPTOP/DESKTOP FIXES */
+/* ================================================ */
 @media (min-width: 769px) {
     body {
         align-items: flex-start; /* Align to top instead of center */
@@ -630,10 +616,10 @@ body {
         max-height: 85vh; /* Slightly smaller max height for laptops */
     }
     
-    /* ADD THESE LINES: Make FAQ section scrollable on laptop */
+    /* Make FAQ section scrollable on laptop if too long */
     .bot-message:first-child .message-content {
-        max-height: 400px; /* Limit FAQ height on laptop */
-        overflow-y: auto; /* Make it scrollable */
-        padding-right: 10px; /* Space for scrollbar */
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
     }
 }
