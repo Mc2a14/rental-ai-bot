@@ -604,22 +604,26 @@ body {
 }
 
 /* ================================================ */
-/* LAPTOP/DESKTOP FIXES */
+/* FAQ MANAGEMENT PAGE - LAPTOP FIX */
 /* ================================================ */
 @media (min-width: 769px) {
-    body {
-        align-items: flex-start; /* Align to top instead of center */
-        padding-top: 30px; /* Add space at top */
+    /* This targets ONLY the FAQ management page */
+    body.faq-manage-page {
+        align-items: flex-start !important;
+        padding-top: 40px !important;
+        padding-bottom: 40px !important;
     }
     
-    .chat-container {
-        max-height: 85vh; /* Slightly smaller max height for laptops */
+    /* Make the main container scrollable */
+    body.faq-manage-page .container {
+        max-height: 80vh !important;
+        overflow-y: auto !important;
     }
     
-    /* Make FAQ section scrollable on laptop if too long */
-    .bot-message:first-child .message-content {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 10px;
+    /* Remove any max-height that might cause cutoff */
+    body.faq-manage-page main,
+    body.faq-manage-page section,
+    body.faq-manage-page div {
+        max-height: none !important;
     }
 }
