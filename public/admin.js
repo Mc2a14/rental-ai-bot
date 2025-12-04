@@ -1015,6 +1015,7 @@ function togglePropertyManager() {
 }
 
 // Create a new property
+// In admin.js - Update the createNewProperty function:
 function createNewProperty() {
     const name = document.getElementById('newPropertyName').value;
     const address = document.getElementById('newPropertyAddress').value;
@@ -1027,16 +1028,37 @@ function createNewProperty() {
     // Generate unique ID
     const id = 'property-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
-    // Create property object
+    // Get CURRENT form data (all property details)
+    const formData = window.propertySetup ? window.propertySetup.getFormData() : {};
+    
+    // Create property object with ALL configuration
     properties[id] = {
         id: id,
         name: name,
         address: address || '',
         config: {
-            // Current form values will be saved here
+            // Basic info
             propertyName: name,
             propertyAddress: address,
-            // ... other config
+            propertyType: formData.type || '',
+            
+            // Contact info
+            hostContact: formData.hostContact || '',
+            maintenanceContact: formData.maintenanceContact || '',
+            
+            // Check-in/out
+            checkInTime: formData.checkInTime || '3:00 PM',
+            checkOutTime: formData.checkOutTime || '11:00 AM',
+            lateCheckout: formData.lateCheckout || '',
+            
+            // Amenities
+            wifiDetails: formData.wifiDetails || '',
+            amenities: formData.amenities || '',
+            houseRules: formData.houseRules || '',
+            
+            // Recommendations and appliances
+            recommendations: window.propertySetup ? window.propertySetup.recommendations : [],
+            appliances: window.propertySetup ? window.propertySetup.appliances : []
         },
         created: new Date().toISOString(),
         faqCount: 0,
@@ -1056,7 +1078,7 @@ function createNewProperty() {
     // Auto-switch to this property
     switchProperty(id);
     
-    alert(`Property "${name}" created! Switch to "Back to Setup" to configure it.`);
+    alert(`Property "${name}" created! The unique link has been copied to your clipboard.`);
 }
 
 // Render properties list
