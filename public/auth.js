@@ -2,7 +2,7 @@
 // SIMPLE PASSWORD PROTECTION SYSTEM
 // ================================================
 
-const ADMIN_PASSWORD = "rental2024"; // Change this to your desired password
+const ADMIN_PASSWORD = "YourStrongPassword123!"; // Your actual password
 
 // Check if user is authenticated
 function isAuthenticated() {
