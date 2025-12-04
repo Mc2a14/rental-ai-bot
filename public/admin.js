@@ -1154,6 +1154,7 @@ function copyPropertyLink(propertyId) {
 }
 
 // Switch to a property
+// In admin.js - Update switchProperty function:
 function switchProperty(propertyId) {
     currentPropertyId = propertyId;
     localStorage.setItem('current_property', propertyId);
@@ -1161,10 +1162,35 @@ function switchProperty(propertyId) {
     // Load property config into form
     const prop = properties[propertyId];
     if (prop && prop.config) {
-        // Populate form with property config
-        document.getElementById('propertyName').value = prop.config.propertyName || prop.name;
-        document.getElementById('propertyAddress').value = prop.config.propertyAddress || prop.address;
-        // ... populate other fields from prop.config
+        // Populate ALL form fields with property config
+        const config = prop.config;
+        
+        // Basic info
+        document.getElementById('propertyName').value = config.propertyName || prop.name;
+        document.getElementById('propertyAddress').value = config.propertyAddress || prop.address;
+        document.getElementById('propertyType').value = config.propertyType || 'Apartment';
+        
+        // Contact info
+        document.getElementById('hostContact').value = config.hostContact || '';
+        document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
+        
+        // Check-in/out
+        document.getElementById('checkInTime').value = config.checkInTime || '3:00 PM';
+        document.getElementById('checkOutTime').value = config.checkOutTime || '11:00 AM';
+        document.getElementById('lateCheckout').value = config.lateCheckout || '';
+        
+        // Amenities
+        document.getElementById('wifiDetails').value = config.wifiDetails || '';
+        document.getElementById('amenities').value = config.amenities || '';
+        document.getElementById('houseRules').value = config.houseRules || '';
+        
+        // Load recommendations and appliances
+        if (window.propertySetup) {
+            window.propertySetup.recommendations = config.recommendations || [];
+            window.propertySetup.appliances = config.appliances || [];
+            window.propertySetup.updateRecommendationsList();
+            window.propertySetup.updateAppliancesList();
+        }
     }
     
     // Update UI
