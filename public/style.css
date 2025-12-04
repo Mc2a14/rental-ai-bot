@@ -623,3 +623,31 @@ body {
         overflow-y: auto !important;
     }
 }
+
+/* ================================================ */
+/* AUTHENTICATION STYLES */
+/* ================================================ */
+
+#adminLoginModal input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+#adminLoginModal button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+#adminLoginModal #loginBtn:hover {
+    background: #2980b9 !important;
+}
+
+#adminLoginModal button:last-child:hover {
+    background: #7f8c8d !important;
+}
+
+/* Logout button hover effect */
+#adminLogoutBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
