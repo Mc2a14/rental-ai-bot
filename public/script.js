@@ -408,7 +408,9 @@ const FAQTracker = {
         
         // If best match has decent score, use it
         const bestMatch = scoredEntries[0];
-        const threshold = 70; // Increase to 70% for all questions
+        const threshold = q.includes('oven') || q.includes('microwave') || 
+                  q.includes('washer') || q.includes('dryer') ? 
+                  85 : 70;
         
         if (bestMatch && bestMatch.score >= threshold) {
             bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
