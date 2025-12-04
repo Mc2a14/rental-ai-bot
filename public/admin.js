@@ -988,3 +988,220 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log("✅ admin.js loaded completely");
+
+// ==============================================
+// PROPERTY MANAGEMENT FUNCTIONS
+// ==============================================
+
+let properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+let currentPropertyId = localStorage.getItem('current_property') || 'default';
+
+// Toggle between setup and property management
+function togglePropertyManager() {
+    const form = document.getElementById('propertyConfig');
+    const manager = document.getElementById('propertyManagementSection');
+    const toggleBtn = document.getElementById('togglePropertyManager');
+    
+    if (manager.style.display === 'none') {
+        form.style.display = 'none';
+        manager.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-cogs"></i> Back to Setup';
+        renderProperties();
+    } else {
+        form.style.display = 'block';
+        manager.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-building"></i> Manage Properties';
+    }
+}
+
+// Create a new property
+function createNewProperty() {
+    const name = document.getElementById('newPropertyName').value;
+    const address = document.getElementById('newPropertyAddress').value;
+    
+    if (!name) {
+        alert('Please enter a property name');
+        return;
+    }
+    
+    // Generate unique ID
+    const id = 'property-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    
+    // Create property object
+    properties[id] = {
+        id: id,
+        name: name,
+        address: address || '',
+        config: {
+            // Current form values will be saved here
+            propertyName: name,
+            propertyAddress: address,
+            // ... other config
+        },
+        created: new Date().toISOString(),
+        faqCount: 0,
+        guestLink: `${window.location.origin}/?property=${id}`
+    };
+    
+    // Save to localStorage
+    localStorage.setItem('rental_properties', JSON.stringify(properties));
+    
+    // Clear inputs
+    document.getElementById('newPropertyName').value = '';
+    document.getElementById('newPropertyAddress').value = '';
+    
+    // Update display
+    renderProperties();
+    
+    // Auto-switch to this property
+    switchProperty(id);
+    
+    alert(`Property "${name}" created! Switch to "Back to Setup" to configure it.`);
+}
+
+// Render properties list
+function renderProperties() {
+    const container = document.getElementById('propertiesContainer');
+    container.innerHTML = '';
+    
+    if (Object.keys(properties).length === 0) {
+        container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">No properties yet. Create your first one!</p>';
+        return;
+    }
+    
+    Object.values(properties).forEach(prop => {
+        const isCurrent = prop.id === currentPropertyId;
+        const div = document.createElement('div');
+        div.className = 'property-card';
+        div.style.cssText = `
+            background: ${isCurrent ? '#e8f4fd' : 'white'};
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid ${isCurrent ? '#3498db' : '#e1e5e9'};
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        `;
+        
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${prop.name} ${isCurrent ? '<small style="color: #3498db;">(Current)</small>' : ''}</h4>
+                    <p style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 0.9em;">${prop.address || 'No address'}</p>
+                    <div class="property-link" style="display: flex; gap: 10px; margin: 10px 0;">
+                        <input type="text" readonly value="${prop.guestLink}" id="link-${prop.id}" 
+                               style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; font-size: 0.9em;">
+                        <button onclick="copyPropertyLink('${prop.id}')" class="btn" style="padding: 8px 12px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-copy"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="switchProperty('${prop.id}')" class="btn" style="padding: 5px 10px; background: ${isCurrent ? '#95a5a6' : '#3498db'}; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;" ${isCurrent ? 'disabled' : ''}>
+                        ${isCurrent ? 'Current' : 'Switch To'}
+                    </button>
+                    <button onclick="deleteProperty('${prop.id}')" class="btn" style="padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div style="font-size: 0.8em; color: #95a5a6; margin-top: 10px;">
+                Created: ${new Date(prop.created).toLocaleDateString()}
+            </div>
+        `;
+        
+        container.appendChild(div);
+    });
+}
+
+// Copy property link to clipboard
+function copyPropertyLink(propertyId) {
+    const input = document.getElementById(`link-${propertyId}`);
+    input.select();
+    document.execCommand('copy');
+    
+    // Show confirmation
+    const btn = input.nextElementSibling;
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    btn.style.background = '#27ae60';
+    
+    setTimeout(() => {
+        btn.innerHTML = original;
+        btn.style.background = '#2ecc71';
+    }, 2000);
+}
+
+// Switch to a property
+function switchProperty(propertyId) {
+    currentPropertyId = propertyId;
+    localStorage.setItem('current_property', propertyId);
+    
+    // Load property config into form
+    const prop = properties[propertyId];
+    if (prop && prop.config) {
+        // Populate form with property config
+        document.getElementById('propertyName').value = prop.config.propertyName || prop.name;
+        document.getElementById('propertyAddress').value = prop.config.propertyAddress || prop.address;
+        // ... populate other fields from prop.config
+    }
+    
+    // Update UI
+    renderProperties();
+    
+    // Switch back to setup form
+    togglePropertyManager();
+    
+    alert(`Now editing: ${prop.name}`);
+}
+
+// Delete a property
+function deleteProperty(propertyId) {
+    if (!confirm(`Delete property "${properties[propertyId].name}"? This cannot be undone.`)) {
+        return;
+    }
+    
+    delete properties[propertyId];
+    localStorage.setItem('rental_properties', JSON.stringify(properties));
+    
+    // If deleting current property, switch to another or default
+    if (propertyId === currentPropertyId) {
+        const remaining = Object.keys(properties);
+        if (remaining.length > 0) {
+            currentPropertyId = remaining[0];
+            localStorage.setItem('current_property', currentPropertyId);
+        } else {
+            currentPropertyId = 'default';
+            localStorage.removeItem('current_property');
+        }
+    }
+    
+    renderProperties();
+}
+
+// Initialize property system
+function initPropertySystem() {
+    // Load current property
+    const prop = properties[currentPropertyId];
+    if (prop && prop.config) {
+        // Pre-fill form with current property data
+        // (You'll need to add this population logic)
+    }
+    
+    // Add property ID to save function
+    const originalSaveConfig = window.saveConfig || function() {};
+    window.saveConfig = function() {
+        const config = getConfigData(); // Your existing function
+        if (currentPropertyId && properties[currentPropertyId]) {
+            properties[currentPropertyId].config = config;
+            properties[currentPropertyId].name = config.propertyName;
+            properties[currentPropertyId].address = config.propertyAddress;
+            localStorage.setItem('rental_properties', JSON.stringify(properties));
+        }
+        originalSaveConfig();
+    };
+}
+
+// Call init on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initPropertySystem();
+});
