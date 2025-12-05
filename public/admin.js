@@ -1,128 +1,242 @@
 console.log("🔄 admin.js is loading...");
 
 class PropertySetup {
-    constructor() {
-        console.log("✅ PropertySetup constructor called");
-        this.currentStep = 1;
-        this.totalSteps = 3;
-        this.recommendations = this.loadRecommendations();
-        this.appliances = this.loadAppliances();
-        
-        console.log("🔄 Initializing event listeners...");
-        this.initializeEventListeners();
-        this.updateStepDisplay();
-        this.updateRecommendationsList();
-        this.updateAppliancesList();
-        this.addPreviewStyles();
-        this.autoLoadExistingConfig();
-        this.setupAdditionalButtons();
-        console.log("✅ PropertySetup initialized successfully");
-    }
-
-    addPreviewStyles() {
-        console.log("🔄 Adding preview styles...");
-        const style = document.createElement('style');
-        style.textContent = `
-            .preview-item {
-                padding: 8px 0;
-                border-bottom: 1px solid #e1e5e9;
-            }
-            .preview-item:last-child {
-                border-bottom: none;
-            }
-            .preview-item strong {
-                color: #2c3e50;
-                display: inline-block;
-                width: 120px;
-            }
-            .section-description {
-                color: #7f8c8d;
-                margin-bottom: 20px;
-                font-style: italic;
-            }
-            .field-invalid {
-                border-color: #e74c3c !important;
-                background-color: #fff0f0 !important;
-            }
-            .field-valid {
-                border-color: #2ecc71 !important;
-            }
-            .validation-message {
-                color: #e74c3c;
-                font-size: 0.8rem;
-                margin-top: 5px;
-                display: none;
-            }
-            .validation-message.show {
-                display: block;
-            }
-        `;
-        document.head.appendChild(style);
-        console.log("✅ Preview styles added");
-    }
-
-    initializeEventListeners() {
-        console.log("🔄 Setting up event listeners...");
-        
-        // Navigation buttons
-        const nextBtn = document.getElementById('nextBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        console.log("📝 Buttons found:", { nextBtn, prevBtn, submitBtn });
-        
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => this.nextStep());
-            console.log("✅ Next button listener added");
-        }
-        
-        if (prevBtn) {
-            prevBtn.addEventListener('click', () => this.prevStep());
-            console.log("✅ Previous button listener added");
-        }
-        
-        if (submitBtn) {
-            submitBtn.addEventListener('click', (e) => {
-                console.log("💾 Save Configuration button clicked!");
-                this.saveConfiguration(e);
-            });
-            console.log("✅ Submit button listener added");
-        }
-        
-        // Real-time validation
+   constructor() {
+    console.log("✅ PropertySetup constructor called");
+    this.currentStep = 1;
+    this.totalSteps = 3;
+    this.recommendations = this.loadRecommendations();
+    this.appliances = this.loadAppliances();
+    
+    console.log("🔄 Initializing event listeners...");
+    this.initializeEventListeners();
+    this.updateStepDisplay();
+    this.updateRecommendationsList();
+    this.updateAppliancesList();
+    this.addPreviewStyles();
+    
+    // Load existing config FIRST
+    this.autoLoadExistingConfig();
+    
+    // THEN initialize validation (so it sees the pre-filled values)
+    // Wait a bit for DOM to be fully ready
+    setTimeout(() => {
         this.setupRealTimeValidation();
-        console.log("✅ All event listeners initialized");
-    }
+    }, 100);
+    
+    this.setupAdditionalButtons();
+    console.log("✅ PropertySetup initialized successfully");
+}
 
-    setupRealTimeValidation() {
-        console.log("🔄 Setting up real-time validation...");
-        const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
-        console.log(`📝 Found ${requiredFields.length} required fields`);
+addPreviewStyles() {
+    console.log("🔄 Adding preview styles...");
+    const style = document.createElement('style');
+    style.textContent = `
+        .preview-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        .preview-item:last-child {
+            border-bottom: none;
+        }
+        .preview-item strong {
+            color: #2c3e50;
+            display: inline-block;
+            width: 120px;
+        }
+        .section-description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        .field-invalid {
+            border-color: #e74c3c !important;
+            background-color: #fff0f0 !important;
+        }
+        .field-valid {
+            border-color: #2ecc71 !important;
+            background-color: #f8fff9 !important;
+        }
+        .validation-message {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+            font-weight: 500;
+        }
+        .validation-message.show {
+            display: block;
+        }
+        /* Style for pre-filled fields */
+        input:not(:placeholder-shown).field-valid,
+        textarea:not(:placeholder-shown).field-valid,
+        select.field-valid {
+            background-color: #f8fff9 !important;
+        }
+    `;
+    document.head.appendChild(style);
+    console.log("✅ Preview styles added");
+}
+
+initializeEventListeners() {
+    console.log("🔄 Setting up event listeners...");
+    
+    // Navigation buttons
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    console.log("📝 Buttons found:", { nextBtn, prevBtn, submitBtn });
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => this.nextStep());
+        console.log("✅ Next button listener added");
+    }
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => this.prevStep());
+        console.log("✅ Previous button listener added");
+    }
+    
+    if (submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+            console.log("💾 Save Configuration button clicked!");
+            this.saveConfiguration(e);
+        });
+        console.log("✅ Submit button listener added");
+    }
+    
+    console.log("✅ All event listeners initialized");
+    // Note: setupRealTimeValidation is called separately with delay
+}
+
+setupRealTimeValidation() {
+    console.log("🔄 Setting up real-time validation...");
+    
+    const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
+    console.log(`📝 Found ${requiredFields.length} required fields`);
+    
+    requiredFields.forEach(field => {
+        // Add validation message element
+        if (!field.parentNode.querySelector('.validation-message')) {
+            const validationMsg = document.createElement('div');
+            validationMsg.className = 'validation-message';
+            validationMsg.textContent = 'This field is required';
+            field.parentNode.appendChild(validationMsg);
+        }
         
-        requiredFields.forEach(field => {
-            // Add validation message element
-            if (!field.parentNode.querySelector('.validation-message')) {
-                const validationMsg = document.createElement('div');
-                validationMsg.className = 'validation-message';
-                validationMsg.textContent = 'This field is required';
-                field.parentNode.appendChild(validationMsg);
-            }
-            
-            // Event listeners
-            field.addEventListener('input', () => {
-                this.validateField(field);
-                this.validateCurrentStep();
-            });
-            
-            field.addEventListener('blur', () => this.validateField(field));
-            
-            // Initial validation
+        // Enhanced event listeners
+        field.addEventListener('input', () => {
             this.validateField(field);
+            this.validateCurrentStep();
         });
         
-        this.validateCurrentStep();
-        console.log("✅ Real-time validation setup complete");
+        field.addEventListener('blur', () => this.validateField(field));
+        
+        // Initial validation - check if field has value
+        this.validateField(field);
+    });
+    
+    this.validateCurrentStep();
+    console.log("✅ Real-time validation setup complete");
+}
+
+// Also update the validateField method (find it in your code and replace with this):
+validateField(field) {
+    // Get the actual value (trim whitespace)
+    const value = field.value.trim();
+    const isValid = value.length > 0;
+    const validationMsg = field.parentNode.querySelector('.validation-message');
+    
+    // Special handling for select elements
+    if (field.tagName === 'SELECT') {
+        // For select elements, check if a value is selected (not empty string)
+        const selectIsValid = field.value !== '';
+        
+        if (selectIsValid) {
+            field.classList.remove('field-invalid');
+            field.classList.add('field-valid');
+            if (validationMsg) validationMsg.classList.remove('show');
+        } else {
+            field.classList.remove('field-valid');
+            field.classList.add('field-invalid');
+            if (validationMsg) validationMsg.classList.add('show');
+        }
+        
+        return selectIsValid;
     }
+    
+    // For input and textarea elements
+    if (isValid) {
+        field.classList.remove('field-invalid');
+        field.classList.add('field-valid');
+        if (validationMsg) validationMsg.classList.remove('show');
+    } else {
+        field.classList.remove('field-valid');
+        field.classList.add('field-invalid');
+        if (validationMsg) validationMsg.classList.add('show');
+    }
+    
+    return isValid;
+}
+
+// Also update the autoLoadExistingConfig method to add a validation call:
+autoLoadExistingConfig() {
+    console.log("🔄 Attempting to auto-load existing configuration...");
+    
+    try {
+        const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+        const savedAppliances = localStorage.getItem('rental_ai_appliances');
+        const savedRecommendations = localStorage.getItem('rental_ai_recommendations');
+        
+        if (savedConfig) {
+            console.log('📁 Found saved configuration, loading...');
+            const config = JSON.parse(savedConfig);
+            
+            // Populate basic info (Step 1)
+            document.getElementById('propertyName').value = config.name || '';
+            document.getElementById('propertyAddress').value = config.address || '';
+            document.getElementById('propertyType').value = config.type || 'Apartment';
+            
+            // Populate contact info (Step 2)
+            document.getElementById('hostContact').value = config.hostContact || '';
+            document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
+            document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
+            document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
+            document.getElementById('lateCheckout').value = config.lateCheckout || '';
+            
+            // Populate details (Step 3)
+            document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
+            document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
+            document.getElementById('houseRules').value = config.houseRules || '';
+            
+            console.log('✅ Configuration loaded into form');
+            
+            // Quick validation fix - remove red styling from pre-filled fields
+            setTimeout(() => {
+                const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
+                requiredFields.forEach(field => {
+                    if (field.value.trim().length > 0) {
+                        field.classList.remove('field-invalid');
+                        field.classList.add('field-valid');
+                        const validationMsg = field.parentNode.querySelector('.validation-message');
+                        if (validationMsg) validationMsg.classList.remove('show');
+                    }
+                });
+            }, 50);
+            
+            // Show edit mode indicator
+            this.showEditModeIndicator();
+        }
+        
+        if (!savedConfig && !savedAppliances && !savedRecommendations) {
+            console.log('ℹ️ No existing configuration found - starting fresh');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error auto-loading configuration:', error);
+    }
+}
 
     validateField(field) {
         const isValid = field.value.trim().length > 0;
