@@ -620,14 +620,7 @@
 3. Use arrow keys to navigate
 4. For Netflix, press the red button" class="form-textarea" rows="4"></textarea>
                         </div>
-<!-- Photo Section - Temporarily Hidden -->
-<!--                        
-                        <div class="form-group">
-                            <label for="appliance-photo">Photo URL (Optional)</label>
-                            <input type="text" id="appliance-photo" placeholder="https://example.com/photo.jpg OR upload instructions below" class="form-input">
-                            <div class="form-help">You can upload to imgur.com or similar and paste the link</div>
-                        </div>
--->                        
+                        
                         <div class="form-group">
                             <label for="appliance-troubleshooting">Troubleshooting Tips (Optional)</label>
                             <textarea id="appliance-troubleshooting" placeholder="Common issues and solutions:
@@ -725,40 +718,6 @@
                 <!-- Reset and Backup buttons will be added by JavaScript -->
             </div>
         </form>
-
-                </form>
-
-              </form>
-
-        <!-- ============================================== -->
-        <!-- PROPERTY MANAGEMENT SECTION - ADD THIS -->
-        <!-- ============================================== -->
-        <div class="form-section" id="propertyManagementSection" style="margin-top: 40px; display: none;">
-            <h3><i class="fas fa-building"></i> Property Management</h3>
-            <p>Create and manage multiple properties. Each property gets a unique link to share with guests.</p>
-            
-            <div class="property-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="newPropertyName" placeholder="New Property Name" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <input type="text" id="newPropertyAddress" placeholder="Address (optional)" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <button onclick="createNewProperty()" class="btn btn-primary" style="padding: 10px 20px;">
-                    <i class="fas fa-plus"></i> Create Property
-                </button>
-            </div>
-            
-            <div class="property-list">
-                <h4>Your Properties</h4>
-                <div id="propertiesContainer" style="margin-top: 15px;">
-                    <!-- Properties will appear here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Add this tab switcher button in the nav-buttons section -->
-        <div style="text-align: center; margin-top: 20px;">
-            <button id="togglePropertyManager" class="btn btn-secondary" onclick="togglePropertyManager()">
-                <i class="fas fa-building"></i> Manage Properties
-            </button>
-        </div>
 
         <div class="success-message" id="successMessage">
             <h3><i class="fas fa-check-circle"></i> Configuration Saved Successfully!</h3>
