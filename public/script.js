@@ -14,22 +14,41 @@ function loadPropertyConfig() {
     
     if (!propertyId) {
         console.log('No property specified in URL, using default');
+        // Show default message
+        const messages = document.querySelector('.chat-messages');
+        if (messages) {
+            const welcomeMsg = messages.querySelector('.message:first-child');
+            if (welcomeMsg) {
+                welcomeMsg.querySelector('.message-content').innerHTML = 
+                    '<p><strong>Welcome to Rental AI Assistant!</strong></p>' +
+                    '<p>This is the default assistant. If you have a specific property link from your host, please use that link.</p>' +
+                    '<p>Otherwise, you can ask general questions.</p>';
+            }
+        }
         return;
     }
     
-    console.log('Loading property:', propertyId);
+    console.log('🔍 Loading property:', propertyId);
     
     const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
     const property = properties[propertyId];
     
     if (!property) {
-        console.error('Property not found:', propertyId);
+        console.error('❌ Property not found:', propertyId);
         showPropertyNotFound(propertyId);
         return;
     }
     
+    console.log('✅ Property found:', property.name);
+    console.log('Property config:', property.config);
+    
     updatePropertyUI(property);
     loadPropertyFAQs(propertyId);
+    
+    // Dispatch event to notify RentalAIChat class
+    window.dispatchEvent(new CustomEvent('propertyLoaded', { 
+        detail: { property, propertyId } 
+    }));
 }
 
 // Update UI with property information
@@ -38,18 +57,18 @@ function updatePropertyUI(property) {
     const headerSubtitle = document.querySelector('.header-text p');
     
     if (headerTitle && property.name) {
-        headerTitle.textContent = property.name;
+        headerTitle.textContent = `Rental AI Assistant - ${property.name}`;
     }
     
-    if (headerSubtitle && property.address) {
-        headerSubtitle.textContent = property.address;
+    if (headerSubtitle) {
+        headerSubtitle.textContent = property.address || `${property.name} • 24/7 Support`;
     }
     
     if (property.name) {
         document.title = `${property.name} - Rental AI Assistant`;
     }
     
-    console.log('Property loaded:', property.name);
+    console.log('✅ Property UI updated:', property.name);
 }
 
 // Show error if property not found
@@ -412,6 +431,12 @@ class RentalAIChat {
         this.hostRecommendations = [];
         this.hostAppliances = [];
         
+        // Listen for property loaded event
+        window.addEventListener('propertyLoaded', (event) => {
+            console.log('🎯 Property loaded event received:', event.detail.property.name);
+            this.onPropertyLoaded(event.detail.property);
+        });
+        
         console.log('🔍 Step 1: Loading ALL property data...');
         this.loadAllPropertyData();
         
@@ -431,6 +456,33 @@ class RentalAIChat {
         this.setupQuickQuestionButtons();
         
         console.log('✅ Chat initialization complete!');
+    }
+
+    // New method: Handle property loaded event
+    onPropertyLoaded(property) {
+        console.log('🔄 Updating chat with property data...');
+        
+        if (property && property.config) {
+            this.hostConfig = this.transformPropertyConfig(
+                property.config, 
+                property.name, 
+                property.address
+            );
+            
+            // Load recommendations and appliances from property config
+            this.hostRecommendations = property.config.recommendations || [];
+            this.hostAppliances = property.config.appliances || [];
+            
+            console.log('✅ Chat updated with property:');
+            console.log('- WiFi:', this.hostConfig?.amenities?.wifi || 'None');
+            console.log('- Recommendations:', this.hostRecommendations.length);
+            console.log('- Appliances:', this.hostAppliances.length);
+            
+            // Update quick questions if appliances exist
+            if (this.hostAppliances.length > 0) {
+                this.setupQuickQuestionButtons();
+            }
+        }
     }
 
     // Load ALL property data
@@ -667,39 +719,41 @@ class RentalAIChat {
         const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
         console.log('2. Total properties in storage:', Object.keys(properties).length);
         
-        if (propertyId && properties[propertyId]) {
-            const property = properties[propertyId];
-            console.log('3. Current property:', property.name);
-            console.log('4. Has config:', !!property.config);
+        if (propertyId) {
+            console.log('3. Properties in storage:', Object.keys(properties));
             
-            if (property.config) {
-                console.log('5. WiFi in config:', property.config.wifiDetails || 'Not set');
-                console.log('6. Recommendations in config:', property.config.recommendations?.length || 0);
-                console.log('7. Appliances in config:', property.config.appliances?.length || 0);
+            if (properties[propertyId]) {
+                const property = properties[propertyId];
+                console.log('4. Current property:', property.name);
+                console.log('5. Full property object:', property);
+                console.log('6. Has config:', !!property.config);
                 
-                if (property.config.recommendations && property.config.recommendations.length > 0) {
-                    console.log('8. First recommendation in config:', property.config.recommendations[0]);
+                if (property.config) {
+                    console.log('7. WiFi in config:', property.config.wifiDetails || 'Not set');
+                    console.log('8. Recommendations in config:', property.config.recommendations?.length || 0);
+                    console.log('9. Appliances in config:', property.config.appliances?.length || 0);
+                    
+                    if (property.config.recommendations && property.config.recommendations.length > 0) {
+                        console.log('10. First recommendation in config:', property.config.recommendations[0]);
+                    }
                 }
+            } else {
+                console.log('11. ❌ Property ID NOT FOUND in storage!');
             }
         }
         
-        console.log('9. Chat loaded hostConfig:', this.hostConfig?.name || 'None');
-        console.log('10. Chat loaded WiFi:', this.hostConfig?.amenities?.wifi || 'None');
-        console.log('11. Chat loaded recommendations:', this.hostRecommendations?.length || 0);
-        console.log('12. Chat loaded appliances:', this.hostAppliances?.length || 0);
-        
-        if (this.hostRecommendations && this.hostRecommendations.length > 0) {
-            console.log('13. First loaded recommendation:', this.hostRecommendations[0]);
-        }
-        
-        console.log('14. Recommendations text being sent:');
-        console.log(this.getRecommendationsText());
+        console.log('12. Chat loaded hostConfig:', this.hostConfig?.name || 'None');
+        console.log('13. Chat loaded WiFi:', this.hostConfig?.amenities?.wifi || 'None');
+        console.log('14. Chat loaded recommendations:', this.hostRecommendations?.length || 0);
+        console.log('15. Chat loaded appliances:', this.hostAppliances?.length || 0);
         
         console.log('=========================');
         
         // Show alert with critical info
         const alertMsg = `PROPERTY DEBUG:
-Property: ${propertyId ? (properties[propertyId]?.name || 'Not found') : 'No URL param'}
+Property ID from URL: ${propertyId || 'None'}
+Property Found: ${propertyId && properties[propertyId] ? 'YES' : 'NO'}
+Property Name: ${propertyId && properties[propertyId] ? properties[propertyId].name : 'N/A'}
 WiFi in config: ${propertyId && properties[propertyId]?.config?.wifiDetails ? 'SET' : 'NOT SET'}
 Chat loaded WiFi: ${this.hostConfig?.amenities?.wifi ? 'SET' : 'NOT SET'}
 Recommendations loaded: ${this.hostRecommendations?.length || 0}`;
