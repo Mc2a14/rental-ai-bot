@@ -482,31 +482,38 @@ function addLogoutButton() {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: rgba(231, 76, 60, 0.1);
+        background: white;
         color: #e74c3c;
-        border: 1px solid #e74c3c;
+        border: 2px solid #e74c3c;
         padding: 8px 15px;
         border-radius: 20px;
         font-size: 0.9rem;
+        font-weight: 600;
         cursor: pointer;
         z-index: 1000;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 6px rgba(231, 76, 60, 0.2);
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
     `;
     
     logoutBtn.addEventListener('mouseenter', () => {
         logoutBtn.style.background = '#e74c3c';
         logoutBtn.style.color = 'white';
+        logoutBtn.style.transform = 'translateY(-2px)';
+        logoutBtn.style.boxShadow = '0 5px 10px rgba(231, 76, 60, 0.3)';
     });
     
     logoutBtn.addEventListener('mouseleave', () => {
-        logoutBtn.style.background = 'rgba(231, 76, 60, 0.1)';
+        logoutBtn.style.background = 'white';
         logoutBtn.style.color = '#e74c3c';
+        logoutBtn.style.transform = 'translateY(0)';
+        logoutBtn.style.boxShadow = '0 3px 6px rgba(231, 76, 60, 0.2)';
     });
     
-    logoutBtn.addEventListener('click', function() {
+    logoutBtn.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent any parent event handlers
         if (confirm(`Logout ${currentUser.username}?`)) {
             logout();
             window.location.href = '/';
