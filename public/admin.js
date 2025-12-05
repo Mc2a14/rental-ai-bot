@@ -141,7 +141,6 @@ setupRealTimeValidation() {
     console.log("✅ Real-time validation setup complete");
 }
 
-// Also update the validateField method (find it in your code and replace with this):
 validateField(field) {
     // Get the actual value (trim whitespace)
     const value = field.value.trim();
@@ -180,7 +179,46 @@ validateField(field) {
     return isValid;
 }
 
-// Also update the autoLoadExistingConfig method to add a validation call:
+validateCurrentStep() {
+    console.log("🔄 Validating current step...");
+    const currentSection = document.getElementById(`section${this.currentStep}`);
+    if (!currentSection) {
+        console.log("❌ Current section not found");
+        return false;
+    }
+    
+    const requiredFields = currentSection.querySelectorAll('input[required], textarea[required], select[required]');
+    let isValid = true;
+
+    console.log(`📝 Checking ${requiredFields.length} required fields in step ${this.currentStep}:`);
+    
+    requiredFields.forEach(field => {
+        const isFieldValid = this.validateField(field);
+        console.log(`  - ${field.id}: "${field.value}" -> ${isFieldValid ? 'VALID' : 'INVALID'}`);
+        
+        if (!isFieldValid) {
+            isValid = false;
+        }
+    });
+
+    // Update button states
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (nextBtn) {
+        nextBtn.disabled = !isValid;
+        nextBtn.title = isValid ? 'Continue to next step' : 'Please fill in all required fields';
+    }
+    
+    if (submitBtn) {
+        submitBtn.disabled = !isValid;
+        submitBtn.title = isValid ? 'Save configuration' : 'Please fill in all required fields';
+    }
+
+    console.log(`✅ Step ${this.currentStep} validation: ${isValid ? 'VALID' : 'INVALID'}`);
+    return isValid;
+}
+
 autoLoadExistingConfig() {
     console.log("🔄 Attempting to auto-load existing configuration...");
     
@@ -237,63 +275,6 @@ autoLoadExistingConfig() {
         console.error('❌ Error auto-loading configuration:', error);
     }
 }
-
-    validateField(field) {
-        const isValid = field.value.trim().length > 0;
-        const validationMsg = field.parentNode.querySelector('.validation-message');
-        
-        if (isValid) {
-            field.classList.remove('field-invalid');
-            field.classList.add('field-valid');
-            if (validationMsg) validationMsg.classList.remove('show');
-        } else {
-            field.classList.remove('field-valid');
-            field.classList.add('field-invalid');
-            if (validationMsg) validationMsg.classList.add('show');
-        }
-        
-        return isValid;
-    }
-
-    validateCurrentStep() {
-        console.log("🔄 Validating current step...");
-        const currentSection = document.getElementById(`section${this.currentStep}`);
-        if (!currentSection) {
-            console.log("❌ Current section not found");
-            return false;
-        }
-        
-        const requiredFields = currentSection.querySelectorAll('input[required], textarea[required], select[required]');
-        let isValid = true;
-
-        console.log(`📝 Checking ${requiredFields.length} required fields in step ${this.currentStep}:`);
-        
-        requiredFields.forEach(field => {
-            const isFieldValid = this.validateField(field);
-            console.log(`  - ${field.id}: "${field.value}" -> ${isFieldValid ? 'VALID' : 'INVALID'}`);
-            
-            if (!isFieldValid) {
-                isValid = false;
-            }
-        });
-
-        // Update button states
-        const nextBtn = document.getElementById('nextBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        if (nextBtn) {
-            nextBtn.disabled = !isValid;
-            nextBtn.title = isValid ? 'Continue to next step' : 'Please fill in all required fields';
-        }
-        
-        if (submitBtn) {
-            submitBtn.disabled = !isValid;
-            submitBtn.title = isValid ? 'Save configuration' : 'Please fill in all required fields';
-        }
-
-        console.log(`✅ Step ${this.currentStep} validation: ${isValid ? 'VALID' : 'INVALID'}`);
-        return isValid;
-    }
 
     nextStep() {
         console.log("🔄 Moving to next step...");
@@ -874,51 +855,6 @@ autoLoadExistingConfig() {
                 message.parentNode.removeChild(message);
             }
         }, 4000);
-    }
-
-    // Auto-load existing configuration
-    autoLoadExistingConfig() {
-        console.log("🔄 Attempting to auto-load existing configuration...");
-        
-        try {
-            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-            const savedAppliances = localStorage.getItem('rental_ai_appliances');
-            const savedRecommendations = localStorage.getItem('rental_ai_recommendations');
-            
-            if (savedConfig) {
-                console.log('📁 Found saved configuration, loading...');
-                const config = JSON.parse(savedConfig);
-                
-                // Populate basic info (Step 1)
-                document.getElementById('propertyName').value = config.name || '';
-                document.getElementById('propertyAddress').value = config.address || '';
-                document.getElementById('propertyType').value = config.type || 'Apartment';
-                
-                // Populate contact info (Step 2)
-                document.getElementById('hostContact').value = config.hostContact || '';
-                document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
-                document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
-                document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
-                document.getElementById('lateCheckout').value = config.lateCheckout || '';
-                
-                // Populate details (Step 3)
-                document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
-                document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
-                document.getElementById('houseRules').value = config.houseRules || '';
-                
-                console.log('✅ Configuration loaded into form');
-                
-                // Show edit mode indicator
-                this.showEditModeIndicator();
-            }
-            
-            if (!savedConfig && !savedAppliances && !savedRecommendations) {
-                console.log('ℹ️ No existing configuration found - starting fresh');
-            }
-            
-        } catch (error) {
-            console.error('❌ Error auto-loading configuration:', error);
-        }
     }
 
     showEditModeIndicator() {
