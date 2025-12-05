@@ -632,9 +632,38 @@ class RentalAIChat {
         console.log('✅ Chat initialization complete!');
     }
 
-    // HOST CONFIGURATION METHODS
+     // HOST CONFIGURATION METHODS - UPDATED
     loadPropertyConfig() {
         try {
+            // FIRST: Try to get property-specific config from URL
+            const propertyId = getPropertyFromURL(); // Use the global function
+            
+            if (propertyId) {
+                // Load from rental_properties database
+                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+                const property = properties[propertyId];
+                
+                if (property && property.config) {
+                    console.log('🏠 Using PROPERTY-SPECIFIC configuration:', property.name);
+                    this.hostConfig = this.transformPropertyConfig(property.config, property.name, property.address);
+                    
+                    // Update UI
+                    this.updateUIWithPropertyInfo(property);
+                    
+                    // Also update recommendations and appliances from property config
+                    if (property.config.recommendations) {
+                        this.hostRecommendations = property.config.recommendations;
+                    }
+                    
+                    if (property.config.appliances) {
+                        this.hostAppliances = property.config.appliances;
+                    }
+                    
+                    return; // Skip the old system
+                }
+            }
+            
+            // FALLBACK: Try the old system (for backward compatibility)
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
             if (savedConfig) {
                 const hostConfig = JSON.parse(savedConfig);
@@ -657,7 +686,7 @@ class RentalAIChat {
                     welcomePropertyName.textContent = hostConfig.name;
                 }
                 
-                console.log('🏠 Using host configuration:', hostConfig.name);
+                console.log('🏠 Using LEGACY configuration:', hostConfig.name);
                 this.hostConfig = hostConfig;
             } else {
                 console.log('🏠 Using default configuration');
@@ -668,20 +697,127 @@ class RentalAIChat {
             this.hostConfig = null;
         }
     }
-
-    // NEW: Refresh property config to get latest data
-    refreshPropertyConfig() {
-        this.loadPropertyConfig();
-        this.loadRecommendations();
-        this.loadAppliances();
+    
+    // Helper: Transform property config to expected format
+    transformPropertyConfig(config, name, address) {
+        return {
+            // Basic info
+            name: name || config.propertyName,
+            address: address || config.propertyAddress,
+            type: config.propertyType || '',
+            
+            // Contact info
+            hostContact: config.hostContact || '',
+            maintenanceContact: config.maintenanceContact || '',
+            emergencyContact: config.maintenanceContact || config.hostContact || '',
+            
+            // Check-in/out
+            checkinTime: config.checkInTime || '3:00 PM',
+            checkoutTime: config.checkOutTime || '11:00 AM',
+            lateCheckout: config.lateCheckout || '',
+            
+            // Amenities
+            amenities: {
+                wifi: config.wifiDetails || '',
+                parking: config.parking || '',
+                other: config.amenities || ''
+            },
+            
+            // Rules
+            houseRules: config.houseRules || '',
+            
+            // Appliances and recommendations
+            appliances: config.appliances || [],
+            hasAppliances: config.appliances && config.appliances.length > 0,
+            
+            // Recommendations
+            hasRecommendations: config.recommendations && config.recommendations.length > 0,
+            
+            // Metadata
+            lastUpdated: new Date().toISOString(),
+            
+            // Legacy fields for compatibility
+            contact: config.hostContact || '',
+            checkInOut: {
+                checkIn: config.checkInTime || '3:00 PM',
+                checkOut: config.checkOutTime || '11:00 AM'
+            }
+        };
+    }
+    
+    // Update UI with property information
+    updateUIWithPropertyInfo(property) {
+        const headerTitle = document.querySelector('.header-text h2');
+        const headerSubtitle = document.querySelector('.header-text p');
         
-        console.log('🔄 Refreshed property config:', this.hostConfig?.name);
-        console.log('🔄 Refreshed recommendations:', this.hostRecommendations.length);
-        console.log('🔄 Refreshed appliances:', this.hostAppliances.length);
+        if (headerTitle && property.name) {
+            headerTitle.textContent = `Rental AI Assistant - ${property.name}`;
+        }
+        
+        if (headerSubtitle && property.name) {
+            headerSubtitle.textContent = `${property.name} • 24/7 Support`;
+        }
+
+        // Update welcome message property name
+        const welcomePropertyName = document.getElementById('welcomePropertyName');
+        if (welcomePropertyName && property.name) {
+            welcomePropertyName.textContent = property.name;
+        }
     }
 
+    // NEW: Refresh property config to get latest data - UPDATED
+    refreshPropertyConfig() {
+        const propertyId = getPropertyFromURL();
+        
+        if (propertyId) {
+            // Reload property-specific config
+            const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+            const property = properties[propertyId];
+            
+            if (property && property.config) {
+                this.hostConfig = this.transformPropertyConfig(property.config, property.name, property.address);
+                
+                // Update recommendations and appliances
+                if (property.config.recommendations) {
+                    this.hostRecommendations = property.config.recommendations;
+                }
+                
+                if (property.config.appliances) {
+                    this.hostAppliances = property.config.appliances;
+                }
+                
+                console.log('🔄 Refreshed PROPERTY-SPECIFIC config:', property.name);
+                console.log('🔄 Recommendations:', this.hostRecommendations.length);
+                console.log('🔄 Appliances:', this.hostAppliances.length);
+            }
+        } else {
+            // Fallback to old system
+            this.loadPropertyConfig();
+            this.loadRecommendations();
+            this.loadAppliances();
+            
+            console.log('🔄 Refreshed LEGACY property config:', this.hostConfig?.name);
+            console.log('🔄 Recommendations:', this.hostRecommendations.length);
+            console.log('🔄 Appliances:', this.hostAppliances.length);
+        }
+    }
+
+    // UPDATED: Get host config - check property-specific first
     getHostConfig() {
         try {
+            // FIRST: Try property-specific config
+            const propertyId = getPropertyFromURL();
+            
+            if (propertyId) {
+                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+                const property = properties[propertyId];
+                
+                if (property && property.config) {
+                    return this.transformPropertyConfig(property.config, property.name, property.address);
+                }
+            }
+            
+            // FALLBACK: Old system
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
             return savedConfig ? JSON.parse(savedConfig) : null;
         } catch (error) {
