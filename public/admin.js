@@ -6,14 +6,16 @@ class PropertySetup {
         this.currentStep = 1;
         this.totalSteps = 3;
         this.recommendations = this.loadRecommendations();
-        this.appliances = this.loadAppliances(); // ADDED: Load appliances
+        this.appliances = this.loadAppliances();
         
         console.log("🔄 Initializing event listeners...");
         this.initializeEventListeners();
         this.updateStepDisplay();
         this.updateRecommendationsList();
-        this.updateAppliancesList(); // ADDED: Update appliances list
+        this.updateAppliancesList();
         this.addPreviewStyles();
+        this.autoLoadExistingConfig();
+        this.setupAdditionalButtons();
         console.log("✅ PropertySetup initialized successfully");
     }
 
@@ -38,7 +40,6 @@ class PropertySetup {
                 margin-bottom: 20px;
                 font-style: italic;
             }
-            /* Validation styles */
             .field-invalid {
                 border-color: #e74c3c !important;
                 background-color: #fff0f0 !important;
@@ -88,7 +89,7 @@ class PropertySetup {
             console.log("✅ Submit button listener added");
         }
         
-        // Real-time validation with enhanced feedback
+        // Real-time validation
         this.setupRealTimeValidation();
         console.log("✅ All event listeners initialized");
     }
@@ -107,7 +108,7 @@ class PropertySetup {
                 field.parentNode.appendChild(validationMsg);
             }
             
-            // Enhanced event listeners
+            // Event listeners
             field.addEventListener('input', () => {
                 this.validateField(field);
                 this.validateCurrentStep();
@@ -162,7 +163,7 @@ class PropertySetup {
             }
         });
 
-        // Update button states with better UX
+        // Update button states
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
         
@@ -187,7 +188,7 @@ class PropertySetup {
             this.updateStepDisplay();
             console.log(`✅ Moved to step ${this.currentStep}`);
             
-            // Auto-scroll to top for better UX
+            // Auto-scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             console.log("❌ Cannot move to next step - validation failed");
@@ -202,7 +203,7 @@ class PropertySetup {
             this.updateStepDisplay();
             console.log(`✅ Moved to step ${this.currentStep}`);
             
-            // Auto-scroll to top for better UX
+            // Auto-scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
@@ -224,7 +225,7 @@ class PropertySetup {
             if (index + 1 === this.currentStep) {
                 section.style.display = 'block';
                 
-                // Ensure WiFi section is visible (extra safety)
+                // Ensure WiFi section is visible
                 if (index + 1 === 3) {
                     const wifiInput = document.getElementById('wifiDetails');
                     if (wifiInput) {
@@ -339,34 +340,34 @@ class PropertySetup {
         const formData = this.getFormData();
         console.log("📝 Form data:", formData);
         
-        // FIXED: Save in the CORRECT format that the main chat expects
+        // Save configuration in the correct format
         const config = {
             // Basic info
             name: formData.name,
             address: formData.address,
             type: formData.type,
             
-            // Contact info - direct properties
+            // Contact info
             hostContact: formData.hostContact,
             maintenanceContact: formData.maintenanceContact,
             emergencyContact: formData.maintenanceContact || formData.hostContact,
             
-            // Check-in/out - direct properties with CORRECT NAMES
+            // Check-in/out
             checkinTime: this.formatTime(formData.checkInTime) || '3:00 PM',
             checkoutTime: this.formatTime(formData.checkOutTime) || '11:00 AM',
             lateCheckout: formData.lateCheckout,
             
-            // Amenities - structured correctly
+            // Amenities
             amenities: {
                 wifi: formData.wifiDetails || 'Not set',
-                parking: '', // Will be added if you add a parking field
+                parking: '',
                 other: formData.amenities || ''
             },
             
-            // Rules - NEW: Save house rules
+            // Rules
             houseRules: formData.houseRules || '',
             
-            // Appliances - ADDED: Save appliances
+            // Appliances
             appliances: this.appliances,
             hasAppliances: this.appliances.length > 0,
             
@@ -376,8 +377,8 @@ class PropertySetup {
             // Recommendations count
             hasRecommendations: this.recommendations.length > 0,
             
-            // FIX: Add missing fields that script.js might check
-            contact: formData.hostContact, // Simple backup
+            // Simple fields for compatibility
+            contact: formData.hostContact,
             checkInOut: {
                 checkIn: this.formatTime(formData.checkInTime) || '3:00 PM',
                 checkOut: this.formatTime(formData.checkOutTime) || '11:00 AM'
@@ -394,10 +395,10 @@ class PropertySetup {
             // Save appliances separately
             this.saveAppliances();
             
-            console.log('✅ Configuration saved with HOUSE RULES & APPLIANCES!', config);
+            console.log('✅ Configuration saved!', config);
             
-            // Show detailed success message
-            this.showSuccessMessage(config);
+            // Show success message with guest link
+            this.showSuccessMessage();
             
             // Notify the main chat window if it's open
             this.notifyMainChat();
@@ -408,12 +409,12 @@ class PropertySetup {
         }
     }
 
-    // Helper function to format time (convert "15:00" to "3:00 PM")
     formatTime(timeString) {
         if (!timeString) return '';
         
         // If already in AM/PM format, return as-is
-        if (timeString.includes('AM') || timeString.includes('PM') || timeString.includes('am') || timeString.includes('pm')) {
+        if (timeString.includes('AM') || timeString.includes('PM') || 
+            timeString.includes('am') || timeString.includes('pm')) {
             return timeString;
         }
         
@@ -423,7 +424,7 @@ class PropertySetup {
         
         let hours = parseInt(match[1]);
         const minutes = match[2] ? parseInt(match[2]) : 0;
-        const ampm = match[3] ? match[3].toUpperCase() : '';
+        let ampm = match[3] ? match[3].toUpperCase() : '';
         
         // If no AM/PM specified and it's 24-hour format
         if (!ampm) {
@@ -453,7 +454,7 @@ class PropertySetup {
         }
     }
 
-    showSuccessMessage(config) {
+    showSuccessMessage() {
         console.log("🔄 Showing success message...");
         const propertyConfig = document.getElementById('propertyConfig');
         const successMessage = document.getElementById('successMessage');
@@ -462,27 +463,42 @@ class PropertySetup {
         if (successMessage) {
             successMessage.style.display = 'block';
             
-            // Show what was saved
-            const previewHtml = `
-                <div style="text-align: left; background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <h4 style="color: #2c3e50; margin-bottom: 10px;">✅ Configuration Saved!</h4>
-                    <p><strong>Property Name:</strong> ${config.name || 'Not set'}</p>
-                    <p><strong>Address:</strong> ${config.address || 'Not set'}</p>
-                    <p><strong>Host Contact:</strong> ${config.hostContact || 'Not set'}</p>
-                    <p><strong>Maintenance Contact:</strong> ${config.maintenanceContact || 'Not set'}</p>
-                    <p><strong>Check-in:</strong> ${config.checkinTime || 'Not set'}</p>
-                    <p><strong>Check-out:</strong> ${config.checkoutTime || 'Not set'}</p>
-                    <p><strong>WiFi Details:</strong> ${config.amenities?.wifi || 'Not set'}</p>
-                    <p><strong>House Rules:</strong> ${config.houseRules ? '✓ Saved' : 'Not set'}</p>
-                    <p><strong>Recommendations:</strong> ${this.recommendations.length} places saved</p>
-                    <p><strong>Appliances:</strong> ${this.appliances.length} appliances saved</p>
-                </div>
-            `;
+            // Generate guest link
+            const guestLink = `${window.location.origin}/`;
             
+            // Update success message with guest link
             const existingPreview = successMessage.querySelector('.saved-preview');
             if (existingPreview) {
                 existingPreview.remove();
             }
+            
+            const previewHtml = `
+                <div style="text-align: left; background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #2ecc71;">
+                    <h4 style="color: #2c3e50; margin-bottom: 15px;">✅ Configuration Saved!</h4>
+                    
+                    <div style="background: #e8f4fd; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                        <h5 style="margin-top: 0; color: #3498db;">📋 Guest Link:</h5>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <input type="text" readonly value="${guestLink}" 
+                                   style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace;">
+                            <button onclick="copyToClipboard('${guestLink}')" 
+                                    style="padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                        <p style="font-size: 0.9em; color: #7f8c8d; margin-top: 8px; margin-bottom: 0;">
+                            Share this link with your guests to access the AI assistant
+                        </p>
+                    </div>
+                    
+                    <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                        <h5 style="color: #2c3e50; margin-bottom: 10px;">📝 What was saved:</h5>
+                        <p><strong>Property Name:</strong> ${document.getElementById('propertyName')?.value || 'Not set'}</p>
+                        <p><strong>Recommendations:</strong> ${this.recommendations.length} places saved</p>
+                        <p><strong>Appliances:</strong> ${this.appliances.length} appliances saved</p>
+                    </div>
+                </div>
+            `;
             
             const previewDiv = document.createElement('div');
             previewDiv.className = 'saved-preview';
@@ -604,7 +620,7 @@ class PropertySetup {
         }
     }
 
-    // Appliance management methods - ADDED
+    // Appliance management
     loadAppliances() {
         try {
             const saved = localStorage.getItem('rental_ai_appliances');
@@ -670,14 +686,12 @@ class PropertySetup {
         const typeInput = document.getElementById('appliance-type');
         const instructionsInput = document.getElementById('appliance-instructions');
         const troubleshootingInput = document.getElementById('appliance-troubleshooting');
-        
-        // Photo input might not exist (it's hidden/removed) - handle safely
         const photoInput = document.getElementById('appliance-photo');
 
         const name = nameInput.value.trim();
         const type = typeInput.value;
         const instructions = instructionsInput.value.trim();
-        const photo = photoInput ? photoInput.value.trim() : ''; // Handle null case
+        const photo = photoInput ? photoInput.value.trim() : '';
         const troubleshooting = troubleshootingInput.value.trim();
 
         if (!name || !instructions) {
@@ -702,11 +716,7 @@ class PropertySetup {
         nameInput.value = '';
         instructionsInput.value = '';
         troubleshootingInput.value = '';
-        
-        // Only clear photo if it exists
-        if (photoInput) {
-            photoInput.value = '';
-        }
+        if (photoInput) photoInput.value = '';
 
         this.showTempMessage('Appliance added successfully!', 'success');
         console.log("✅ Appliance added:", newAppliance);
@@ -751,6 +761,166 @@ class PropertySetup {
             }
         }, 4000);
     }
+
+    // Auto-load existing configuration
+    autoLoadExistingConfig() {
+        console.log("🔄 Attempting to auto-load existing configuration...");
+        
+        try {
+            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+            const savedAppliances = localStorage.getItem('rental_ai_appliances');
+            const savedRecommendations = localStorage.getItem('rental_ai_recommendations');
+            
+            if (savedConfig) {
+                console.log('📁 Found saved configuration, loading...');
+                const config = JSON.parse(savedConfig);
+                
+                // Populate basic info (Step 1)
+                document.getElementById('propertyName').value = config.name || '';
+                document.getElementById('propertyAddress').value = config.address || '';
+                document.getElementById('propertyType').value = config.type || 'Apartment';
+                
+                // Populate contact info (Step 2)
+                document.getElementById('hostContact').value = config.hostContact || '';
+                document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
+                document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
+                document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
+                document.getElementById('lateCheckout').value = config.lateCheckout || '';
+                
+                // Populate details (Step 3)
+                document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
+                document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
+                document.getElementById('houseRules').value = config.houseRules || '';
+                
+                console.log('✅ Configuration loaded into form');
+                
+                // Show edit mode indicator
+                this.showEditModeIndicator();
+            }
+            
+            if (!savedConfig && !savedAppliances && !savedRecommendations) {
+                console.log('ℹ️ No existing configuration found - starting fresh');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error auto-loading configuration:', error);
+        }
+    }
+
+    showEditModeIndicator() {
+        const hasConfig = localStorage.getItem('rentalAIPropertyConfig');
+        
+        if (hasConfig) {
+            // Create edit mode banner
+            const banner = document.createElement('div');
+            banner.className = 'edit-mode-banner';
+            banner.innerHTML = `
+                <div style="background: #d1ecf1; border-left: 4px solid #3498db; padding: 12px 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-edit" style="color: #0c5460;"></i>
+                    <div>
+                        <strong style="color: #0c5460;">Edit Mode</strong> - You are editing your existing configuration.
+                        <span style="color: #0c5460; opacity: 0.8; font-size: 0.9em; display: block;">Changes will update your current setup.</span>
+                    </div>
+                </div>
+            `;
+            
+            // Insert at the top of the admin container
+            const adminContainer = document.querySelector('.admin-container');
+            if (adminContainer) {
+                const firstChild = adminContainer.firstChild;
+                adminContainer.insertBefore(banner, firstChild);
+            }
+        }
+    }
+
+    setupAdditionalButtons() {
+        this.setupResetButton();
+        this.setupBackupButton();
+    }
+
+    setupResetButton() {
+        // Create reset button
+        const resetBtn = document.createElement('button');
+        resetBtn.id = 'resetBtn';
+        resetBtn.className = 'btn btn-danger';
+        resetBtn.innerHTML = '<i class="fas fa-trash"></i> Reset All Data';
+        
+        // Add it to the button group
+        const navButtons = document.querySelector('.nav-buttons');
+        if (navButtons) {
+            navButtons.appendChild(resetBtn);
+        }
+        
+        resetBtn.addEventListener('click', () => {
+            if (confirm('⚠️ WARNING: This will delete ALL your property data, appliances, and recommendations. This cannot be undone! Are you sure?')) {
+                // Clear all localStorage data
+                localStorage.removeItem('rentalAIPropertyConfig');
+                localStorage.removeItem('rental_ai_appliances');
+                localStorage.removeItem('rental_ai_recommendations');
+                
+                // Clear form fields
+                document.querySelectorAll('input, textarea, select').forEach(field => {
+                    if (field.type !== 'button' && field.type !== 'submit' && field.id !== 'appliance-photo') {
+                        field.value = '';
+                    }
+                });
+                
+                // Reset to step 1
+                this.currentStep = 1;
+                this.updateStepDisplay();
+                
+                // Clear appliances and recommendations lists
+                this.appliances = [];
+                this.recommendations = [];
+                this.updateAppliancesList();
+                this.updateRecommendationsList();
+                
+                // Remove edit mode banner
+                const banner = document.querySelector('.edit-mode-banner');
+                if (banner) banner.remove();
+                
+                // Show confirmation
+                this.showTempMessage('All data has been reset. You can now start fresh.', 'success');
+                console.log('🧹 All data reset successfully');
+            }
+        });
+    }
+
+    setupBackupButton() {
+        // Create backup button
+        const backupBtn = document.createElement('button');
+        backupBtn.id = 'backupBtn';
+        backupBtn.className = 'btn btn-info';
+        backupBtn.innerHTML = '<i class="fas fa-download"></i> Download Backup';
+        
+        // Add it to the button group
+        const navButtons = document.querySelector('.nav-buttons');
+        if (navButtons) {
+            navButtons.appendChild(backupBtn);
+        }
+        
+        backupBtn.addEventListener('click', () => {
+            const config = {
+                property: JSON.parse(localStorage.getItem('rentalAIPropertyConfig') || '{}'),
+                appliances: JSON.parse(localStorage.getItem('rental_ai_appliances') || '[]'),
+                recommendations: JSON.parse(localStorage.getItem('rental_ai_recommendations') || '[]'),
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `rental-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            this.showTempMessage('Backup downloaded successfully!', 'success');
+        });
+    }
 }
 
 // Global function for the add recommendation button
@@ -764,7 +934,7 @@ function addRecommendation() {
     }
 }
 
-// Global function for the add appliance button - ADDED
+// Global function for the add appliance button
 function addAppliance() {
     console.log("🛠️ Global addAppliance called");
     if (window.propertySetup) {
@@ -775,500 +945,19 @@ function addAppliance() {
     }
 }
 
-// ================================================
-// AUTO-LOAD EXISTING CONFIGURATION - ADDED
-// ================================================
-
-// Add this function to auto-load existing config
-function autoLoadExistingConfig() {
-    console.log("🔄 Attempting to auto-load existing configuration...");
-    
-    try {
-        // Check if configuration exists
-        const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-        const savedAppliances = localStorage.getItem('rental_ai_appliances');
-        const savedRecommendations = localStorage.getItem('rental_ai_recommendations');
-        
-        if (savedConfig) {
-            console.log('📁 Found saved configuration, loading...');
-            const config = JSON.parse(savedConfig);
-            
-            // Populate basic info (Step 1)
-            document.getElementById('propertyName').value = config.name || '';
-            document.getElementById('propertyAddress').value = config.address || '';
-            document.getElementById('propertyType').value = config.type || 'Apartment';
-            
-            // Populate contact info (Step 2)
-            document.getElementById('hostContact').value = config.hostContact || '';
-            document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
-            document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
-            document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
-            document.getElementById('lateCheckout').value = config.lateCheckout || '';
-            
-            // Populate details (Step 3)
-            document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
-            document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
-            document.getElementById('houseRules').value = config.houseRules || '';
-            
-            console.log('✅ Configuration loaded into form');
-            
-            // Show edit mode indicator
-            showEditModeIndicator();
-        }
-        
-        // Appliances and recommendations will auto-load via your existing load functions
-        
-        if (!savedConfig && !savedAppliances && !savedRecommendations) {
-            console.log('ℹ️ No existing configuration found - starting fresh');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error auto-loading configuration:', error);
-    }
-}
-
-// ================================================
-// EDIT MODE INDICATOR - ADDED
-// ================================================
-
-function showEditModeIndicator() {
-    const hasConfig = localStorage.getItem('rentalAIPropertyConfig');
-    
-    if (hasConfig) {
-        // Create edit mode banner
-        const banner = document.createElement('div');
-        banner.className = 'edit-mode-banner';
-        banner.innerHTML = `
-            <div style="background: #d1ecf1; border-left: 4px solid #3498db; padding: 12px 15px; border-radius: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-edit" style="color: #0c5460;"></i>
-                <div>
-                    <strong style="color: #0c5460;">Edit Mode</strong> - You are editing your existing configuration.
-                    <span style="color: #0c5460; opacity: 0.8; font-size: 0.9em; display: block;">Changes will update your current setup.</span>
-                </div>
-            </div>
-        `;
-        
-        // Insert at the top of the admin container
-        const adminContainer = document.querySelector('.admin-container');
-        if (adminContainer) {
-            const firstChild = adminContainer.firstChild;
-            adminContainer.insertBefore(banner, firstChild);
-        }
-    }
-}
-
-// ================================================
-// RESET BUTTON FUNCTIONALITY - ADDED
-// ================================================
-
-function setupResetButton() {
-    // Create reset button
-    const resetBtn = document.createElement('button');
-    resetBtn.id = 'resetBtn';
-    resetBtn.className = 'btn btn-danger';
-    resetBtn.innerHTML = '<i class="fas fa-trash"></i> Reset All Data';
-    
-    // Add it to the button group
-    const navButtons = document.querySelector('.nav-buttons');
-    if (navButtons) {
-        navButtons.appendChild(resetBtn);
-    }
-    
-    resetBtn.addEventListener('click', function() {
-        if (confirm('⚠️ WARNING: This will delete ALL your property data, appliances, and recommendations. This cannot be undone! Are you sure?')) {
-            // Clear all localStorage data
-            localStorage.removeItem('rentalAIPropertyConfig');
-            localStorage.removeItem('rental_ai_appliances');
-            localStorage.removeItem('rental_ai_recommendations');
-            
-            // Clear form fields
-            document.querySelectorAll('input, textarea, select').forEach(field => {
-                if (field.type !== 'button' && field.type !== 'submit' && field.id !== 'appliance-photo') {
-                    field.value = '';
-                }
-            });
-            
-            // Reset to step 1
-            if (window.propertySetup) {
-                window.propertySetup.currentStep = 1;
-                window.propertySetup.updateStepDisplay();
-                
-                // Clear appliances and recommendations lists
-                window.propertySetup.appliances = [];
-                window.propertySetup.recommendations = [];
-                window.propertySetup.updateAppliancesList();
-                window.propertySetup.updateRecommendationsList();
-            }
-            
-            // Remove edit mode banner
-            const banner = document.querySelector('.edit-mode-banner');
-            if (banner) banner.remove();
-            
-            // Show confirmation
-            if (window.propertySetup) {
-                window.propertySetup.showTempMessage('All data has been reset. You can now start fresh.', 'success');
-            }
-            console.log('🧹 All data reset successfully');
-        }
-    });
-}
-
-// ================================================
-// BACKUP BUTTON FUNCTIONALITY - ADDED
-// ================================================
-
-function setupBackupButton() {
-    // Create backup button
-    const backupBtn = document.createElement('button');
-    backupBtn.id = 'backupBtn';
-    backupBtn.className = 'btn btn-info';
-    backupBtn.innerHTML = '<i class="fas fa-download"></i> Download Backup';
-    
-    // Add it to the button group
-    const navButtons = document.querySelector('.nav-buttons');
-    if (navButtons) {
-        navButtons.appendChild(backupBtn);
-    }
-    
-    backupBtn.addEventListener('click', function() {
-        const config = {
-            property: JSON.parse(localStorage.getItem('rentalAIPropertyConfig') || '{}'),
-            appliances: JSON.parse(localStorage.getItem('rental_ai_appliances') || '[]'),
-            recommendations: JSON.parse(localStorage.getItem('rental_ai_recommendations') || '[]'),
-            exportDate: new Date().toISOString(),
-            version: '1.0'
-        };
-        
-        const dataStr = JSON.stringify(config, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = `rental-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
-        
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
-        
-        if (window.propertySetup) {
-            window.propertySetup.showTempMessage('Backup downloaded successfully!', 'success');
-        }
-    });
-}
-
-console.log("✅ admin.js loaded completely");
-
-// ==============================================
-// PROPERTY MANAGEMENT FUNCTIONS
-// ==============================================
-
-let properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-let currentPropertyId = localStorage.getItem('current_property') || 'default';
-
-// Toggle between setup and property management
-function togglePropertyManager() {
-    const form = document.getElementById('propertyConfig');
-    const manager = document.getElementById('propertyManagementSection');
-    const toggleBtn = document.getElementById('togglePropertyManager');
-    
-    if (manager.style.display === 'none') {
-        form.style.display = 'none';
-        manager.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="fas fa-cogs"></i> Back to Setup';
-        renderProperties();
-    } else {
-        form.style.display = 'block';
-        manager.style.display = 'none';
-        toggleBtn.innerHTML = '<i class="fas fa-building"></i> Manage Properties';
-    }
-}
-
-// Create a new property
-// In admin.js - update createNewProperty function:
-function createNewProperty() {
-    const name = document.getElementById('newPropertyName').value;
-    const address = document.getElementById('newPropertyAddress').value;
-    
-    if (!name) {
-        alert('Please enter a property name');
-        return;
-    }
-    
-    // Generate unique ID
-    const id = 'property-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    
-    // Get CURRENT form data
-    let formData = {};
-    if (window.propertySetup) {
-        formData = window.propertySetup.getFormData();
-    }
-    
-    // Create property object
-    properties[id] = {
-        id: id,
-        name: name,
-        address: address || '',
-        config: {
-            propertyName: name,
-            propertyAddress: address,
-            propertyType: formData.type || '',
-            hostContact: formData.hostContact || '',
-            maintenanceContact: formData.maintenanceContact || '',
-            checkInTime: formData.checkInTime || '3:00 PM',
-            checkOutTime: formData.checkOutTime || '11:00 AM',
-            lateCheckout: formData.lateCheckout || '',
-            wifiDetails: formData.wifiDetails || '',
-            amenities: formData.amenities || '',
-            houseRules: formData.houseRules || '',
-            recommendations: window.propertySetup ? window.propertySetup.recommendations : [],
-            appliances: window.propertySetup ? window.propertySetup.appliances : []
-        },
-        created: new Date().toISOString(),
-        faqCount: 0,
-        guestLink: `${window.location.origin}/?property=${id}`
-    };
-    
-    // Save to localStorage
-    localStorage.setItem('rental_properties', JSON.stringify(properties));
-    
-    // Clear the "new property" form inputs
-    document.getElementById('newPropertyName').value = '';
-    document.getElementById('newPropertyAddress').value = '';
-    
-    // =============================================
-    // 🔥 AUTO-CLEAR THE MAIN FORM
-    // =============================================
-    if (window.propertySetup) {
-        // Clear all form fields
-        document.getElementById('propertyName').value = '';
-        document.getElementById('propertyAddress').value = '';
-        document.getElementById('propertyType').value = 'Vacation Home';
-        document.getElementById('hostContact').value = '';
-        document.getElementById('maintenanceContact').value = '';
-        document.getElementById('checkInTime').value = '3:00 PM'; // Default value
-        document.getElementById('checkOutTime').value = '11:00 AM'; // Default value
-        document.getElementById('lateCheckout').value = '';
-        document.getElementById('wifiDetails').value = '';
-        document.getElementById('amenities').value = '';
-        document.getElementById('houseRules').value = '';
-        
-        // Clear recommendations and appliances
-        window.propertySetup.recommendations = [];
-        window.propertySetup.appliances = [];
-        window.propertySetup.updateRecommendationsList();
-        window.propertySetup.updateAppliancesList();
-        
-        // Reset to step 1
-        window.propertySetup.currentStep = 1;
-        window.propertySetup.updateStepDisplay();
-        
-        // Clear the saved config from localStorage
-        localStorage.removeItem('rentalAIPropertyConfig');
-        
-        // Remove any edit mode banner
-        const banner = document.querySelector('.edit-mode-banner');
-        if (banner) banner.remove();
-        
-        // Show success message in the form
-        const successMessage = document.getElementById('successMessage');
-        if (successMessage) {
-            successMessage.style.display = 'none';
-        }
-        
-        // Show the form (in case it was hidden)
-        const propertyConfig = document.getElementById('propertyConfig');
-        if (propertyConfig) {
-            propertyConfig.style.display = 'block';
-        }
-        
-        console.log('✅ Form cleared for next property');
-    }
-    
-    // Update properties display
-    renderProperties();
-    
-    // Auto-switch to this property (optional - you might want to keep it)
-    // switchProperty(id);
-    
-    // Copy link to clipboard
+// Helper function to copy to clipboard
+function copyToClipboard(text) {
     const tempInput = document.createElement('input');
-    tempInput.value = properties[id].guestLink;
+    tempInput.value = text;
     document.body.appendChild(tempInput);
     tempInput.select();
     document.execCommand('copy');
     document.body.removeChild(tempInput);
     
-    alert(`✅ Property "${name}" created!\n\n📋 Guest link copied to clipboard:\n${properties[id].guestLink}\n\n📝 Form cleared - ready for next property!`);
-    
-    // Optional: Switch back to setup form
-    togglePropertyManager();
-}
-
-// Render properties list
-function renderProperties() {
-    const container = document.getElementById('propertiesContainer');
-    container.innerHTML = '';
-    
-    if (Object.keys(properties).length === 0) {
-        container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">No properties yet. Create your first one!</p>';
-        return;
-    }
-    
-    Object.values(properties).forEach(prop => {
-        const isCurrent = prop.id === currentPropertyId;
-        const div = document.createElement('div');
-        div.className = 'property-card';
-        div.style.cssText = `
-            background: ${isCurrent ? '#e8f4fd' : 'white'};
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border-left: 4px solid ${isCurrent ? '#3498db' : '#e1e5e9'};
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        `;
-        
-        div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${prop.name} ${isCurrent ? '<small style="color: #3498db;">(Current)</small>' : ''}</h4>
-                    <p style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 0.9em;">${prop.address || 'No address'}</p>
-                    <div class="property-link" style="display: flex; gap: 10px; margin: 10px 0;">
-                        <input type="text" readonly value="${prop.guestLink}" id="link-${prop.id}" 
-                               style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; font-size: 0.9em;">
-                        <button onclick="copyPropertyLink('${prop.id}')" class="btn" style="padding: 8px 12px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                            <i class="fas fa-copy"></i> Copy Link
-                        </button>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 5px;">
-                    <button onclick="switchProperty('${prop.id}')" class="btn" style="padding: 5px 10px; background: ${isCurrent ? '#95a5a6' : '#3498db'}; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;" ${isCurrent ? 'disabled' : ''}>
-                        ${isCurrent ? 'Current' : 'Switch To'}
-                    </button>
-                    <button onclick="deleteProperty('${prop.id}')" class="btn" style="padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <div style="font-size: 0.8em; color: #95a5a6; margin-top: 10px;">
-                Created: ${new Date(prop.created).toLocaleDateString()}
-            </div>
-        `;
-        
-        container.appendChild(div);
-    });
-}
-
-// Copy property link to clipboard
-function copyPropertyLink(propertyId) {
-    const input = document.getElementById(`link-${propertyId}`);
-    input.select();
-    document.execCommand('copy');
-    
     // Show confirmation
-    const btn = input.nextElementSibling;
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-    btn.style.background = '#27ae60';
-    
-    setTimeout(() => {
-        btn.innerHTML = original;
-        btn.style.background = '#2ecc71';
-    }, 2000);
-}
-
-// Switch to a property
-// In admin.js - Update switchProperty function:
-function switchProperty(propertyId) {
-    currentPropertyId = propertyId;
-    localStorage.setItem('current_property', propertyId);
-    
-    // Load property config into form
-    const prop = properties[propertyId];
-    if (prop && prop.config) {
-        // Populate ALL form fields with property config
-        const config = prop.config;
-        
-        // Basic info
-        document.getElementById('propertyName').value = config.propertyName || prop.name;
-        document.getElementById('propertyAddress').value = config.propertyAddress || prop.address;
-        document.getElementById('propertyType').value = config.propertyType || 'Apartment';
-        
-        // Contact info
-        document.getElementById('hostContact').value = config.hostContact || '';
-        document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
-        
-        // Check-in/out
-        document.getElementById('checkInTime').value = config.checkInTime || '3:00 PM';
-        document.getElementById('checkOutTime').value = config.checkOutTime || '11:00 AM';
-        document.getElementById('lateCheckout').value = config.lateCheckout || '';
-        
-        // Amenities
-        document.getElementById('wifiDetails').value = config.wifiDetails || '';
-        document.getElementById('amenities').value = config.amenities || '';
-        document.getElementById('houseRules').value = config.houseRules || '';
-        
-        // Load recommendations and appliances
-        if (window.propertySetup) {
-            window.propertySetup.recommendations = config.recommendations || [];
-            window.propertySetup.appliances = config.appliances || [];
-            window.propertySetup.updateRecommendationsList();
-            window.propertySetup.updateAppliancesList();
-        }
+    if (window.propertySetup) {
+        window.propertySetup.showTempMessage('Link copied to clipboard!', 'success');
     }
-    
-    // Update UI
-    renderProperties();
-    
-    // Switch back to setup form
-    togglePropertyManager();
-    
-    alert(`Now editing: ${prop.name}`);
-}
-
-// Delete a property
-function deleteProperty(propertyId) {
-    if (!confirm(`Delete property "${properties[propertyId].name}"? This cannot be undone.`)) {
-        return;
-    }
-    
-    delete properties[propertyId];
-    localStorage.setItem('rental_properties', JSON.stringify(properties));
-    
-    // If deleting current property, switch to another or default
-    if (propertyId === currentPropertyId) {
-        const remaining = Object.keys(properties);
-        if (remaining.length > 0) {
-            currentPropertyId = remaining[0];
-            localStorage.setItem('current_property', currentPropertyId);
-        } else {
-            currentPropertyId = 'default';
-            localStorage.removeItem('current_property');
-        }
-    }
-    
-    renderProperties();
-}
-
-// Initialize property system
-function initPropertySystem() {
-    // Load current property
-    const prop = properties[currentPropertyId];
-    if (prop && prop.config) {
-        // Pre-fill form with current property data
-        // (You'll need to add this population logic)
-    }
-    
-    // Add property ID to save function
-    const originalSaveConfig = window.saveConfig || function() {};
-    window.saveConfig = function() {
-        const config = getConfigData(); // Your existing function
-        if (currentPropertyId && properties[currentPropertyId]) {
-            properties[currentPropertyId].config = config;
-            properties[currentPropertyId].name = config.propertyName;
-            properties[currentPropertyId].address = config.propertyAddress;
-            localStorage.setItem('rental_properties', JSON.stringify(properties));
-        }
-        originalSaveConfig();
-    };
 }
 
 // SINGLE DOMContentLoaded listener
@@ -1277,16 +966,6 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         window.propertySetup = new PropertySetup();
         console.log("✅ PropertySetup initialized successfully!");
-        
-        // AUTO-LOAD existing configuration
-        autoLoadExistingConfig();
-        
-        // SETUP additional buttons
-        setupResetButton();
-        setupBackupButton();
-        
-        // Initialize property management system
-        initPropertySystem();
         
         // Extra safety: Ensure WiFi field is visible
         setTimeout(() => {
