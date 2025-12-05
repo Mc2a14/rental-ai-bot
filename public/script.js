@@ -765,7 +765,7 @@ class RentalAIChat {
         }
     }
 
-    // NEW: Refresh property config to get latest data - UPDATED
+        // NEW: Refresh property config to get latest data - UPDATED
     refreshPropertyConfig() {
         const propertyId = getPropertyFromURL();
         
@@ -802,7 +802,7 @@ class RentalAIChat {
         }
     }
 
-    // UPDATED: Get host config - check property-specific first
+        // UPDATED: Get host config - check property-specific first
     getHostConfig() {
         try {
             // FIRST: Try property-specific config
@@ -826,13 +826,28 @@ class RentalAIChat {
         }
     }
 
-    // HOST RECOMMENDATIONS METHODS
+           // HOST RECOMMENDATIONS METHODS - UPDATED
     loadRecommendations() {
         try {
+            // FIRST: Try property-specific recommendations
+            const propertyId = getPropertyFromURL();
+            
+            if (propertyId) {
+                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+                const property = properties[propertyId];
+                
+                if (property && property.config && property.config.recommendations) {
+                    this.hostRecommendations = property.config.recommendations;
+                    console.log('📍 Loaded PROPERTY-SPECIFIC recommendations:', this.hostRecommendations.length);
+                    return;
+                }
+            }
+            
+            // FALLBACK: Old system
             const saved = localStorage.getItem(this.recommendationsKey);
             if (saved) {
                 this.hostRecommendations = JSON.parse(saved);
-                console.log('📍 Host recommendations loaded:', this.hostRecommendations.length);
+                console.log('📍 Loaded LEGACY recommendations:', this.hostRecommendations.length);
             } else {
                 this.hostRecommendations = [];
             }
@@ -842,13 +857,28 @@ class RentalAIChat {
         }
     }
 
-    // HOST APPLIANCES METHODS - ADDED
+        // HOST APPLIANCES METHODS - UPDATED
     loadAppliances() {
         try {
+            // FIRST: Try property-specific appliances
+            const propertyId = getPropertyFromURL();
+            
+            if (propertyId) {
+                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+                const property = properties[propertyId];
+                
+                if (property && property.config && property.config.appliances) {
+                    this.hostAppliances = property.config.appliances;
+                    console.log('🛠️ Loaded PROPERTY-SPECIFIC appliances:', this.hostAppliances.length);
+                    return;
+                }
+            }
+            
+            // FALLBACK: Old system
             const saved = localStorage.getItem(this.appliancesKey);
             if (saved) {
                 this.hostAppliances = JSON.parse(saved);
-                console.log('🛠️ Host appliances loaded:', this.hostAppliances.length);
+                console.log('🛠️ Loaded LEGACY appliances:', this.hostAppliances.length);
             } else {
                 this.hostAppliances = [];
             }
