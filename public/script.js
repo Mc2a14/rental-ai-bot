@@ -1039,6 +1039,14 @@ class RentalAIChat {
                 return;
             }
             return;
+            // Add a debug button
+const debugPropsBtn = document.createElement('button');
+debugPropsBtn.className = 'setup-btn';
+debugPropsBtn.innerHTML = '🔍 Props';
+debugPropsBtn.title = 'Debug stored properties';
+debugPropsBtn.addEventListener('click', debugStoredProperties);
+headerControls.appendChild(debugPropsBtn);
+console.log('✅ Added Properties debug button');
         }
         
         // Check if controls already exist
@@ -2097,4 +2105,88 @@ document.addEventListener('visibilitychange', function() {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     }
+    // Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+});
+
+// ================================================
+// DEBUG FUNCTIONS - ADDED
+// ================================================
+
+// Debug function to check stored properties
+function debugStoredProperties() {
+    console.log('🔍 DEBUG STORED PROPERTIES');
+    
+    // Check all rental_properties data
+    const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+    console.log('Total properties in localStorage:', Object.keys(properties).length);
+    
+    // List all property IDs and names
+    Object.keys(properties).forEach((key, index) => {
+        console.log(`${index + 1}. ID: "${key}"`);
+        console.log(`   Name: ${properties[key].name}`);
+        console.log(`   Has Config: ${!!properties[key].config}`);
+    });
+    
+    // Check the exact URL parameter
+    const urlParam = getPropertyFromURL();
+    console.log('URL Parameter value:', urlParam);
+    
+    // Check if it exists in properties
+    if (urlParam) {
+        console.log('Exists in properties?', !!properties[urlParam]);
+        if (properties[urlParam]) {
+            console.log('Found property:', properties[urlParam]);
+        }
+    }
+    
+    // Show in alert for easy reading
+    const propertyKeys = Object.keys(properties);
+    let alertMsg = `Stored Properties (${propertyKeys.length}):\n\n`;
+    
+    propertyKeys.forEach((key, index) => {
+        alertMsg += `${index + 1}. "${key}"\n`;
+        alertMsg += `   ${properties[key].name}\n\n`;
+    });
+    
+    alertMsg += `URL Parameter: "${urlParam || 'none'}"\n`;
+    alertMsg += `Exists in storage: ${urlParam ? !!properties[urlParam] : 'N/A'}`;
+    
+    alert(alertMsg);
+}
+
+// Quick property test function
+function quickPropertyTest() {
+    console.log('🚀 QUICK PROPERTY TEST');
+    
+    const propertyId = getPropertyFromURL();
+    console.log('1. Property ID from URL:', propertyId);
+    
+    const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+    console.log('2. All properties:', Object.keys(properties));
+    
+    if (propertyId) {
+        const property = properties[propertyId];
+        console.log('3. Found property:', property?.name);
+        console.log('4. Property config:', property?.config ? 'EXISTS' : 'MISSING');
+        
+        if (property?.config) {
+            console.log('5. Recommendations:', property.config.recommendations?.length || 0);
+            console.log('6. Appliances:', property.config.appliances?.length || 0);
+        }
+    }
+    
+    if (window.chat) {
+        console.log('7. Chat loaded recommendations:', window.chat.hostRecommendations?.length || 0);
+        console.log('8. Chat loaded appliances:', window.chat.hostAppliances?.length || 0);
+    }
+    
+    console.log('✅ Test complete');
+}
 });
