@@ -896,4 +896,828 @@ class RentalAIChat {
         
         // Add Setup button
         const setupBtn = document.createElement('button');
-        setupBtn
+        setupBtn.className = 'setup-btn';
+        setupBtn.innerHTML = '⚙️ Setup';
+        setupBtn.title = 'Configure your property information';
+        setupBtn.addEventListener('click', () => {
+            window.location.href = '/admin';
+        });
+        headerControls.appendChild(setupBtn);
+        
+        // Add Clear Chat button
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-chat-btn';
+        clearBtn.innerHTML = '🗑️ Clear';
+        clearBtn.title = 'Clear conversation history';
+        clearBtn.addEventListener('click', () => this.clearChat());
+        headerControls.appendChild(clearBtn);
+        
+        // Add Theme Toggle button
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.className = 'theme-toggle';
+        themeToggle.innerHTML = '🌙 Dark';
+        themeToggle.title = 'Toggle dark/light mode';
+        themeToggle.addEventListener('click', () => this.toggleTheme());
+        headerControls.appendChild(themeToggle);
+        
+        // Add Language Selector
+        const langSelect = document.createElement('select');
+        langSelect.id = 'languageSelect';
+        langSelect.className = 'language-select';
+        langSelect.title = 'Select language / Seleccionar idioma / Choisir la langue';
+        
+        const languages = [
+            { code: 'en', name: '🇺🇸 English', native: 'English' },
+            { code: 'es', name: '🇪🇸 Español', native: 'Español' },
+            { code: 'fr', name: '🇫🇷 Français', native: 'Français' }
+        ];
+        
+        languages.forEach(lang => {
+            const option = document.createElement('option');
+            option.value = lang.code;
+            option.textContent = lang.name;
+            option.setAttribute('data-native', lang.native);
+            langSelect.appendChild(option);
+        });
+        
+        langSelect.addEventListener('change', (e) => {
+            this.changeLanguage(e.target.value);
+        });
+        headerControls.appendChild(langSelect);
+        
+        // Add Debug button
+        const debugBtn = document.createElement('button');
+        debugBtn.className = 'setup-btn';
+        debugBtn.innerHTML = '🔍 Debug';
+        debugBtn.title = 'Debug property data';
+        debugBtn.addEventListener('click', () => this.debugPropertyData());
+        headerControls.appendChild(debugBtn);
+        
+        // Add FAQ Manager button
+        const faqBtn = document.createElement('button');
+        faqBtn.className = 'setup-btn';
+        faqBtn.innerHTML = '🧠 FAQ';
+        faqBtn.title = 'Manage FAQ auto-learning';
+        faqBtn.addEventListener('click', () => window.open('/faq-manage.html', '_blank'));
+        headerControls.appendChild(faqBtn);
+        
+        const statusIndicator = header.querySelector('.status-indicator');
+        if (statusIndicator) {
+            header.insertBefore(headerControls, statusIndicator);
+        } else {
+            header.appendChild(headerControls);
+        }
+        
+        headerControls.style.display = 'flex';
+        headerControls.style.alignItems = 'center';
+        headerControls.style.gap = '8px';
+        headerControls.style.marginLeft = 'auto';
+        
+        console.log('✅ Header controls created successfully!');
+    }
+
+    // NEW: Debug property data
+    debugPropertyData() {
+        console.log('🔍 DEBUG PROPERTY DATA');
+        console.log('=======================');
+        
+        const propertyId = getPropertyFromURL();
+        console.log('1. Property ID from URL:', propertyId);
+        
+        const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+        console.log('2. Total properties in storage:', Object.keys(properties).length);
+        
+        if (propertyId && properties[propertyId]) {
+            const property = properties[propertyId];
+            console.log('3. Current property:', property.name);
+            console.log('4. Has config:', !!property.config);
+            
+            if (property.config) {
+                console.log('5. Recommendations in config:', property.config.recommendations?.length || 0);
+                console.log('6. Appliances in config:', property.config.appliances?.length || 0);
+            }
+        }
+        
+        console.log('7. Chat loaded recommendations:', this.hostRecommendations?.length || 0);
+        console.log('8. Chat loaded appliances:', this.hostAppliances?.length || 0);
+        console.log('9. Chat host config:', this.hostConfig?.name || 'None');
+        
+        if (this.hostRecommendations && this.hostRecommendations.length > 0) {
+            console.log('10. First recommendation:', this.hostRecommendations[0].name);
+        }
+        
+        console.log('=======================');
+        
+        const summary = `Property Debug:
+URL Property: ${propertyId || 'None'}
+Property Name: ${propertyId ? (properties[propertyId]?.name || 'Not found') : 'N/A'}
+Recommendations: ${this.hostRecommendations?.length || 0}
+Appliances: ${this.hostAppliances?.length || 0}`;
+        
+        alert(summary);
+    }
+
+    // LANGUAGE SUPPORT METHODS
+    changeLanguage(langCode) {
+        this.saveLanguagePreference(langCode);
+        this.updateUIForLanguage(langCode);
+        this.showTempMessage(`Language changed to ${this.getLanguageName(langCode)}`, 'info');
+    }
+
+    updateUIForLanguage(langCode) {
+        const messageInput = document.getElementById('messageInput');
+        const placeholders = {
+            en: "Ask about your stay, local recommendations, or appliance instructions...",
+            es: "Pregunte sobre su estadía, recomendaciones locales o instrucciones de electrodomésticos...",
+            fr: "Demandez des informations sur votre séjour, des recommandations locales ou des instructions pour les appareils..."
+        };
+        if (messageInput) {
+            messageInput.placeholder = placeholders[langCode] || placeholders.en;
+        }
+        this.updateQuickQuestions(langCode);
+    }
+
+    updateQuickQuestions(langCode) {
+        const quickQuestions = {
+            en: {
+                checkin: "Check-in/out times",
+                wifi: "WiFi Information", 
+                restaurants: "Nearby Restaurants",
+                emergency: "Emergency Contacts",
+                applianceHelp: "🛠️ Appliance Help",
+                ovenHelp: "🍳 Oven/Microwave",
+                washerHelp: "🧺 Washer/Dryer",
+                thermostatHelp: "🌡️ Thermostat"
+            },
+            es: {
+                checkin: "Horarios de check-in/out",
+                wifi: "Información del WiFi",
+                restaurants: "Restaurantes cercanos",
+                emergency: "Contactos de emergencia",
+                applianceHelp: "🛠️ Ayuda con Electrodomésticos",
+                ovenHelp: "🍳 Horno/Microondas",
+                washerHelp: "🧺 Lavadora/Secadora",
+                thermostatHelp: "🌡️ Termostato"
+            },
+            fr: {
+                checkin: "Horaires check-in/out",
+                wifi: "Informations WiFi",
+                restaurants: "Restaurants à proximité",
+                emergency: "Contacts d'urgence",
+                applianceHelp: "🛠️ Aide aux Appareils",
+                ovenHelp: "🍳 Four/Micro-ondes",
+                washerHelp: "🧺 Lave-linge/Sèche-linge",
+                thermostatHelp: "🌡️ Thermostat"
+            }
+        };
+
+        const questions = quickQuestions[langCode] || quickQuestions.en;
+        
+        const buttons = document.querySelectorAll('.quick-btn');
+        if (buttons.length >= 4) {
+            buttons[0].textContent = questions.checkin;
+            buttons[1].textContent = questions.wifi;
+            buttons[2].textContent = questions.restaurants;
+            buttons[3].textContent = questions.emergency;
+        }
+        
+        const applianceButtons = document.querySelectorAll('.appliance-quick-btn');
+        if (applianceButtons.length >= 4) {
+            applianceButtons[0].textContent = questions.applianceHelp;
+            applianceButtons[1].textContent = questions.ovenHelp;
+            applianceButtons[2].textContent = questions.washerHelp;
+            applianceButtons[3].textContent = questions.thermostatHelp;
+        }
+    }
+
+    getLanguageName(langCode) {
+        const languages = {
+            en: 'English',
+            es: 'Español', 
+            fr: 'Français'
+        };
+        return languages[langCode] || 'English';
+    }
+
+    loadLanguagePreference() {
+        try {
+            const savedLang = localStorage.getItem(this.languageKey) || 'en';
+            const langSelect = document.getElementById('languageSelect');
+            if (langSelect) {
+                langSelect.value = savedLang;
+            }
+            this.updateUIForLanguage(savedLang);
+            console.log('🌍 Language loaded:', savedLang);
+        } catch (error) {
+            console.error('Error loading language preference:', error);
+        }
+    }
+
+    saveLanguagePreference(langCode) {
+        try {
+            localStorage.setItem(this.languageKey, langCode);
+        } catch (error) {
+            console.error('Error saving language preference:', error);
+        }
+    }
+
+    getCurrentLanguage() {
+        const langSelect = document.getElementById('languageSelect');
+        return langSelect ? langSelect.value : 'en';
+    }
+
+    // THEME MANAGEMENT METHODS
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        this.updateThemeButton(newTheme);
+        this.saveThemePreference(newTheme);
+        this.showTempMessage(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode enabled`, 'info');
+    }
+
+    updateThemeButton(theme) {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        }
+    }
+
+    loadThemePreference() {
+        try {
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedTheme = localStorage.getItem(this.themeKey);
+            let theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+            
+            document.documentElement.setAttribute('data-theme', theme);
+            this.updateThemeButton(theme);
+            
+            console.log('🎨 Theme loaded:', theme, '(system prefers dark:', systemPrefersDark, ')');
+        } catch (error) {
+            console.error('Error loading theme preference:', error);
+        }
+    }
+
+    saveThemePreference(theme) {
+        try {
+            localStorage.setItem(this.themeKey, theme);
+        } catch (error) {
+            console.error('Error saving theme preference:', error);
+        }
+    }
+
+    // CHAT HISTORY METHODS
+    clearChat() {
+        if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
+            localStorage.removeItem(this.storageKey);
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const welcomeMessage = chatMessages.querySelector('.message:first-child');
+            chatMessages.innerHTML = '';
+            if (welcomeMessage) {
+                chatMessages.appendChild(welcomeMessage);
+            }
+            
+            this.showTempMessage('Chat history cleared successfully!', 'success');
+        }
+    }
+
+    showTempMessage(text, type = 'info') {
+        const tempMsg = document.createElement('div');
+        tempMsg.className = `temp-message temp-message-${type}`;
+        tempMsg.textContent = text;
+        document.body.appendChild(tempMsg);
+
+        setTimeout(() => {
+            tempMsg.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (tempMsg.parentNode) {
+                    tempMsg.parentNode.removeChild(tempMsg);
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    saveChatHistory() {
+        try {
+            const chatMessages = document.getElementById('chatMessages');
+            const messages = [];
+            
+            const messageElements = chatMessages.querySelectorAll('.message');
+            
+            messageElements.forEach((messageEl, index) => {
+                if (index === 0) return;
+                
+                const isBot = messageEl.classList.contains('bot-message');
+                const contentEl = messageEl.querySelector('.message-content');
+                const content = contentEl.textContent || contentEl.innerText;
+                
+                messages.push({
+                    type: isBot ? 'bot' : 'user',
+                    content: content,
+                    timestamp: new Date().toISOString()
+                });
+            });
+
+            localStorage.setItem(this.storageKey, JSON.stringify(messages));
+            console.log('💾 Chat history saved:', messages.length, 'messages');
+            
+        } catch (error) {
+            console.error('Error saving chat history:', error);
+        }
+    }
+
+    loadChatHistory() {
+        try {
+            const saved = localStorage.getItem(this.storageKey);
+            if (saved) {
+                const messages = JSON.parse(saved);
+                const chatMessages = document.getElementById('chatMessages');
+                
+                const welcomeMessage = chatMessages.querySelector('.message:first-child');
+                chatMessages.innerHTML = '';
+                if (welcomeMessage) {
+                    chatMessages.appendChild(welcomeMessage);
+                }
+
+                messages.forEach(msg => {
+                    this.addMessage(msg.content, msg.type, true);
+                });
+
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                console.log('📂 Chat history loaded:', messages.length, 'messages');
+                
+                this.showTempMessage(`Loaded ${messages.length} previous messages`, 'info');
+            }
+        } catch (error) {
+            console.error('Error loading chat history:', error);
+        }
+    }
+
+    updateCharCount() {
+        const messageInput = document.getElementById('messageInput');
+        const charCount = document.getElementById('charCount');
+        if (messageInput && charCount) {
+            const length = messageInput.value.length;
+            charCount.textContent = `${length}/500`;
+            
+            if (length > 450) {
+                charCount.style.color = '#e74c3c';
+            } else if (length > 400) {
+                charCount.style.color = '#f39c12';
+            } else {
+                charCount.style.color = '#7f8c8d';
+            }
+        }
+    }
+
+    // UPDATED: sendMessage method with FRESH property data each time
+    async sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+
+        if (!message) return;
+
+        // TRACK QUESTION FOR FAQ AUTO-LEARNING
+        FAQTracker.trackQuestion(message);
+        
+        messageInput.value = '';
+        this.updateCharCount();
+        document.getElementById('sendButton').disabled = true;
+
+        this.addMessage(message, 'user');
+        this.showTypingIndicator();
+
+        try {
+            const currentLanguage = this.getCurrentLanguage();
+            
+            // FIRST: Check if we have an FAQ answer in knowledge base
+            const faqAnswer = FAQTracker.findAnswer(message);
+            
+            if (faqAnswer) {
+                console.log("✅ Found FAQ answer in knowledge base");
+                this.hideTypingIndicator();
+                this.addMessage(faqAnswer, 'bot');
+                return;
+            }
+            
+            // IMPORTANT: RELOAD property data for EACH message to ensure freshness
+            this.loadAllPropertyData();
+            const hostConfig = this.getHostConfig();
+            
+            // Prepare system messages
+            let systemMessage = '';
+            
+            // Check if question is about local recommendations
+            const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 
+                'beach', 'park', 'attraction', 'nearby', 'local', 
+                'recommend', 'things to do', 'activity', 'tour', 
+                'sightseeing', 'place to visit', 'what to do', 'see',
+                'visit', 'explore', 'destination'];
+            
+            // Check if question is about appliances
+            const applianceKeywords = ['appliance', 'oven', 'microwave', 'stove', 'cooktop',
+                'washer', 'dryer', 'laundry', 'washing machine',
+                'dishwasher', 'refrigerator', 'fridge', 'freezer',
+                'thermostat', 'heating', 'cooling', 'air conditioning',
+                'AC', 'heat', 'coffee maker', 'toaster', 'blender',
+                'microwave', 'TV', 'television', 'remote', 'control',
+                'instructions', 'how to use', 'operate', 'work',
+                'not working', 'troubleshoot', 'help with', 'use the',
+                'how do I', 'turn on', 'start', 'begin'];
+            
+            if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
+                systemMessage += `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
+            }
+            
+            // Include appliances context for appliance questions
+            if (anyKeywordInMessage(message, applianceKeywords) && this.hostAppliances.length > 0) {
+                if (systemMessage) systemMessage += "\n\n";
+                systemMessage += `When users ask about appliances, use these instructions:\n\n${this.getAppliancesText()}`;
+            }
+
+            console.log('🔄 Sending to AI:', {
+                message: message,
+                language: currentLanguage,
+                hostConfig: hostConfig?.name || 'No config',
+                hasRecommendations: this.hostRecommendations.length,
+                hasAppliances: this.hostAppliances.length,
+                hasSystemMessage: !!systemMessage
+            });
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    message: message,
+                    language: currentLanguage,
+                    hostConfig: hostConfig,
+                    systemMessage: systemMessage
+                }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            const data = await response.json();
+            this.hideTypingIndicator();
+
+            if (data.success) {
+                this.addMessage(data.response, 'bot');
+                console.log('🌍 Response language:', data.detectedLanguage);
+                console.log('🏠 Using custom config:', data.usingCustomConfig);
+                console.log('🛠️ Using appliances data:', data.usingAppliances || false);
+                
+                // Auto-learn from successful AI answers
+                FAQTracker.autoLearnFromAnswer(message, data.response);
+                
+                if (data.usingCustomConfig && hostConfig) {
+                    console.log('✅ AI is using your custom property configuration');
+                }
+            } else {
+                this.addMessage(
+                    "I'm having trouble connecting right now. Please try again in a moment.",
+                    'bot'
+                );
+            }
+
+        } catch (error) {
+            this.hideTypingIndicator();
+            
+            if (error.name === 'AbortError') {
+                this.addMessage(
+                    "The request took too long. Please try again with a simpler question.",
+                    'bot'
+                );
+            } else {
+                this.addMessage(
+                    "Sorry, I'm experiencing connection issues. Please check your internet connection and try again.",
+                    'bot'
+                );
+            }
+            console.error('Network error:', error);
+        }
+    }
+
+    addMessage(content, sender, isRestored = false) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = sender === 'bot' 
+            ? '<i class="fas fa-robot"></i>' 
+            : '<i class="fas fa-user"></i>';
+
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+
+        if (sender === 'bot') {
+            const formattedContent = this.formatBotResponse(content);
+            messageContent.innerHTML = formattedContent;
+        } else {
+            messageContent.textContent = content;
+        }
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(messageContent);
+        chatMessages.appendChild(messageDiv);
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (!isRestored && chatMessages.children.length > 1) {
+            this.saveChatHistory();
+        }
+    }
+
+    formatBotResponse(text) {
+        let formatted = text.replace(/\n/g, '<br>');
+        formatted = formatted.replace(/(\d+)\.\s/g, '<strong>$1.</strong> ');
+        formatted = formatted.replace(/Emergency:/g, '<strong>🚨 Emergency:</strong>');
+        formatted = formatted.replace(/Contact:/g, '<strong>📞 Contact:</strong>');
+        formatted = formatted.replace(/Address:/g, '<strong>📍 Address:</strong>');
+        formatted = formatted.replace(/Check-in:/g, '<strong>🕒 Check-in:</strong>');
+        formatted = formatted.replace(/Check-out:/g, '<strong>🕒 Check-out:</strong>');
+        formatted = formatted.replace(/WiFi:/g, '<strong>📶 WiFi:</strong>');
+        formatted = formatted.replace(/Parking:/g, '<strong>🚗 Parking:</strong>');
+        formatted = formatted.replace(/Trash:/g, '<strong>🗑️ Trash:</strong>');
+        formatted = formatted.replace(/Garbage:/g, '<strong>🗑️ Garbage:</strong>');
+        formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
+        formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
+        formatted = formatted.replace(/Troubleshooting:/g, '<strong>🔧 Troubleshooting:</strong>');
+        formatted = formatted.replace(/Type:/g, '<strong>📝 Type:</strong>');
+        
+        return formatted;
+    }
+
+    showTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.style.display = 'flex';
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+    }
+
+    hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.style.display = 'none';
+        }
+    }
+}
+
+// Helper function to check for local keywords
+function anyKeywordInMessage(message, keywords) {
+    const lowerMessage = message.toLowerCase();
+    return keywords.some(keyword => lowerMessage.includes(keyword));
+}
+
+// Global function for quick questions
+function askQuestion(question) {
+    const messageInput = document.getElementById('messageInput');
+    messageInput.value = question;
+    document.getElementById('sendButton').disabled = false;
+    
+    const chat = window.chat || new RentalAIChat();
+    chat.sendMessage();
+}
+
+// Debug function to check configuration
+function debugConfig() {
+    const config = localStorage.getItem('rentalAIPropertyConfig');
+    const recommendations = localStorage.getItem('rental_ai_recommendations');
+    const appliances = localStorage.getItem('rental_ai_appliances');
+    const faqLog = localStorage.getItem('rental_ai_faq_log');
+    const faqStats = localStorage.getItem('rental_ai_faq_stats');
+    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
+    
+    if (config) {
+        const parsed = JSON.parse(config);
+        console.log('🔧 Current Host Configuration:', parsed);
+        
+        let alertText = `Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`;
+        
+        if (appliances) {
+            const applianceList = JSON.parse(appliances);
+            alertText += `\nAppliances: ${applianceList.length} configured`;
+        }
+        
+        if (faqLog) {
+            const faqList = JSON.parse(faqLog);
+            alertText += `\nQuestions Tracked: ${faqList.length}`;
+        }
+        
+        if (faqStats) {
+            const stats = JSON.parse(faqStats);
+            alertText += `\nFrequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}`;
+        }
+        
+        if (knowledgeBase) {
+            const kb = JSON.parse(knowledgeBase);
+            alertText += `\nFAQ Knowledge Base: ${kb.length} entries`;
+        }
+        
+        alert(alertText);
+    } else {
+        console.log('🔧 No host configuration found');
+        alert('No host configuration found. Please run setup first.');
+    }
+}
+
+// Enhanced debug function
+function debugFullConfig() {
+    const config = localStorage.getItem('rentalAIPropertyConfig');
+    const recommendations = localStorage.getItem('rental_ai_recommendations');
+    const appliances = localStorage.getItem('rental_ai_appliances');
+    const faqLog = localStorage.getItem('rental_ai_faq_log');
+    const faqStats = localStorage.getItem('rental_ai_faq_stats');
+    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
+    
+    if (config) {
+        const parsed = JSON.parse(config);
+        console.log('🔧 FULL Host Configuration:', parsed);
+        
+        let debugInfo = 'Current Configuration:\n';
+        debugInfo += `Property: ${parsed.name || 'Not set'}\n`;
+        debugInfo += `Address: ${parsed.address || 'Not set'}\n`;
+        debugInfo += `Host Contact: ${parsed.hostContact || 'Not set'}\n`;
+        debugInfo += `Maintenance Contact: ${parsed.maintenanceContact || 'Not set'}\n`;
+        debugInfo += `Check-in: ${parsed.checkinTime || 'Not set'}\n`;
+        debugInfo += `Check-out: ${parsed.checkoutTime || 'Not set'}\n`;
+        debugInfo += `WiFi: ${parsed.amenities?.wifi || 'Not set'}\n`;
+        debugInfo += `Other Amenities: ${parsed.amenities?.other || 'Not set'}\n`;
+        debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
+        
+        const recs = recommendations ? JSON.parse(recommendations) : [];
+        debugInfo += `Recommendations: ${recs.length} places\n`;
+        
+        const applianceList = appliances ? JSON.parse(appliances) : [];
+        debugInfo += `Appliances: ${applianceList.length} configured\n`;
+        if (applianceList.length > 0) {
+            applianceList.forEach((appliance, index) => {
+                debugInfo += `  ${index + 1}. ${appliance.name} (${appliance.type})\n`;
+            });
+        }
+        
+        if (faqLog) {
+            const faqList = JSON.parse(faqLog);
+            debugInfo += `\nFAQ Tracking:\n`;
+            debugInfo += `  Questions Tracked: ${faqList.length}\n`;
+        }
+        
+        if (faqStats) {
+            const stats = JSON.parse(faqStats);
+            debugInfo += `  Frequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}\n`;
+        }
+        
+        if (knowledgeBase) {
+            const kb = JSON.parse(knowledgeBase);
+            debugInfo += `  Knowledge Base Entries: ${kb.length}\n`;
+            kb.slice(0, 5).forEach((entry, index) => {
+                debugInfo += `    ${index + 1}. "${entry.question.substring(0, 30)}..." (Uses: ${entry.uses || 0})\n`;
+            });
+            if (kb.length > 5) debugInfo += `    ... and ${kb.length - 5} more\n`;
+        }
+        
+        alert(debugInfo);
+    } else {
+        console.log('🔧 No host configuration found');
+        alert('No host configuration found. Please run setup first.');
+    }
+}
+
+// Test FAQ matching
+function testFAQMatch(question) {
+    console.log('🧪 Testing FAQ match for:', question);
+    const result = FAQTracker.findAnswer(question);
+    if (result) {
+        console.log('✅ Found match:', result.substring(0, 100) + '...');
+        return result;
+    } else {
+        console.log('❌ No match found');
+        return null;
+    }
+}
+
+// Initialize chat when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM Content Loaded - Initializing RentalAIChat...');
+    try {
+        window.chat = new RentalAIChat();
+        console.log('✅ RentalAIChat initialized successfully!');
+        
+        // Add CSS for header controls
+        const style = document.createElement('style');
+        style.textContent = `
+            .header-controls {
+                display: flex !important;
+                align-items: center;
+                gap: 8px;
+                margin-left: auto;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            .setup-btn, .clear-chat-btn, .theme-toggle {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 6px 10px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            .setup-btn:hover, .clear-chat-btn:hover, .theme-toggle:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            
+            .language-select {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 6px 10px;
+                border-radius: 10px;
+                font-size: 0.8rem;
+                cursor: pointer;
+            }
+            
+            .language-select option {
+                background: #2c3e50;
+                color: white;
+            }
+            
+            /* Appliance quick questions */
+            .quick-appliance-section {
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border-color);
+            }
+            
+            .quick-section-title {
+                margin-bottom: 10px;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            
+            .quick-appliance-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .appliance-quick-btn {
+                background: var(--accent-secondary);
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                text-align: center;
+            }
+            
+            .appliance-quick-btn:hover {
+                background: var(--accent-primary);
+            }
+            
+            /* Animation styles */
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+    } catch (error) {
+        console.error('❌ Error initializing RentalAIChat:', error);
+        alert('Error initializing chat. Please check console for details.');
+    }
+});
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+});
