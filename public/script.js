@@ -13,14 +13,12 @@ function loadPropertyConfig() {
     const propertyId = getPropertyFromURL();
     
     if (!propertyId) {
-        // No property specified - show default
         console.log('No property specified in URL, using default');
         return;
     }
     
     console.log('Loading property:', propertyId);
     
-    // Get properties from localStorage
     const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
     const property = properties[propertyId];
     
@@ -30,16 +28,12 @@ function loadPropertyConfig() {
         return;
     }
     
-    // Update UI with property info
     updatePropertyUI(property);
-    
-    // Load property-specific FAQs
     loadPropertyFAQs(propertyId);
 }
 
 // Update UI with property information
 function updatePropertyUI(property) {
-    // Update header
     const headerTitle = document.querySelector('.header-text h2');
     const headerSubtitle = document.querySelector('.header-text p');
     
@@ -51,7 +45,6 @@ function updatePropertyUI(property) {
         headerSubtitle.textContent = property.address;
     }
     
-    // Update page title
     if (property.name) {
         document.title = `${property.name} - Rental AI Assistant`;
     }
@@ -81,11 +74,10 @@ function showPropertyNotFound(propertyId) {
     messages.insertBefore(errorMsg, messages.firstChild);
 }
 
-// Load property-specific FAQs (you'll need to adapt your FAQ system)
+// Load property-specific FAQs
 function loadPropertyFAQs(propertyId) {
     console.log('Loading FAQs for property:', propertyId);
     
-    // Example: Load property-specific config
     const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
     const property = properties[propertyId];
     
@@ -105,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // FAQ AUTO-LEARNING SYSTEM
 // ================================================
 const FAQTracker = {
-    // Track a new question
     trackQuestion(question, propertyId = 'default') {
         console.log("📝 Tracking question:", question);
         
@@ -137,7 +128,6 @@ const FAQTracker = {
         }
     },
     
-    // Detect question category
     detectCategory(question) {
         const q = question.toLowerCase();
         
@@ -170,7 +160,6 @@ const FAQTracker = {
         }
     },
     
-    // Analyze frequency of questions
     analyzeFrequency() {
         const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
         const faqStats = JSON.parse(localStorage.getItem('rental_ai_faq_stats') || '{}');
@@ -200,7 +189,6 @@ const FAQTracker = {
         }
     },
     
-    // Flag questions for host review
     flagForReview(questions) {
         const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
         
@@ -228,17 +216,14 @@ const FAQTracker = {
         this.showNotificationIfNeeded(questions.length);
     },
     
-    // Show notification in admin
     showNotificationIfNeeded(count) {
         console.log(`💡 ${count} frequent questions need review. Visit /faq-manage.html`);
     },
     
-    // Get FAQ knowledge base
     getKnowledgeBase() {
         return JSON.parse(localStorage.getItem('rental_ai_knowledge_base') || '[]');
     },
     
-    // Add to knowledge base
     addToKnowledgeBase(question, answer, category = 'general') {
         const knowledgeBase = this.getKnowledgeBase();
         
@@ -257,7 +242,6 @@ const FAQTracker = {
         console.log(`✅ Added to knowledge base: "${question}" (Category: ${category})`);
     },
     
-    // IMPROVED: Find answer in knowledge base
     findAnswer(question) {
         const knowledgeBase = this.getKnowledgeBase();
         if (knowledgeBase.length === 0) return null;
@@ -268,24 +252,9 @@ const FAQTracker = {
         const synonymGroups = {
             'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 'throw away', 'dispose', 'bin', 'dump', 'bags', 'full bags', 'garbage bags', 'trash bags', 'where does', 'where do', 'where to', 'disposal', 'dumpster', 'take out', 'put out'],
             'beach': ['beach', 'playa', 'shore', 'coast', 'seaside', 'ocean', 'sand', 'waves'],
-            'pool': ['pool', 'swimming', 'jacuzzi', 'hot tub', 'spa', 'swim'],
             'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro'],
             'wifi': ['wifi', 'internet', 'wireless', 'network', 'connection', 'online', 'web'],
             'parking': ['parking', 'car', 'vehicle', 'park', 'spot', 'garage'],
-            'kitchen': ['kitchen', 'cook', 'stove', 'oven', 'fridge', 'refrigerator'],
-            'checkin': ['check in', 'check-in', 'arrive', 'arrival', 'enter', 'come', 'get here'],
-            'checkout': ['check out', 'check-out', 'leave', 'depart', 'exit', 'go', 'vacate'],
-            'time': ['time', 'hour', 'when', 'schedule', 'clock'],
-            'clean': ['clean', 'cleaning', 'tidy', 'maid', 'housekeeping', 'towels', 'linens'],
-            'key': ['key', 'lock', 'door', 'enter', 'access', 'code'],
-            'tv': ['tv', 'television', 'netflix', 'youtube', 'movie', 'watch'],
-            'ac': ['ac', 'air conditioning', 'heating', 'cooling', 'thermostat', 'temperature'],
-            'washer': ['washer', 'laundry', 'dryer', 'clothes', 'wash'],
-            'how': ['how', 'operate', 'use', 'work', 'function'],
-            'where': ['where', 'location', 'place', 'find', 'locate'],
-            'what': ['what', 'which', 'tell me about', 'information'],
-            'can': ['can', 'could', 'may', 'able', 'possible', 'allow'],
-            'please': ['please', 'could you', 'can you', 'would you']
         };
         
         const questionPatterns = [
@@ -295,8 +264,6 @@ const FAQTracker = {
             { pattern: /^(when is|when are|when can i)/i, replace: '' },
             { pattern: /^(do you have|is there|are there)/i, replace: '' },
             { pattern: /^(can i|may i|could i)/i, replace: '' },
-            { pattern: /^(tell me about|i need|i want|i\'m looking for)/i, replace: '' },
-            { pattern: /^(please tell me|could you tell me|can you tell me)/i, replace: '' },
             { pattern: /[?,.!]/g, replace: '' },
             { pattern: /\s+/g, replace: ' ' }
         ];
@@ -306,22 +273,6 @@ const FAQTracker = {
             normalizedQ = normalizedQ.replace(pattern.pattern, pattern.replace);
         });
         normalizedQ = normalizedQ.trim();
-        
-        const applianceGroups = {
-            'oven_microwave': ['oven', 'microwave', 'stove', 'cooktop', 'bake', 'cook', 'heat'],
-            'washer_dryer': ['washer', 'dryer', 'laundry', 'clothes', 'wash', 'detergent', 'spin'],
-            'refrigerator': ['refrigerator', 'fridge', 'freezer', 'cool', 'chill', 'ice'],
-            'thermostat': ['thermostat', 'temperature', 'heat', 'cool', 'ac', 'air conditioning', 'climate'],
-            'tv': ['tv', 'television', 'remote', 'channel', 'netflix', 'stream', 'watch']
-        };
-        
-        let userApplianceGroup = null;
-        for (const [group, keywords] of Object.entries(applianceGroups)) {
-            if (keywords.some(keyword => normalizedQ.includes(keyword))) {
-                userApplianceGroup = group;
-                break;
-            }
-        }
         
         const scoredEntries = knowledgeBase.map(entry => {
             const entryQ = entry.question.toLowerCase().trim();
@@ -334,13 +285,9 @@ const FAQTracker = {
             
             let score = 0;
             
-            console.log(`  Comparing: User="${normalizedQ}" vs FAQ="${normalizedEntryQ}"`);
-            
             if (normalizedQ === normalizedEntryQ) {
-                console.log('    ✅ Exact match!');
                 score = 100;
             } else if (q === entryQ) {
-                console.log('    ✅ Original text match!');
                 score = 100;
             } else {
                 const questionWords = this.getExpandedWords(normalizedQ, synonymGroups);
@@ -354,78 +301,14 @@ const FAQTracker = {
                 const unionSize = union.size || 1;
                 const similarity = intersection.length / unionSize;
                 score = Math.min(similarity * 100, 80);
-                
-                console.log(`    Similarity: ${similarity * 100}% → base score: ${score}`);
-                
-                if (userApplianceGroup) {
-                    let entryApplianceGroup = null;
-                    for (const [group, keywords] of Object.entries(applianceGroups)) {
-                        if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
-                            entryApplianceGroup = group;
-                            break;
-                        }
-                    }
-                    
-                    if (entryApplianceGroup) {
-                        if (userApplianceGroup === entryApplianceGroup) {
-                            score += 25;
-                            console.log(`    ✅ Same appliance group: ${userApplianceGroup} (+25)`);
-                        } else {
-                            score -= 50;
-                            console.log(`    ❌ Different appliance groups: ${userApplianceGroup} vs ${entryApplianceGroup} (-50)`);
-                        }
-                    }
-                }
-                
-                const keywordCategories = {
-                    'wifi': ['wifi', 'internet', 'password', 'network', 'connection', 'wi-fi'],
-                    'checkin': ['checkin', 'check-in', 'checkout', 'check-out', 'arrival', 'departure', 'time', 'schedule'],
-                    'emergency': ['emergency', 'urgent', 'contact', 'number', 'phone', 'fire', 'police', 'hospital', 'doctor', 'ambulance'],
-                    'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro', 'restaurants', 'nearby', 'local'],
-                    'beach': ['beach', 'playa', 'shore', 'ocean', 'sea', 'sand'],
-                    'parking': ['parking', 'car', 'vehicle', 'garage', 'spot', 'space'],
-                    'keys': ['key', 'keys', 'access', 'door', 'lock', 'code', 'entry'],
-                    'trash': ['trash', 'garbage', 'recycle', 'disposal', 'waste']
-                };
-                
-                let userCategory = null;
-                let entryCategory = null;
-                
-                for (const [category, keywords] of Object.entries(keywordCategories)) {
-                    if (keywords.some(keyword => normalizedQ.includes(keyword))) {
-                        userCategory = category;
-                    }
-                    if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
-                        entryCategory = category;
-                    }
-                }
-                
-                if (userCategory && entryCategory) {
-                    if (userCategory === entryCategory) {
-                        score += 15;
-                    } else {
-                        score -= 25;
-                    }
-                }
-                
-                score += Math.min((entry.uses || 0) * 0.5, 10);
             }
             
             score = Math.max(0, Math.min(100, Math.round(score)));
-            console.log(`    Final score: ${score}%`);
             
             return { entry, score, normalizedEntryQ };
         });
         
         scoredEntries.sort((a, b) => b.score - a.score);
-        
-        const topMatches = scoredEntries.filter(s => s.score > 0).slice(0, 5);
-        if (topMatches.length > 0) {
-            console.log('🔍 Top FAQ Matches:');
-            topMatches.forEach((match, i) => {
-                console.log(`  ${i+1}. "${match.entry.question}" → ${match.score}%`);
-            });
-        }
         
         let threshold = 70;
         const applianceKeywords = ['oven', 'microwave', 'washer', 'dryer', 'laundry', 'fridge', 'thermostat', 'tv'];
@@ -433,7 +316,6 @@ const FAQTracker = {
         
         if (isApplianceQuestion) {
             threshold = 80;
-            console.log(`🔧 Appliance question detected - using higher threshold: ${threshold}%`);
         }
         
         const bestMatch = scoredEntries[0];
@@ -442,15 +324,12 @@ const FAQTracker = {
             bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
             bestMatch.entry.lastUsed = new Date().toISOString();
             localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-            console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${bestMatch.score}%)`);
             return bestMatch.entry.answer;
         }
         
-        console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? scoredEntries[0].score : 0}%, threshold: ${threshold}%)`);
         return null;
     },
     
-    // Helper: Get expanded words with synonyms
     getExpandedWords(text, synonymGroups) {
         if (!text || text.trim().length === 0) return new Set();
         
@@ -470,16 +349,11 @@ const FAQTracker = {
                     });
                 }
             }
-            
-            if (cleanWord.endsWith('s') && cleanWord.length > 3) expandedSet.add(cleanWord.slice(0, -1));
-            if (cleanWord.endsWith('ing') && cleanWord.length > 4) expandedSet.add(cleanWord.slice(0, -3));
-            if (cleanWord.endsWith('ed') && cleanWord.length > 3) expandedSet.add(cleanWord.slice(0, -2));
         });
         
         return expandedSet;
     },
     
-    // ADDED: Auto-learn from successful AI answers
     autoLearnFromAnswer(question, aiAnswer) {
         try {
             const knowledgeBase = this.getKnowledgeBase();
@@ -494,7 +368,6 @@ const FAQTracker = {
                     existingEntry.answer = aiAnswer;
                     existingEntry.lastUpdated = new Date().toISOString();
                     localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-                    console.log(`🔄 Updated existing FAQ entry: "${question}"`);
                 }
                 return;
             }
@@ -511,7 +384,6 @@ const FAQTracker = {
                     aiAnswer,
                     this.detectCategory(question)
                 );
-                console.log(`🤖 Auto-learned from AI answer: "${question.substring(0, 50)}..."`);
             }
             
         } catch (error) {
@@ -521,12 +393,12 @@ const FAQTracker = {
 };
 
 // ================================================
-// MAIN CHAT CLASS - FIXED PROPERTY ISOLATION
+// MAIN CHAT CLASS - ENHANCED DEBUGGING
 // ================================================
 
 class RentalAIChat {
     constructor() {
-        console.log('🔄 Chat Initialized - localStorage:', !!window.localStorage);
+        console.log('🔄 Chat Initialized');
         
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
@@ -535,12 +407,12 @@ class RentalAIChat {
         this.recommendationsKey = 'rental_ai_recommendations';
         this.appliancesKey = 'rental_ai_appliances';
         
-        // Clear any cached data first
+        // Clear all cached data
         this.hostConfig = null;
         this.hostRecommendations = [];
         this.hostAppliances = [];
         
-        console.log('🔍 Step 1: Loading property-specific data...');
+        console.log('🔍 Step 1: Loading ALL property data...');
         this.loadAllPropertyData();
         
         console.log('🔍 Step 2: Initializing event listeners...');
@@ -561,14 +433,30 @@ class RentalAIChat {
         console.log('✅ Chat initialization complete!');
     }
 
-    // NEW: Load ALL property data in correct order
+    // Load ALL property data
     loadAllPropertyData() {
+        console.log('=== LOADING PROPERTY DATA ===');
+        const propertyId = getPropertyFromURL();
+        console.log('Current Property ID:', propertyId);
+        
         this.loadPropertyConfig();
         this.loadRecommendations();
         this.loadAppliances();
+        
+        console.log('=== PROPERTY DATA LOADED ===');
+        console.log('Host Config:', this.hostConfig?.name || 'None');
+        console.log('Recommendations:', this.hostRecommendations?.length || 0);
+        console.log('Appliances:', this.hostAppliances?.length || 0);
+        
+        if (this.hostRecommendations && this.hostRecommendations.length > 0) {
+            console.log('First recommendation name:', this.hostRecommendations[0]?.name);
+        }
+        if (this.hostConfig) {
+            console.log('WiFi details in config:', this.hostConfig.amenities?.wifi || 'None');
+        }
     }
 
-    // HOST CONFIGURATION METHODS - FIXED
+    // Load property configuration
     loadPropertyConfig() {
         try {
             const propertyId = getPropertyFromURL();
@@ -578,19 +466,20 @@ class RentalAIChat {
                 const property = properties[propertyId];
                 
                 if (property && property.config) {
-                    console.log('🏠 Using PROPERTY-SPECIFIC configuration:', property.name);
+                    console.log(`✅ Loading config for: ${property.name}`);
                     this.hostConfig = this.transformPropertyConfig(property.config, property.name, property.address);
                     this.updateUIWithPropertyInfo(property);
                     return;
                 } else {
-                    console.error('❌ Property found but missing config:', propertyId);
+                    console.error(`❌ Property ${propertyId} not found or missing config`);
                 }
             }
             
-            // FALLBACK: Old system
+            // Legacy fallback
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
             if (savedConfig) {
                 const hostConfig = JSON.parse(savedConfig);
+                this.hostConfig = hostConfig;
                 
                 const headerText = document.querySelector('.header-text h2');
                 const headerSubtext = document.querySelector('.header-text p');
@@ -602,14 +491,6 @@ class RentalAIChat {
                 if (headerSubtext && hostConfig.name) {
                     headerSubtext.textContent = `${hostConfig.name} • 24/7 Support`;
                 }
-
-                const welcomePropertyName = document.getElementById('welcomePropertyName');
-                if (welcomePropertyName && hostConfig.name) {
-                    welcomePropertyName.textContent = hostConfig.name;
-                }
-                
-                console.log('🏠 Using LEGACY configuration:', hostConfig.name);
-                this.hostConfig = hostConfig;
             } else {
                 console.log('🏠 Using default configuration');
                 this.hostConfig = null;
@@ -620,7 +501,7 @@ class RentalAIChat {
         }
     }
     
-    // Helper: Transform property config to expected format
+    // Transform property config
     transformPropertyConfig(config, name, address) {
         return {
             name: name || config.propertyName,
@@ -641,16 +522,11 @@ class RentalAIChat {
             appliances: config.appliances || [],
             hasAppliances: config.appliances && config.appliances.length > 0,
             hasRecommendations: config.recommendations && config.recommendations.length > 0,
-            lastUpdated: new Date().toISOString(),
-            contact: config.hostContact || '',
-            checkInOut: {
-                checkIn: config.checkInTime || '3:00 PM',
-                checkOut: config.checkOutTime || '11:00 AM'
-            }
+            lastUpdated: new Date().toISOString()
         };
     }
     
-    // Update UI with property information
+    // Update UI
     updateUIWithPropertyInfo(property) {
         const headerTitle = document.querySelector('.header-text h2');
         const headerSubtitle = document.querySelector('.header-text p');
@@ -662,19 +538,16 @@ class RentalAIChat {
         if (headerSubtitle && property.name) {
             headerSubtitle.textContent = `${property.name} • 24/7 Support`;
         }
-
-        const welcomePropertyName = document.getElementById('welcomePropertyName');
-        if (welcomePropertyName && property.name) {
-            welcomePropertyName.textContent = property.name;
-        }
     }
 
-    // HOST RECOMMENDATIONS METHODS - FIXED
+    // Load recommendations - FIXED VERSION
     loadRecommendations() {
         try {
-            this.hostRecommendations = []; // Clear first
+            // Always clear first
+            this.hostRecommendations = [];
             
             const propertyId = getPropertyFromURL();
+            console.log('Loading recommendations for property:', propertyId);
             
             if (propertyId) {
                 const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
@@ -682,19 +555,17 @@ class RentalAIChat {
                 
                 if (property && property.config && property.config.recommendations) {
                     this.hostRecommendations = property.config.recommendations;
-                    console.log('📍 Loaded PROPERTY-SPECIFIC recommendations:', this.hostRecommendations.length);
-                    console.log('📍 First recommendation:', this.hostRecommendations[0]?.name || 'None');
+                    console.log(`✅ Loaded ${this.hostRecommendations.length} recommendations for ${property.name}`);
+                    console.log('Recommendations:', this.hostRecommendations);
                     return;
                 }
             }
             
-            // FALLBACK: Old system
+            // Legacy fallback
             const saved = localStorage.getItem(this.recommendationsKey);
             if (saved) {
                 this.hostRecommendations = JSON.parse(saved);
-                console.log('📍 Loaded LEGACY recommendations:', this.hostRecommendations.length);
-            } else {
-                console.log('📍 No recommendations found');
+                console.log(`📚 Loaded ${this.hostRecommendations.length} legacy recommendations`);
             }
         } catch (error) {
             console.error('Error loading recommendations:', error);
@@ -702,12 +573,14 @@ class RentalAIChat {
         }
     }
 
-    // HOST APPLIANCES METHODS - FIXED
+    // Load appliances - FIXED VERSION
     loadAppliances() {
         try {
-            this.hostAppliances = []; // Clear first
+            // Always clear first
+            this.hostAppliances = [];
             
             const propertyId = getPropertyFromURL();
+            console.log('Loading appliances for property:', propertyId);
             
             if (propertyId) {
                 const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
@@ -715,19 +588,16 @@ class RentalAIChat {
                 
                 if (property && property.config && property.config.appliances) {
                     this.hostAppliances = property.config.appliances;
-                    console.log('🛠️ Loaded PROPERTY-SPECIFIC appliances:', this.hostAppliances.length);
-                    console.log('🛠️ First appliance:', this.hostAppliances[0]?.name || 'None');
+                    console.log(`✅ Loaded ${this.hostAppliances.length} appliances for ${property.name}`);
                     return;
                 }
             }
             
-            // FALLBACK: Old system
+            // Legacy fallback
             const saved = localStorage.getItem(this.appliancesKey);
             if (saved) {
                 this.hostAppliances = JSON.parse(saved);
-                console.log('🛠️ Loaded LEGACY appliances:', this.hostAppliances.length);
-            } else {
-                console.log('🛠️ No appliances found');
+                console.log(`🛠️ Loaded ${this.hostAppliances.length} legacy appliances`);
             }
         } catch (error) {
             console.error('Error loading appliances:', error);
@@ -735,70 +605,109 @@ class RentalAIChat {
         }
     }
 
-    // Get host config - ALWAYS fresh from URL
+    // Get host config - always fresh
     getHostConfig() {
-        try {
-            const propertyId = getPropertyFromURL();
+        const propertyId = getPropertyFromURL();
+        
+        if (propertyId) {
+            const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+            const property = properties[propertyId];
             
-            if (propertyId) {
-                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-                const property = properties[propertyId];
-                
-                if (property && property.config) {
-                    return this.transformPropertyConfig(property.config, property.name, property.address);
-                }
+            if (property && property.config) {
+                return this.transformPropertyConfig(property.config, property.name, property.address);
             }
-            
-            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-            return savedConfig ? JSON.parse(savedConfig) : null;
-        } catch (error) {
-            console.error('Error getting host config:', error);
-            return null;
         }
-    }
-
-    saveRecommendations() {
-        try {
-            localStorage.setItem(this.recommendationsKey, JSON.stringify(this.hostRecommendations));
-        } catch (error) {
-            console.error('Error saving recommendations:', error);
-        }
+        
+        const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+        return savedConfig ? JSON.parse(savedConfig) : null;
     }
 
     getRecommendationsText() {
         if (!this.hostRecommendations || this.hostRecommendations.length === 0) {
+            console.log('⚠️ No recommendations to send to AI');
             return "";
         }
         
-        let text = "HOST RECOMMENDATIONS:\n\n";
-        this.hostRecommendations.forEach(place => {
-            text += `📍 ${place.name} (${place.category})\n`;
-            if (place.description) text += `📝 ${place.description}\n`;
-            if (place.notes) text += `💡 ${place.notes}\n`;
+        let text = "HOST RECOMMENDATIONS FOR THIS PROPERTY:\n\n";
+        this.hostRecommendations.forEach((place, index) => {
+            text += `${index + 1}. ${place.name} (${place.category})\n`;
+            if (place.description) text += `   ${place.description}\n`;
+            if (place.notes) text += `   Note: ${place.notes}\n`;
             text += "\n";
         });
+        
+        console.log('📤 Recommendations being sent to AI:', this.hostRecommendations.length);
+        console.log('First recommendation:', this.hostRecommendations[0]?.name);
         return text;
     }
 
-    // Get appliances text for AI context
     getAppliancesText() {
         if (!this.hostAppliances || this.hostAppliances.length === 0) {
             return "";
         }
         
-        let text = "HOST APPLIANCES:\n\n";
+        let text = "HOST APPLIANCES FOR THIS PROPERTY:\n\n";
         this.hostAppliances.forEach(appliance => {
-            text += `🛠️ ${appliance.name} (${appliance.type})\n`;
-            if (appliance.instructions) text += `📋 Instructions: ${appliance.instructions}\n`;
-            if (appliance.troubleshooting) text += `🔧 Troubleshooting: ${appliance.troubleshooting}\n`;
-            if (appliance.photo) text += `📸 Photo available\n`;
+            text += `${appliance.name} (${appliance.type})\n`;
+            if (appliance.instructions) text += `Instructions: ${appliance.instructions}\n`;
+            if (appliance.troubleshooting) text += `Troubleshooting: ${appliance.troubleshooting}\n`;
             text += "\n";
         });
         return text;
     }
 
+    // NEW: Enhanced debug function
+    debugAIRequestData() {
+        console.log('🔍 DEBUG AI REQUEST DATA');
+        console.log('=========================');
+        
+        const propertyId = getPropertyFromURL();
+        console.log('1. Property ID from URL:', propertyId);
+        
+        const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+        console.log('2. Total properties in storage:', Object.keys(properties).length);
+        
+        if (propertyId && properties[propertyId]) {
+            const property = properties[propertyId];
+            console.log('3. Current property:', property.name);
+            console.log('4. Has config:', !!property.config);
+            
+            if (property.config) {
+                console.log('5. WiFi in config:', property.config.wifiDetails || 'Not set');
+                console.log('6. Recommendations in config:', property.config.recommendations?.length || 0);
+                console.log('7. Appliances in config:', property.config.appliances?.length || 0);
+                
+                if (property.config.recommendations && property.config.recommendations.length > 0) {
+                    console.log('8. First recommendation in config:', property.config.recommendations[0]);
+                }
+            }
+        }
+        
+        console.log('9. Chat loaded hostConfig:', this.hostConfig?.name || 'None');
+        console.log('10. Chat loaded WiFi:', this.hostConfig?.amenities?.wifi || 'None');
+        console.log('11. Chat loaded recommendations:', this.hostRecommendations?.length || 0);
+        console.log('12. Chat loaded appliances:', this.hostAppliances?.length || 0);
+        
+        if (this.hostRecommendations && this.hostRecommendations.length > 0) {
+            console.log('13. First loaded recommendation:', this.hostRecommendations[0]);
+        }
+        
+        console.log('14. Recommendations text being sent:');
+        console.log(this.getRecommendationsText());
+        
+        console.log('=========================');
+        
+        // Show alert with critical info
+        const alertMsg = `PROPERTY DEBUG:
+Property: ${propertyId ? (properties[propertyId]?.name || 'Not found') : 'No URL param'}
+WiFi in config: ${propertyId && properties[propertyId]?.config?.wifiDetails ? 'SET' : 'NOT SET'}
+Chat loaded WiFi: ${this.hostConfig?.amenities?.wifi ? 'SET' : 'NOT SET'}
+Recommendations loaded: ${this.hostRecommendations?.length || 0}`;
+        
+        alert(alertMsg);
+    }
+
     initializeEventListeners() {
-        console.log('🔍 Setting up event listeners...');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
 
@@ -821,18 +730,11 @@ class RentalAIChat {
         messageInput.addEventListener('input', () => {
             sendButton.disabled = messageInput.value.trim().length === 0;
         });
-
-        console.log('✅ All event listeners initialized');
     }
 
-    // Setup quick question buttons including appliance presets
     setupQuickQuestionButtons() {
-        console.log('🔍 Setting up quick question buttons...');
         const quickQuestionsContainer = document.querySelector('.quick-questions');
-        if (!quickQuestionsContainer) {
-            console.log('⚠️ Quick questions container not found');
-            return;
-        }
+        if (!quickQuestionsContainer) return;
 
         const existingApplianceSection = quickQuestionsContainer.querySelector('.quick-appliance-section');
         if (existingApplianceSection) {
@@ -865,10 +767,8 @@ class RentalAIChat {
         
         applianceSection.appendChild(applianceGrid);
         quickQuestionsContainer.appendChild(applianceSection);
-        console.log('✅ Appliance quick questions added');
     }
 
-    // Handle appliance question button clicks
     askApplianceQuestion(question) {
         const messageInput = document.getElementById('messageInput');
         messageInput.value = question;
@@ -876,10 +776,7 @@ class RentalAIChat {
         this.sendMessage();
     }
 
-    // HEADER CONTROLS METHODS
     createHeaderControls() {
-        console.log('🔄 Creating header controls...');
-        
         const header = document.querySelector('.chat-header');
         if (!header) {
             console.error('❌ Chat header not found!');
@@ -894,17 +791,15 @@ class RentalAIChat {
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
         
-        // Add Setup button
+        // Setup button
         const setupBtn = document.createElement('button');
         setupBtn.className = 'setup-btn';
         setupBtn.innerHTML = '⚙️ Setup';
         setupBtn.title = 'Configure your property information';
-        setupBtn.addEventListener('click', () => {
-            window.location.href = '/admin';
-        });
+        setupBtn.addEventListener('click', () => window.location.href = '/admin');
         headerControls.appendChild(setupBtn);
         
-        // Add Clear Chat button
+        // Clear button
         const clearBtn = document.createElement('button');
         clearBtn.className = 'clear-chat-btn';
         clearBtn.innerHTML = '🗑️ Clear';
@@ -912,7 +807,7 @@ class RentalAIChat {
         clearBtn.addEventListener('click', () => this.clearChat());
         headerControls.appendChild(clearBtn);
         
-        // Add Theme Toggle button
+        // Theme toggle
         const themeToggle = document.createElement('button');
         themeToggle.id = 'themeToggle';
         themeToggle.className = 'theme-toggle';
@@ -921,23 +816,22 @@ class RentalAIChat {
         themeToggle.addEventListener('click', () => this.toggleTheme());
         headerControls.appendChild(themeToggle);
         
-        // Add Language Selector
+        // Language selector
         const langSelect = document.createElement('select');
         langSelect.id = 'languageSelect';
         langSelect.className = 'language-select';
-        langSelect.title = 'Select language / Seleccionar idioma / Choisir la langue';
+        langSelect.title = 'Select language';
         
         const languages = [
-            { code: 'en', name: '🇺🇸 English', native: 'English' },
-            { code: 'es', name: '🇪🇸 Español', native: 'Español' },
-            { code: 'fr', name: '🇫🇷 Français', native: 'Français' }
+            { code: 'en', name: '🇺🇸 English' },
+            { code: 'es', name: '🇪🇸 Español' },
+            { code: 'fr', name: '🇫🇷 Français' }
         ];
         
         languages.forEach(lang => {
             const option = document.createElement('option');
             option.value = lang.code;
             option.textContent = lang.name;
-            option.setAttribute('data-native', lang.native);
             langSelect.appendChild(option);
         });
         
@@ -946,21 +840,25 @@ class RentalAIChat {
         });
         headerControls.appendChild(langSelect);
         
-        // Add Debug button
+        // DEBUG button
         const debugBtn = document.createElement('button');
         debugBtn.className = 'setup-btn';
-        debugBtn.innerHTML = '🔍 Debug';
-        debugBtn.title = 'Debug property data';
-        debugBtn.addEventListener('click', () => this.debugPropertyData());
+        debugBtn.innerHTML = '🔍 Debug AI';
+        debugBtn.title = 'Debug AI request data';
+        debugBtn.addEventListener('click', () => this.debugAIRequestData());
         headerControls.appendChild(debugBtn);
         
-        // Add FAQ Manager button
-        const faqBtn = document.createElement('button');
-        faqBtn.className = 'setup-btn';
-        faqBtn.innerHTML = '🧠 FAQ';
-        faqBtn.title = 'Manage FAQ auto-learning';
-        faqBtn.addEventListener('click', () => window.open('/faq-manage.html', '_blank'));
-        headerControls.appendChild(faqBtn);
+        // RELOAD button
+        const reloadBtn = document.createElement('button');
+        reloadBtn.className = 'setup-btn';
+        reloadBtn.innerHTML = '🔄 Reload';
+        reloadBtn.title = 'Reload property data';
+        reloadBtn.addEventListener('click', () => {
+            console.log('🔄 Manually reloading property data...');
+            this.loadAllPropertyData();
+            alert('Property data reloaded! Check console for details.');
+        });
+        headerControls.appendChild(reloadBtn);
         
         const statusIndicator = header.querySelector('.status-indicator');
         if (statusIndicator) {
@@ -973,52 +871,9 @@ class RentalAIChat {
         headerControls.style.alignItems = 'center';
         headerControls.style.gap = '8px';
         headerControls.style.marginLeft = 'auto';
-        
-        console.log('✅ Header controls created successfully!');
     }
 
-    // NEW: Debug property data
-    debugPropertyData() {
-        console.log('🔍 DEBUG PROPERTY DATA');
-        console.log('=======================');
-        
-        const propertyId = getPropertyFromURL();
-        console.log('1. Property ID from URL:', propertyId);
-        
-        const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-        console.log('2. Total properties in storage:', Object.keys(properties).length);
-        
-        if (propertyId && properties[propertyId]) {
-            const property = properties[propertyId];
-            console.log('3. Current property:', property.name);
-            console.log('4. Has config:', !!property.config);
-            
-            if (property.config) {
-                console.log('5. Recommendations in config:', property.config.recommendations?.length || 0);
-                console.log('6. Appliances in config:', property.config.appliances?.length || 0);
-            }
-        }
-        
-        console.log('7. Chat loaded recommendations:', this.hostRecommendations?.length || 0);
-        console.log('8. Chat loaded appliances:', this.hostAppliances?.length || 0);
-        console.log('9. Chat host config:', this.hostConfig?.name || 'None');
-        
-        if (this.hostRecommendations && this.hostRecommendations.length > 0) {
-            console.log('10. First recommendation:', this.hostRecommendations[0].name);
-        }
-        
-        console.log('=======================');
-        
-        const summary = `Property Debug:
-URL Property: ${propertyId || 'None'}
-Property Name: ${propertyId ? (properties[propertyId]?.name || 'Not found') : 'N/A'}
-Recommendations: ${this.hostRecommendations?.length || 0}
-Appliances: ${this.hostAppliances?.length || 0}`;
-        
-        alert(summary);
-    }
-
-    // LANGUAGE SUPPORT METHODS
+    // LANGUAGE SUPPORT
     changeLanguage(langCode) {
         this.saveLanguagePreference(langCode);
         this.updateUIForLanguage(langCode);
@@ -1034,60 +889,6 @@ Appliances: ${this.hostAppliances?.length || 0}`;
         };
         if (messageInput) {
             messageInput.placeholder = placeholders[langCode] || placeholders.en;
-        }
-        this.updateQuickQuestions(langCode);
-    }
-
-    updateQuickQuestions(langCode) {
-        const quickQuestions = {
-            en: {
-                checkin: "Check-in/out times",
-                wifi: "WiFi Information", 
-                restaurants: "Nearby Restaurants",
-                emergency: "Emergency Contacts",
-                applianceHelp: "🛠️ Appliance Help",
-                ovenHelp: "🍳 Oven/Microwave",
-                washerHelp: "🧺 Washer/Dryer",
-                thermostatHelp: "🌡️ Thermostat"
-            },
-            es: {
-                checkin: "Horarios de check-in/out",
-                wifi: "Información del WiFi",
-                restaurants: "Restaurantes cercanos",
-                emergency: "Contactos de emergencia",
-                applianceHelp: "🛠️ Ayuda con Electrodomésticos",
-                ovenHelp: "🍳 Horno/Microondas",
-                washerHelp: "🧺 Lavadora/Secadora",
-                thermostatHelp: "🌡️ Termostato"
-            },
-            fr: {
-                checkin: "Horaires check-in/out",
-                wifi: "Informations WiFi",
-                restaurants: "Restaurants à proximité",
-                emergency: "Contacts d'urgence",
-                applianceHelp: "🛠️ Aide aux Appareils",
-                ovenHelp: "🍳 Four/Micro-ondes",
-                washerHelp: "🧺 Lave-linge/Sèche-linge",
-                thermostatHelp: "🌡️ Thermostat"
-            }
-        };
-
-        const questions = quickQuestions[langCode] || quickQuestions.en;
-        
-        const buttons = document.querySelectorAll('.quick-btn');
-        if (buttons.length >= 4) {
-            buttons[0].textContent = questions.checkin;
-            buttons[1].textContent = questions.wifi;
-            buttons[2].textContent = questions.restaurants;
-            buttons[3].textContent = questions.emergency;
-        }
-        
-        const applianceButtons = document.querySelectorAll('.appliance-quick-btn');
-        if (applianceButtons.length >= 4) {
-            applianceButtons[0].textContent = questions.applianceHelp;
-            applianceButtons[1].textContent = questions.ovenHelp;
-            applianceButtons[2].textContent = questions.washerHelp;
-            applianceButtons[3].textContent = questions.thermostatHelp;
         }
     }
 
@@ -1108,7 +909,6 @@ Appliances: ${this.hostAppliances?.length || 0}`;
                 langSelect.value = savedLang;
             }
             this.updateUIForLanguage(savedLang);
-            console.log('🌍 Language loaded:', savedLang);
         } catch (error) {
             console.error('Error loading language preference:', error);
         }
@@ -1127,7 +927,7 @@ Appliances: ${this.hostAppliances?.length || 0}`;
         return langSelect ? langSelect.value : 'en';
     }
 
-    // THEME MANAGEMENT METHODS
+    // THEME MANAGEMENT
     toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1153,8 +953,6 @@ Appliances: ${this.hostAppliances?.length || 0}`;
             
             document.documentElement.setAttribute('data-theme', theme);
             this.updateThemeButton(theme);
-            
-            console.log('🎨 Theme loaded:', theme, '(system prefers dark:', systemPrefersDark, ')');
         } catch (error) {
             console.error('Error loading theme preference:', error);
         }
@@ -1168,7 +966,7 @@ Appliances: ${this.hostAppliances?.length || 0}`;
         }
     }
 
-    // CHAT HISTORY METHODS
+    // CHAT HISTORY
     clearChat() {
         if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
             localStorage.removeItem(this.storageKey);
@@ -1222,8 +1020,6 @@ Appliances: ${this.hostAppliances?.length || 0}`;
             });
 
             localStorage.setItem(this.storageKey, JSON.stringify(messages));
-            console.log('💾 Chat history saved:', messages.length, 'messages');
-            
         } catch (error) {
             console.error('Error saving chat history:', error);
         }
@@ -1247,9 +1043,6 @@ Appliances: ${this.hostAppliances?.length || 0}`;
                 });
 
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-                console.log('📂 Chat history loaded:', messages.length, 'messages');
-                
-                this.showTempMessage(`Loaded ${messages.length} previous messages`, 'info');
             }
         } catch (error) {
             console.error('Error loading chat history:', error);
@@ -1273,14 +1066,13 @@ Appliances: ${this.hostAppliances?.length || 0}`;
         }
     }
 
-    // UPDATED: sendMessage method with FRESH property data each time
+    // SEND MESSAGE - WITH ENHANCED DEBUGGING
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
 
         if (!message) return;
 
-        // TRACK QUESTION FOR FAQ AUTO-LEARNING
         FAQTracker.trackQuestion(message);
         
         messageInput.value = '';
@@ -1293,59 +1085,47 @@ Appliances: ${this.hostAppliances?.length || 0}`;
         try {
             const currentLanguage = this.getCurrentLanguage();
             
-            // FIRST: Check if we have an FAQ answer in knowledge base
+            // Check FAQ first
             const faqAnswer = FAQTracker.findAnswer(message);
-            
             if (faqAnswer) {
-                console.log("✅ Found FAQ answer in knowledge base");
                 this.hideTypingIndicator();
                 this.addMessage(faqAnswer, 'bot');
                 return;
             }
             
-            // IMPORTANT: RELOAD property data for EACH message to ensure freshness
+            // CRITICAL: Reload data for THIS message
+            console.log('🔄 RELOADING DATA FOR THIS MESSAGE');
             this.loadAllPropertyData();
+            
             const hostConfig = this.getHostConfig();
             
-            // Prepare system messages
+            // DEBUG: Log exactly what's being sent
+            console.log('=== AI REQUEST DEBUG ===');
+            console.log('Property:', hostConfig?.name || 'No config');
+            console.log('WiFi in config:', hostConfig?.amenities?.wifi || 'No WiFi');
+            console.log('Recommendations loaded:', this.hostRecommendations?.length || 0);
+            console.log('First recommendation:', this.hostRecommendations[0]?.name || 'None');
+            console.log('=== END DEBUG ===');
+            
             let systemMessage = '';
             
-            // Check if question is about local recommendations
-            const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 
-                'beach', 'park', 'attraction', 'nearby', 'local', 
-                'recommend', 'things to do', 'activity', 'tour', 
-                'sightseeing', 'place to visit', 'what to do', 'see',
-                'visit', 'explore', 'destination'];
-            
-            // Check if question is about appliances
-            const applianceKeywords = ['appliance', 'oven', 'microwave', 'stove', 'cooktop',
-                'washer', 'dryer', 'laundry', 'washing machine',
-                'dishwasher', 'refrigerator', 'fridge', 'freezer',
-                'thermostat', 'heating', 'cooling', 'air conditioning',
-                'AC', 'heat', 'coffee maker', 'toaster', 'blender',
-                'microwave', 'TV', 'television', 'remote', 'control',
-                'instructions', 'how to use', 'operate', 'work',
-                'not working', 'troubleshoot', 'help with', 'use the',
-                'how do I', 'turn on', 'start', 'begin'];
+            const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 'beach', 'park', 'attraction', 'nearby', 'local', 'recommend'];
+            const applianceKeywords = ['appliance', 'oven', 'microwave', 'stove', 'washer', 'dryer', 'laundry', 'fridge', 'thermostat'];
             
             if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
-                systemMessage += `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
+                systemMessage += `IMPORTANT: Use these specific recommendations for ${hostConfig?.name || 'this property'}:\n\n${this.getRecommendationsText()}`;
             }
             
-            // Include appliances context for appliance questions
             if (anyKeywordInMessage(message, applianceKeywords) && this.hostAppliances.length > 0) {
                 if (systemMessage) systemMessage += "\n\n";
-                systemMessage += `When users ask about appliances, use these instructions:\n\n${this.getAppliancesText()}`;
+                systemMessage += `APPLIANCE INSTRUCTIONS:\n\n${this.getAppliancesText()}`;
             }
-
-            console.log('🔄 Sending to AI:', {
-                message: message,
-                language: currentLanguage,
-                hostConfig: hostConfig?.name || 'No config',
-                hasRecommendations: this.hostRecommendations.length,
-                hasAppliances: this.hostAppliances.length,
-                hasSystemMessage: !!systemMessage
-            });
+            
+            // If asking about WiFi, include it specifically
+            if (message.toLowerCase().includes('wifi') && hostConfig?.amenities?.wifi) {
+                if (systemMessage) systemMessage += "\n\n";
+                systemMessage += `WIFI INFORMATION:\nNetwork: ${hostConfig.amenities.wifi}`;
+            }
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -1371,16 +1151,9 @@ Appliances: ${this.hostAppliances?.length || 0}`;
 
             if (data.success) {
                 this.addMessage(data.response, 'bot');
-                console.log('🌍 Response language:', data.detectedLanguage);
-                console.log('🏠 Using custom config:', data.usingCustomConfig);
-                console.log('🛠️ Using appliances data:', data.usingAppliances || false);
+                console.log('AI Response - Using config:', data.usingCustomConfig || false);
                 
-                // Auto-learn from successful AI answers
                 FAQTracker.autoLearnFromAnswer(message, data.response);
-                
-                if (data.usingCustomConfig && hostConfig) {
-                    console.log('✅ AI is using your custom property configuration');
-                }
             } else {
                 this.addMessage(
                     "I'm having trouble connecting right now. Please try again in a moment.",
@@ -1452,8 +1225,6 @@ Appliances: ${this.hostAppliances?.length || 0}`;
         formatted = formatted.replace(/Garbage:/g, '<strong>🗑️ Garbage:</strong>');
         formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
         formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
-        formatted = formatted.replace(/Troubleshooting:/g, '<strong>🔧 Troubleshooting:</strong>');
-        formatted = formatted.replace(/Type:/g, '<strong>📝 Type:</strong>');
         
         return formatted;
     }
@@ -1477,13 +1248,13 @@ Appliances: ${this.hostAppliances?.length || 0}`;
     }
 }
 
-// Helper function to check for local keywords
+// Helper function
 function anyKeywordInMessage(message, keywords) {
     const lowerMessage = message.toLowerCase();
     return keywords.some(keyword => lowerMessage.includes(keyword));
 }
 
-// Global function for quick questions
+// Quick question function
 function askQuestion(question) {
     const messageInput = document.getElementById('messageInput');
     messageInput.value = question;
@@ -1493,124 +1264,7 @@ function askQuestion(question) {
     chat.sendMessage();
 }
 
-// Debug function to check configuration
-function debugConfig() {
-    const config = localStorage.getItem('rentalAIPropertyConfig');
-    const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances');
-    const faqLog = localStorage.getItem('rental_ai_faq_log');
-    const faqStats = localStorage.getItem('rental_ai_faq_stats');
-    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
-    
-    if (config) {
-        const parsed = JSON.parse(config);
-        console.log('🔧 Current Host Configuration:', parsed);
-        
-        let alertText = `Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`;
-        
-        if (appliances) {
-            const applianceList = JSON.parse(appliances);
-            alertText += `\nAppliances: ${applianceList.length} configured`;
-        }
-        
-        if (faqLog) {
-            const faqList = JSON.parse(faqLog);
-            alertText += `\nQuestions Tracked: ${faqList.length}`;
-        }
-        
-        if (faqStats) {
-            const stats = JSON.parse(faqStats);
-            alertText += `\nFrequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}`;
-        }
-        
-        if (knowledgeBase) {
-            const kb = JSON.parse(knowledgeBase);
-            alertText += `\nFAQ Knowledge Base: ${kb.length} entries`;
-        }
-        
-        alert(alertText);
-    } else {
-        console.log('🔧 No host configuration found');
-        alert('No host configuration found. Please run setup first.');
-    }
-}
-
-// Enhanced debug function
-function debugFullConfig() {
-    const config = localStorage.getItem('rentalAIPropertyConfig');
-    const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances');
-    const faqLog = localStorage.getItem('rental_ai_faq_log');
-    const faqStats = localStorage.getItem('rental_ai_faq_stats');
-    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
-    
-    if (config) {
-        const parsed = JSON.parse(config);
-        console.log('🔧 FULL Host Configuration:', parsed);
-        
-        let debugInfo = 'Current Configuration:\n';
-        debugInfo += `Property: ${parsed.name || 'Not set'}\n`;
-        debugInfo += `Address: ${parsed.address || 'Not set'}\n`;
-        debugInfo += `Host Contact: ${parsed.hostContact || 'Not set'}\n`;
-        debugInfo += `Maintenance Contact: ${parsed.maintenanceContact || 'Not set'}\n`;
-        debugInfo += `Check-in: ${parsed.checkinTime || 'Not set'}\n`;
-        debugInfo += `Check-out: ${parsed.checkoutTime || 'Not set'}\n`;
-        debugInfo += `WiFi: ${parsed.amenities?.wifi || 'Not set'}\n`;
-        debugInfo += `Other Amenities: ${parsed.amenities?.other || 'Not set'}\n`;
-        debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
-        
-        const recs = recommendations ? JSON.parse(recommendations) : [];
-        debugInfo += `Recommendations: ${recs.length} places\n`;
-        
-        const applianceList = appliances ? JSON.parse(appliances) : [];
-        debugInfo += `Appliances: ${applianceList.length} configured\n`;
-        if (applianceList.length > 0) {
-            applianceList.forEach((appliance, index) => {
-                debugInfo += `  ${index + 1}. ${appliance.name} (${appliance.type})\n`;
-            });
-        }
-        
-        if (faqLog) {
-            const faqList = JSON.parse(faqLog);
-            debugInfo += `\nFAQ Tracking:\n`;
-            debugInfo += `  Questions Tracked: ${faqList.length}\n`;
-        }
-        
-        if (faqStats) {
-            const stats = JSON.parse(faqStats);
-            debugInfo += `  Frequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}\n`;
-        }
-        
-        if (knowledgeBase) {
-            const kb = JSON.parse(knowledgeBase);
-            debugInfo += `  Knowledge Base Entries: ${kb.length}\n`;
-            kb.slice(0, 5).forEach((entry, index) => {
-                debugInfo += `    ${index + 1}. "${entry.question.substring(0, 30)}..." (Uses: ${entry.uses || 0})\n`;
-            });
-            if (kb.length > 5) debugInfo += `    ... and ${kb.length - 5} more\n`;
-        }
-        
-        alert(debugInfo);
-    } else {
-        console.log('🔧 No host configuration found');
-        alert('No host configuration found. Please run setup first.');
-    }
-}
-
-// Test FAQ matching
-function testFAQMatch(question) {
-    console.log('🧪 Testing FAQ match for:', question);
-    const result = FAQTracker.findAnswer(question);
-    if (result) {
-        console.log('✅ Found match:', result.substring(0, 100) + '...');
-        return result;
-    } else {
-        console.log('❌ No match found');
-        return null;
-    }
-}
-
-// Initialize chat when page loads
+// Initialize chat
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM Content Loaded - Initializing RentalAIChat...');
     try {
@@ -1659,7 +1313,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 color: white;
             }
             
-            /* Appliance quick questions */
             .quick-appliance-section {
                 margin-top: 20px;
                 padding-top: 20px;
@@ -1692,23 +1345,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .appliance-quick-btn:hover {
                 background: var(--accent-primary);
             }
-            
-            /* Animation styles */
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            
-            @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
         `;
         document.head.appendChild(style);
         
     } catch (error) {
         console.error('❌ Error initializing RentalAIChat:', error);
-        alert('Error initializing chat. Please check console for details.');
     }
 });
 
