@@ -1015,7 +1015,7 @@ function togglePropertyManager() {
 }
 
 // Create a new property
-// In admin.js - Update the createNewProperty function:
+// In admin.js - update createNewProperty function:
 function createNewProperty() {
     const name = document.getElementById('newPropertyName').value;
     const address = document.getElementById('newPropertyAddress').value;
@@ -1028,8 +1028,11 @@ function createNewProperty() {
     // Generate unique ID
     const id = 'property-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
-    // Get CURRENT form data (all property details)
-    const formData = window.propertySetup ? window.propertySetup.getFormData() : {};
+    // Get CURRENT form data using propertySetup instance
+    let formData = {};
+    if (window.propertySetup) {
+        formData = window.propertySetup.getFormData();
+    }
     
     // Create property object with ALL configuration
     properties[id] = {
@@ -1078,7 +1081,15 @@ function createNewProperty() {
     // Auto-switch to this property
     switchProperty(id);
     
-    alert(`Property "${name}" created! The unique link has been copied to your clipboard.`);
+    // Copy link to clipboard
+    const tempInput = document.createElement('input');
+    tempInput.value = properties[id].guestLink;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    
+    alert(`Property "${name}" created! The unique link has been copied to your clipboard.\n\nGuest Link: ${properties[id].guestLink}`);
 }
 
 // Render properties list
