@@ -83,8 +83,6 @@ function showPropertyNotFound(propertyId) {
 
 // Load property-specific FAQs (you'll need to adapt your FAQ system)
 function loadPropertyFAQs(propertyId) {
-    // This depends on how your FAQ system is structured
-    // You might need to modify your existing FAQ loading code
     console.log('Loading FAQs for property:', propertyId);
     
     // Example: Load property-specific config
@@ -92,20 +90,19 @@ function loadPropertyFAQs(propertyId) {
     const property = properties[propertyId];
     
     if (property && property.config) {
-        // Load property config into your FAQ system
         console.log('Property config available:', property.config);
     }
 }
 
 // Initialize property loading
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait a moment for everything to load
     setTimeout(() => {
         loadPropertyConfig();
     }, 100);
 });
+
 // ================================================
-// FAQ AUTO-LEARNING SYSTEM - ADDED
+// FAQ AUTO-LEARNING SYSTEM
 // ================================================
 const FAQTracker = {
     // Track a new question
@@ -115,10 +112,7 @@ const FAQTracker = {
         try {
             const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
             
-            // Don't track very short questions
             if (question.length < 3) return;
-            
-            // Don't track commands or special queries
             if (question.startsWith('/') || question.includes('password') || question.includes('credit card')) {
                 return;
             }
@@ -132,13 +126,10 @@ const FAQTracker = {
                 category: this.detectCategory(question)
             });
             
-            // Keep only last 1000 questions to avoid storage issues
             const trimmedLog = faqLog.slice(-1000);
             localStorage.setItem('rental_ai_faq_log', JSON.stringify(trimmedLog));
             
             console.log(`✅ Question logged. Total: ${trimmedLog.length}`);
-            
-            // Check if this is becoming frequent
             this.analyzeFrequency();
             
         } catch (error) {
@@ -150,7 +141,6 @@ const FAQTracker = {
     detectCategory(question) {
         const q = question.toLowerCase();
         
-        // ADDED: Trash/Garbage category first
         if (q.includes('trash') || q.includes('garbage') || q.includes('rubbish') || 
             q.includes('waste') || q.includes('dispose') || q.includes('bin') || 
             q.includes('bags') || q.includes('dumpster')) {
@@ -185,19 +175,16 @@ const FAQTracker = {
         const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
         const faqStats = JSON.parse(localStorage.getItem('rental_ai_faq_stats') || '{}');
         
-        // Group questions by text (simplified)
         const questionCounts = {};
         faqLog.forEach(entry => {
             const key = entry.question.toLowerCase().trim();
             questionCounts[key] = (questionCounts[key] || 0) + 1;
         });
         
-        // Update stats
         faqStats.totalQuestions = faqLog.length;
         faqStats.uniqueQuestions = Object.keys(questionCounts).length;
         faqStats.lastAnalyzed = new Date().toISOString();
         
-        // Find frequent questions (asked 2+ times)
         const frequentQuestions = Object.entries(questionCounts)
             .filter(([_, count]) => count >= 2)
             .map(([question, count]) => ({ question, count }));
@@ -207,7 +194,6 @@ const FAQTracker = {
         
         console.log(`📊 FAQ Stats: ${frequentQuestions.length} frequent questions`);
         
-        // If we have very frequent questions (3+ times), flag for review
         const needsReview = frequentQuestions.filter(q => q.count >= 3);
         if (needsReview.length > 0) {
             this.flagForReview(needsReview);
@@ -219,7 +205,6 @@ const FAQTracker = {
         const reviewList = JSON.parse(localStorage.getItem('rental_ai_review_list') || '[]');
         
         questions.forEach(q => {
-            // Check if already in review list
             const exists = reviewList.some(item => 
                 item.question.toLowerCase() === q.question.toLowerCase()
             );
@@ -236,13 +221,10 @@ const FAQTracker = {
             }
         });
         
-        // Keep list manageable
         const trimmedList = reviewList.slice(-50);
         localStorage.setItem('rental_ai_review_list', JSON.stringify(trimmedList));
         
         console.log(`🚩 ${questions.length} questions flagged for review`);
-        
-        // Show notification if host is on admin page
         this.showNotificationIfNeeded(questions.length);
     },
     
@@ -275,245 +257,198 @@ const FAQTracker = {
         console.log(`✅ Added to knowledge base: "${question}" (Category: ${category})`);
     },
     
-   // IMPROVED: Find answer in knowledge base
-findAnswer(question) {
-    const knowledgeBase = this.getKnowledgeBase();
-    if (knowledgeBase.length === 0) return null;
-    
-    const q = question.toLowerCase().trim();
-    console.log('🔍 FAQ Search for:', q);
-    
-    // Define comprehensive synonym groups for common rental topics
-    const synonymGroups = {
-        // Trash/Garbage - EXPANDED
-        'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 
-                 'throw away', 'dispose', 'bin', 'dump', 'bags', 'full bags',
-                 'garbage bags', 'trash bags', 'where does', 'where do', 'where to',
-                 'disposal', 'dumpster', 'take out', 'put out'],
+    // IMPROVED: Find answer in knowledge base
+    findAnswer(question) {
+        const knowledgeBase = this.getKnowledgeBase();
+        if (knowledgeBase.length === 0) return null;
         
-        // Location/Places
-        'beach': ['beach', 'playa', 'shore', 'coast', 'seaside', 'ocean', 'sand', 'waves'],
-        'pool': ['pool', 'swimming', 'jacuzzi', 'hot tub', 'spa', 'swim'],
-        'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro'],
+        const q = question.toLowerCase().trim();
+        console.log('🔍 FAQ Search for:', q);
         
-        // Amenities
-        'wifi': ['wifi', 'internet', 'wireless', 'network', 'connection', 'online', 'web'],
-        'parking': ['parking', 'car', 'vehicle', 'park', 'spot', 'garage'],
-        'kitchen': ['kitchen', 'cook', 'stove', 'oven', 'fridge', 'refrigerator'],
+        const synonymGroups = {
+            'trash': ['trash', 'garbage', 'rubbish', 'waste', 'refuse', 'litter', 'throw away', 'dispose', 'bin', 'dump', 'bags', 'full bags', 'garbage bags', 'trash bags', 'where does', 'where do', 'where to', 'disposal', 'dumpster', 'take out', 'put out'],
+            'beach': ['beach', 'playa', 'shore', 'coast', 'seaside', 'ocean', 'sand', 'waves'],
+            'pool': ['pool', 'swimming', 'jacuzzi', 'hot tub', 'spa', 'swim'],
+            'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro'],
+            'wifi': ['wifi', 'internet', 'wireless', 'network', 'connection', 'online', 'web'],
+            'parking': ['parking', 'car', 'vehicle', 'park', 'spot', 'garage'],
+            'kitchen': ['kitchen', 'cook', 'stove', 'oven', 'fridge', 'refrigerator'],
+            'checkin': ['check in', 'check-in', 'arrive', 'arrival', 'enter', 'come', 'get here'],
+            'checkout': ['check out', 'check-out', 'leave', 'depart', 'exit', 'go', 'vacate'],
+            'time': ['time', 'hour', 'when', 'schedule', 'clock'],
+            'clean': ['clean', 'cleaning', 'tidy', 'maid', 'housekeeping', 'towels', 'linens'],
+            'key': ['key', 'lock', 'door', 'enter', 'access', 'code'],
+            'tv': ['tv', 'television', 'netflix', 'youtube', 'movie', 'watch'],
+            'ac': ['ac', 'air conditioning', 'heating', 'cooling', 'thermostat', 'temperature'],
+            'washer': ['washer', 'laundry', 'dryer', 'clothes', 'wash'],
+            'how': ['how', 'operate', 'use', 'work', 'function'],
+            'where': ['where', 'location', 'place', 'find', 'locate'],
+            'what': ['what', 'which', 'tell me about', 'information'],
+            'can': ['can', 'could', 'may', 'able', 'possible', 'allow'],
+            'please': ['please', 'could you', 'can you', 'would you']
+        };
         
-        // Check-in/out
-        'checkin': ['check in', 'check-in', 'arrive', 'arrival', 'enter', 'come', 'get here'],
-        'checkout': ['check out', 'check-out', 'leave', 'depart', 'exit', 'go', 'vacate'],
-        'time': ['time', 'hour', 'when', 'schedule', 'clock'],
+        const questionPatterns = [
+            { pattern: /^(what is|what's) (the|a|an)?/i, replace: '' },
+            { pattern: /^(how do i|how to|how can i)/i, replace: '' },
+            { pattern: /^(where is|where are|where can i|where should i|where do i)/i, replace: '' },
+            { pattern: /^(when is|when are|when can i)/i, replace: '' },
+            { pattern: /^(do you have|is there|are there)/i, replace: '' },
+            { pattern: /^(can i|may i|could i)/i, replace: '' },
+            { pattern: /^(tell me about|i need|i want|i\'m looking for)/i, replace: '' },
+            { pattern: /^(please tell me|could you tell me|can you tell me)/i, replace: '' },
+            { pattern: /[?,.!]/g, replace: '' },
+            { pattern: /\s+/g, replace: ' ' }
+        ];
         
-        // Housekeeping
-        'clean': ['clean', 'cleaning', 'tidy', 'maid', 'housekeeping', 'towels', 'linens'],
-        'key': ['key', 'lock', 'door', 'enter', 'access', 'code'],
-        
-        // Appliances
-        'tv': ['tv', 'television', 'netflix', 'youtube', 'movie', 'watch'],
-        'ac': ['ac', 'air conditioning', 'heating', 'cooling', 'thermostat', 'temperature'],
-        'washer': ['washer', 'laundry', 'dryer', 'clothes', 'wash'],
-        
-        // General
-        'how': ['how', 'operate', 'use', 'work', 'function'],
-        'where': ['where', 'location', 'place', 'find', 'locate'],
-        'what': ['what', 'which', 'tell me about', 'information'],
-        'can': ['can', 'could', 'may', 'able', 'possible', 'allow'],
-        'please': ['please', 'could you', 'can you', 'would you']
-    };
-    
-    // Common question patterns to normalize
-    const questionPatterns = [
-        { pattern: /^(what is|what's) (the|a|an)?/i, replace: '' },
-        { pattern: /^(how do i|how to|how can i)/i, replace: '' },
-        { pattern: /^(where is|where are|where can i|where should i|where do i)/i, replace: '' },
-        { pattern: /^(when is|when are|when can i)/i, replace: '' },
-        { pattern: /^(do you have|is there|are there)/i, replace: '' },
-        { pattern: /^(can i|may i|could i)/i, replace: '' },
-        { pattern: /^(tell me about|i need|i want|i\'m looking for)/i, replace: '' },
-        { pattern: /^(please tell me|could you tell me|can you tell me)/i, replace: '' },
-        { pattern: /[?,.!]/g, replace: '' },
-        { pattern: /\s+/g, replace: ' ' }
-    ];
-    
-    // Normalize the question
-    let normalizedQ = q;
-    questionPatterns.forEach(pattern => {
-        normalizedQ = normalizedQ.replace(pattern.pattern, pattern.replace);
-    });
-    normalizedQ = normalizedQ.trim();
-    
-    // CRITICAL: Define appliance groups that shouldn't cross-match
-    const applianceGroups = {
-        'oven_microwave': ['oven', 'microwave', 'stove', 'cooktop', 'bake', 'cook', 'heat'],
-        'washer_dryer': ['washer', 'dryer', 'laundry', 'clothes', 'wash', 'detergent', 'spin'],
-        'refrigerator': ['refrigerator', 'fridge', 'freezer', 'cool', 'chill', 'ice'],
-        'thermostat': ['thermostat', 'temperature', 'heat', 'cool', 'ac', 'air conditioning', 'climate'],
-        'tv': ['tv', 'television', 'remote', 'channel', 'netflix', 'stream', 'watch']
-    };
-    
-    // Identify which appliance group the user is asking about
-    let userApplianceGroup = null;
-    for (const [group, keywords] of Object.entries(applianceGroups)) {
-        if (keywords.some(keyword => normalizedQ.includes(keyword))) {
-            userApplianceGroup = group;
-            break;
-        }
-    }
-    
-    // Score each FAQ entry
-    const scoredEntries = knowledgeBase.map(entry => {
-        const entryQ = entry.question.toLowerCase().trim();
-        let normalizedEntryQ = entryQ;
-        
-        // Normalize FAQ question too
+        let normalizedQ = q;
         questionPatterns.forEach(pattern => {
-            normalizedEntryQ = normalizedEntryQ.replace(pattern.pattern, pattern.replace);
+            normalizedQ = normalizedQ.replace(pattern.pattern, pattern.replace);
         });
-        normalizedEntryQ = normalizedEntryQ.trim();
+        normalizedQ = normalizedQ.trim();
         
-        let score = 0;
+        const applianceGroups = {
+            'oven_microwave': ['oven', 'microwave', 'stove', 'cooktop', 'bake', 'cook', 'heat'],
+            'washer_dryer': ['washer', 'dryer', 'laundry', 'clothes', 'wash', 'detergent', 'spin'],
+            'refrigerator': ['refrigerator', 'fridge', 'freezer', 'cool', 'chill', 'ice'],
+            'thermostat': ['thermostat', 'temperature', 'heat', 'cool', 'ac', 'air conditioning', 'climate'],
+            'tv': ['tv', 'television', 'remote', 'channel', 'netflix', 'stream', 'watch']
+        };
         
-        // DEBUG LOGGING
-        console.log(`  Comparing: User="${normalizedQ}" vs FAQ="${normalizedEntryQ}"`);
-        
-        // 1. Exact match (highest priority)
-        if (normalizedQ === normalizedEntryQ) {
-            console.log('    ✅ Exact match!');
-            score = 100;
+        let userApplianceGroup = null;
+        for (const [group, keywords] of Object.entries(applianceGroups)) {
+            if (keywords.some(keyword => normalizedQ.includes(keyword))) {
+                userApplianceGroup = group;
+                break;
+            }
         }
-        // 2. Check original (non-normalized) match
-        else if (q === entryQ) {
-            console.log('    ✅ Original text match!');
-            score = 100;
-        }
-        // 3. Smart word matching
-        else {
-            // Get all words from both questions
-            const questionWords = this.getExpandedWords(normalizedQ, synonymGroups);
-            const entryWords = this.getExpandedWords(normalizedEntryQ, synonymGroups);
+        
+        const scoredEntries = knowledgeBase.map(entry => {
+            const entryQ = entry.question.toLowerCase().trim();
+            let normalizedEntryQ = entryQ;
             
-            // Calculate word overlap
-            const intersection = [...questionWords].filter(word => 
-                entryWords.has(word) && word.length > 2
-            );
+            questionPatterns.forEach(pattern => {
+                normalizedEntryQ = normalizedEntryQ.replace(pattern.pattern, pattern.replace);
+            });
+            normalizedEntryQ = normalizedEntryQ.trim();
             
-            // Calculate similarity score
-            const union = new Set([...questionWords, ...entryWords]);
-            const unionSize = union.size || 1;
-            const similarity = intersection.length / unionSize;
-            score = Math.min(similarity * 100, 80);
+            let score = 0;
             
-            console.log(`    Similarity: ${similarity * 100}% → base score: ${score}`);
+            console.log(`  Comparing: User="${normalizedQ}" vs FAQ="${normalizedEntryQ}"`);
             
-            // CRITICAL: APPLIANCE GROUP MATCHING
-            if (userApplianceGroup) {
-                // Identify which appliance group the FAQ entry is about
-                let entryApplianceGroup = null;
-                for (const [group, keywords] of Object.entries(applianceGroups)) {
-                    if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
-                        entryApplianceGroup = group;
-                        break;
+            if (normalizedQ === normalizedEntryQ) {
+                console.log('    ✅ Exact match!');
+                score = 100;
+            } else if (q === entryQ) {
+                console.log('    ✅ Original text match!');
+                score = 100;
+            } else {
+                const questionWords = this.getExpandedWords(normalizedQ, synonymGroups);
+                const entryWords = this.getExpandedWords(normalizedEntryQ, synonymGroups);
+                
+                const intersection = [...questionWords].filter(word => 
+                    entryWords.has(word) && word.length > 2
+                );
+                
+                const union = new Set([...questionWords, ...entryWords]);
+                const unionSize = union.size || 1;
+                const similarity = intersection.length / unionSize;
+                score = Math.min(similarity * 100, 80);
+                
+                console.log(`    Similarity: ${similarity * 100}% → base score: ${score}`);
+                
+                if (userApplianceGroup) {
+                    let entryApplianceGroup = null;
+                    for (const [group, keywords] of Object.entries(applianceGroups)) {
+                        if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
+                            entryApplianceGroup = group;
+                            break;
+                        }
+                    }
+                    
+                    if (entryApplianceGroup) {
+                        if (userApplianceGroup === entryApplianceGroup) {
+                            score += 25;
+                            console.log(`    ✅ Same appliance group: ${userApplianceGroup} (+25)`);
+                        } else {
+                            score -= 50;
+                            console.log(`    ❌ Different appliance groups: ${userApplianceGroup} vs ${entryApplianceGroup} (-50)`);
+                        }
                     }
                 }
                 
-                if (entryApplianceGroup) {
-                    if (userApplianceGroup === entryApplianceGroup) {
-                        // Same appliance group = bonus
-                        score += 25;
-                        console.log(`    ✅ Same appliance group: ${userApplianceGroup} (+25)`);
-                    } else {
-                        // DIFFERENT appliance groups = heavy penalty!
-                        score -= 50;
-                        console.log(`    ❌ Different appliance groups: ${userApplianceGroup} vs ${entryApplianceGroup} (-50)`);
+                const keywordCategories = {
+                    'wifi': ['wifi', 'internet', 'password', 'network', 'connection', 'wi-fi'],
+                    'checkin': ['checkin', 'check-in', 'checkout', 'check-out', 'arrival', 'departure', 'time', 'schedule'],
+                    'emergency': ['emergency', 'urgent', 'contact', 'number', 'phone', 'fire', 'police', 'hospital', 'doctor', 'ambulance'],
+                    'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro', 'restaurants', 'nearby', 'local'],
+                    'beach': ['beach', 'playa', 'shore', 'ocean', 'sea', 'sand'],
+                    'parking': ['parking', 'car', 'vehicle', 'garage', 'spot', 'space'],
+                    'keys': ['key', 'keys', 'access', 'door', 'lock', 'code', 'entry'],
+                    'trash': ['trash', 'garbage', 'recycle', 'disposal', 'waste']
+                };
+                
+                let userCategory = null;
+                let entryCategory = null;
+                
+                for (const [category, keywords] of Object.entries(keywordCategories)) {
+                    if (keywords.some(keyword => normalizedQ.includes(keyword))) {
+                        userCategory = category;
+                    }
+                    if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
+                        entryCategory = category;
                     }
                 }
+                
+                if (userCategory && entryCategory) {
+                    if (userCategory === entryCategory) {
+                        score += 15;
+                    } else {
+                        score -= 25;
+                    }
+                }
+                
+                score += Math.min((entry.uses || 0) * 0.5, 10);
             }
             
-            // Existing category matching logic
-            const keywordCategories = {
-                'wifi': ['wifi', 'internet', 'password', 'network', 'connection', 'wi-fi'],
-                'checkin': ['checkin', 'check-in', 'checkout', 'check-out', 'arrival', 'departure', 'time', 'schedule'],
-                'emergency': ['emergency', 'urgent', 'contact', 'number', 'phone', 'fire', 'police', 'hospital', 'doctor', 'ambulance'],
-                'restaurant': ['restaurant', 'food', 'eat', 'dining', 'meal', 'cafe', 'bar', 'bistro', 'restaurants', 'nearby', 'local'],
-                'beach': ['beach', 'playa', 'shore', 'ocean', 'sea', 'sand'],
-                'parking': ['parking', 'car', 'vehicle', 'garage', 'spot', 'space'],
-                'keys': ['key', 'keys', 'access', 'door', 'lock', 'code', 'entry'],
-                'trash': ['trash', 'garbage', 'recycle', 'disposal', 'waste']
-            };
+            score = Math.max(0, Math.min(100, Math.round(score)));
+            console.log(`    Final score: ${score}%`);
             
-            // Identify categories
-            let userCategory = null;
-            let entryCategory = null;
-            
-            for (const [category, keywords] of Object.entries(keywordCategories)) {
-                if (keywords.some(keyword => normalizedQ.includes(keyword))) {
-                    userCategory = category;
-                }
-                if (keywords.some(keyword => normalizedEntryQ.includes(keyword))) {
-                    entryCategory = category;
-                }
-            }
-            
-            // Apply category bonuses/penalties
-            if (userCategory && entryCategory) {
-                if (userCategory === entryCategory) {
-                    score += 15;
-                } else {
-                    score -= 25;
-                }
-            }
-            
-            // Usage boost
-            score += Math.min((entry.uses || 0) * 0.5, 10);
+            return { entry, score, normalizedEntryQ };
+        });
+        
+        scoredEntries.sort((a, b) => b.score - a.score);
+        
+        const topMatches = scoredEntries.filter(s => s.score > 0).slice(0, 5);
+        if (topMatches.length > 0) {
+            console.log('🔍 Top FAQ Matches:');
+            topMatches.forEach((match, i) => {
+                console.log(`  ${i+1}. "${match.entry.question}" → ${match.score}%`);
+            });
         }
         
-        // Ensure score is within bounds
-        score = Math.max(0, Math.min(100, Math.round(score)));
+        let threshold = 70;
+        const applianceKeywords = ['oven', 'microwave', 'washer', 'dryer', 'laundry', 'fridge', 'thermostat', 'tv'];
+        const isApplianceQuestion = applianceKeywords.some(keyword => q.includes(keyword));
         
-        console.log(`    Final score: ${score}%`);
+        if (isApplianceQuestion) {
+            threshold = 80;
+            console.log(`🔧 Appliance question detected - using higher threshold: ${threshold}%`);
+        }
         
-        return { entry, score, normalizedEntryQ };
-    });
-    
-    // Sort by score (highest first)
-    scoredEntries.sort((a, b) => b.score - a.score);
-    
-    // Debug logging
-    const topMatches = scoredEntries.filter(s => s.score > 0).slice(0, 5);
-    if (topMatches.length > 0) {
-        console.log('🔍 Top FAQ Matches:');
-        topMatches.forEach((match, i) => {
-            console.log(`  ${i+1}. "${match.entry.question}" → ${match.score}%`);
-        });
-    }
-    
-    // Dynamic threshold based on question type
-    let threshold = 70; // Default
-    
-    // Check if this is an appliance question
-    const applianceKeywords = ['oven', 'microwave', 'washer', 'dryer', 'laundry', 'fridge', 'thermostat', 'tv'];
-    const isApplianceQuestion = applianceKeywords.some(keyword => q.includes(keyword));
-    
-    if (isApplianceQuestion) {
-        threshold = 80; // Higher threshold for appliances
-        console.log(`🔧 Appliance question detected - using higher threshold: ${threshold}%`);
-    }
-    
-    const bestMatch = scoredEntries[0];
-    
-    if (bestMatch && bestMatch.score >= threshold) {
-        bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
-        bestMatch.entry.lastUsed = new Date().toISOString();
-        localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-        console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${bestMatch.score}%)`);
-        return bestMatch.entry.answer;
-    }
-    
-    console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? scoredEntries[0].score : 0}%, threshold: ${threshold}%)`);
-    return null;
-},
+        const bestMatch = scoredEntries[0];
+        
+        if (bestMatch && bestMatch.score >= threshold) {
+            bestMatch.entry.uses = (bestMatch.entry.uses || 0) + 1;
+            bestMatch.entry.lastUsed = new Date().toISOString();
+            localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
+            console.log(`✅ FAQ Match: "${bestMatch.entry.question}" (${bestMatch.score}%)`);
+            return bestMatch.entry.answer;
+        }
+        
+        console.log(`❌ No FAQ match (best: ${scoredEntries[0] ? scoredEntries[0].score : 0}%, threshold: ${threshold}%)`);
+        return null;
+    },
     
     // Helper: Get expanded words with synonyms
     getExpandedWords(text, synonymGroups) {
@@ -523,13 +458,11 @@ findAnswer(question) {
         const expandedSet = new Set();
         
         words.forEach(word => {
-            // Clean the word
             const cleanWord = word.replace(/[^a-z]/g, '');
             if (cleanWord.length < 2) return;
             
             expandedSet.add(cleanWord);
             
-            // Add synonyms
             for (const [key, synonyms] of Object.entries(synonymGroups)) {
                 if (synonyms.includes(cleanWord)) {
                     synonyms.forEach(synonym => {
@@ -538,7 +471,6 @@ findAnswer(question) {
                 }
             }
             
-            // Add stemmed versions (simple)
             if (cleanWord.endsWith('s') && cleanWord.length > 3) expandedSet.add(cleanWord.slice(0, -1));
             if (cleanWord.endsWith('ing') && cleanWord.length > 4) expandedSet.add(cleanWord.slice(0, -3));
             if (cleanWord.endsWith('ed') && cleanWord.length > 3) expandedSet.add(cleanWord.slice(0, -2));
@@ -553,13 +485,11 @@ findAnswer(question) {
             const knowledgeBase = this.getKnowledgeBase();
             const q = question.toLowerCase().trim();
             
-            // Check if this question already exists in knowledge base
             const existingEntry = knowledgeBase.find(entry => 
                 entry.question.toLowerCase().trim() === q
             );
             
             if (existingEntry) {
-                // Update existing entry if AI answer is different
                 if (existingEntry.answer !== aiAnswer) {
                     existingEntry.answer = aiAnswer;
                     existingEntry.lastUpdated = new Date().toISOString();
@@ -569,7 +499,6 @@ findAnswer(question) {
                 return;
             }
             
-            // Only auto-learn if this is a frequently asked question
             const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
             const similarQuestions = faqLog.filter(entry => 
                 entry.question.toLowerCase().includes(q.substring(0, 10)) || 
@@ -577,7 +506,6 @@ findAnswer(question) {
             );
             
             if (similarQuestions.length >= 2) {
-                // Add to knowledge base as auto-learned
                 this.addToKnowledgeBase(
                     question,
                     aiAnswer,
@@ -591,8 +519,9 @@ findAnswer(question) {
         }
     }
 };
+
 // ================================================
-// MAIN CHAT CLASS
+// MAIN CHAT CLASS - FIXED PROPERTY ISOLATION
 // ================================================
 
 class RentalAIChat {
@@ -606,8 +535,13 @@ class RentalAIChat {
         this.recommendationsKey = 'rental_ai_recommendations';
         this.appliancesKey = 'rental_ai_appliances';
         
-        console.log('🔍 Step 1: Loading property config...');
-        this.loadPropertyConfig();
+        // Clear any cached data first
+        this.hostConfig = null;
+        this.hostRecommendations = [];
+        this.hostAppliances = [];
+        
+        console.log('🔍 Step 1: Loading property-specific data...');
+        this.loadAllPropertyData();
         
         console.log('🔍 Step 2: Initializing event listeners...');
         this.initializeEventListeners();
@@ -620,55 +554,44 @@ class RentalAIChat {
         console.log('🔍 Step 4: Loading preferences...');
         this.loadThemePreference();
         this.loadLanguagePreference();
-        this.loadRecommendations();
-        this.loadAppliances();
         
         console.log('🔍 Step 5: Setting up quick questions...');
         this.setupQuickQuestionButtons();
         
-        console.log('🔍 Step 6: Refreshing config...');
-        this.refreshPropertyConfig();
-        
         console.log('✅ Chat initialization complete!');
     }
 
-     // HOST CONFIGURATION METHODS - UPDATED
+    // NEW: Load ALL property data in correct order
+    loadAllPropertyData() {
+        this.loadPropertyConfig();
+        this.loadRecommendations();
+        this.loadAppliances();
+    }
+
+    // HOST CONFIGURATION METHODS - FIXED
     loadPropertyConfig() {
         try {
-            // FIRST: Try to get property-specific config from URL
-            const propertyId = getPropertyFromURL(); // Use the global function
+            const propertyId = getPropertyFromURL();
             
             if (propertyId) {
-                // Load from rental_properties database
                 const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
                 const property = properties[propertyId];
                 
                 if (property && property.config) {
                     console.log('🏠 Using PROPERTY-SPECIFIC configuration:', property.name);
                     this.hostConfig = this.transformPropertyConfig(property.config, property.name, property.address);
-                    
-                    // Update UI
                     this.updateUIWithPropertyInfo(property);
-                    
-                    // Also update recommendations and appliances from property config
-                    if (property.config.recommendations) {
-                        this.hostRecommendations = property.config.recommendations;
-                    }
-                    
-                    if (property.config.appliances) {
-                        this.hostAppliances = property.config.appliances;
-                    }
-                    
-                    return; // Skip the old system
+                    return;
+                } else {
+                    console.error('❌ Property found but missing config:', propertyId);
                 }
             }
             
-            // FALLBACK: Try the old system (for backward compatibility)
+            // FALLBACK: Old system
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
             if (savedConfig) {
                 const hostConfig = JSON.parse(savedConfig);
                 
-                // Update the chat header with custom property name
                 const headerText = document.querySelector('.header-text h2');
                 const headerSubtext = document.querySelector('.header-text p');
                 
@@ -680,7 +603,6 @@ class RentalAIChat {
                     headerSubtext.textContent = `${hostConfig.name} • 24/7 Support`;
                 }
 
-                // ✅ UPDATE WELCOME MESSAGE PROPERTY NAME
                 const welcomePropertyName = document.getElementById('welcomePropertyName');
                 if (welcomePropertyName && hostConfig.name) {
                     welcomePropertyName.textContent = hostConfig.name;
@@ -701,42 +623,25 @@ class RentalAIChat {
     // Helper: Transform property config to expected format
     transformPropertyConfig(config, name, address) {
         return {
-            // Basic info
             name: name || config.propertyName,
             address: address || config.propertyAddress,
             type: config.propertyType || '',
-            
-            // Contact info
             hostContact: config.hostContact || '',
             maintenanceContact: config.maintenanceContact || '',
             emergencyContact: config.maintenanceContact || config.hostContact || '',
-            
-            // Check-in/out
             checkinTime: config.checkInTime || '3:00 PM',
             checkoutTime: config.checkOutTime || '11:00 AM',
             lateCheckout: config.lateCheckout || '',
-            
-            // Amenities
             amenities: {
                 wifi: config.wifiDetails || '',
                 parking: config.parking || '',
                 other: config.amenities || ''
             },
-            
-            // Rules
             houseRules: config.houseRules || '',
-            
-            // Appliances and recommendations
             appliances: config.appliances || [],
             hasAppliances: config.appliances && config.appliances.length > 0,
-            
-            // Recommendations
             hasRecommendations: config.recommendations && config.recommendations.length > 0,
-            
-            // Metadata
             lastUpdated: new Date().toISOString(),
-            
-            // Legacy fields for compatibility
             contact: config.hostContact || '',
             checkInOut: {
                 checkIn: config.checkInTime || '3:00 PM',
@@ -758,54 +663,81 @@ class RentalAIChat {
             headerSubtitle.textContent = `${property.name} • 24/7 Support`;
         }
 
-        // Update welcome message property name
         const welcomePropertyName = document.getElementById('welcomePropertyName');
         if (welcomePropertyName && property.name) {
             welcomePropertyName.textContent = property.name;
         }
     }
 
-        // NEW: Refresh property config to get latest data - UPDATED
-    refreshPropertyConfig() {
-        const propertyId = getPropertyFromURL();
-        
-        if (propertyId) {
-            // Reload property-specific config
-            const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-            const property = properties[propertyId];
+    // HOST RECOMMENDATIONS METHODS - FIXED
+    loadRecommendations() {
+        try {
+            this.hostRecommendations = []; // Clear first
             
-            if (property && property.config) {
-                this.hostConfig = this.transformPropertyConfig(property.config, property.name, property.address);
+            const propertyId = getPropertyFromURL();
+            
+            if (propertyId) {
+                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+                const property = properties[propertyId];
                 
-                // Update recommendations and appliances
-                if (property.config.recommendations) {
+                if (property && property.config && property.config.recommendations) {
                     this.hostRecommendations = property.config.recommendations;
+                    console.log('📍 Loaded PROPERTY-SPECIFIC recommendations:', this.hostRecommendations.length);
+                    console.log('📍 First recommendation:', this.hostRecommendations[0]?.name || 'None');
+                    return;
                 }
-                
-                if (property.config.appliances) {
-                    this.hostAppliances = property.config.appliances;
-                }
-                
-                console.log('🔄 Refreshed PROPERTY-SPECIFIC config:', property.name);
-                console.log('🔄 Recommendations:', this.hostRecommendations.length);
-                console.log('🔄 Appliances:', this.hostAppliances.length);
             }
-        } else {
-            // Fallback to old system
-            this.loadPropertyConfig();
-            this.loadRecommendations();
-            this.loadAppliances();
             
-            console.log('🔄 Refreshed LEGACY property config:', this.hostConfig?.name);
-            console.log('🔄 Recommendations:', this.hostRecommendations.length);
-            console.log('🔄 Appliances:', this.hostAppliances.length);
+            // FALLBACK: Old system
+            const saved = localStorage.getItem(this.recommendationsKey);
+            if (saved) {
+                this.hostRecommendations = JSON.parse(saved);
+                console.log('📍 Loaded LEGACY recommendations:', this.hostRecommendations.length);
+            } else {
+                console.log('📍 No recommendations found');
+            }
+        } catch (error) {
+            console.error('Error loading recommendations:', error);
+            this.hostRecommendations = [];
         }
     }
 
-        // UPDATED: Get host config - check property-specific first
+    // HOST APPLIANCES METHODS - FIXED
+    loadAppliances() {
+        try {
+            this.hostAppliances = []; // Clear first
+            
+            const propertyId = getPropertyFromURL();
+            
+            if (propertyId) {
+                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
+                const property = properties[propertyId];
+                
+                if (property && property.config && property.config.appliances) {
+                    this.hostAppliances = property.config.appliances;
+                    console.log('🛠️ Loaded PROPERTY-SPECIFIC appliances:', this.hostAppliances.length);
+                    console.log('🛠️ First appliance:', this.hostAppliances[0]?.name || 'None');
+                    return;
+                }
+            }
+            
+            // FALLBACK: Old system
+            const saved = localStorage.getItem(this.appliancesKey);
+            if (saved) {
+                this.hostAppliances = JSON.parse(saved);
+                console.log('🛠️ Loaded LEGACY appliances:', this.hostAppliances.length);
+            } else {
+                console.log('🛠️ No appliances found');
+            }
+        } catch (error) {
+            console.error('Error loading appliances:', error);
+            this.hostAppliances = [];
+        }
+    }
+
+    // Get host config - ALWAYS fresh from URL
     getHostConfig() {
         try {
-            // FIRST: Try property-specific config
             const propertyId = getPropertyFromURL();
             
             if (propertyId) {
@@ -817,74 +749,11 @@ class RentalAIChat {
                 }
             }
             
-            // FALLBACK: Old system
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
             return savedConfig ? JSON.parse(savedConfig) : null;
         } catch (error) {
             console.error('Error getting host config:', error);
             return null;
-        }
-    }
-
-           // HOST RECOMMENDATIONS METHODS - UPDATED
-    loadRecommendations() {
-        try {
-            // FIRST: Try property-specific recommendations
-            const propertyId = getPropertyFromURL();
-            
-            if (propertyId) {
-                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-                const property = properties[propertyId];
-                
-                if (property && property.config && property.config.recommendations) {
-                    this.hostRecommendations = property.config.recommendations;
-                    console.log('📍 Loaded PROPERTY-SPECIFIC recommendations:', this.hostRecommendations.length);
-                    return;
-                }
-            }
-            
-            // FALLBACK: Old system
-            const saved = localStorage.getItem(this.recommendationsKey);
-            if (saved) {
-                this.hostRecommendations = JSON.parse(saved);
-                console.log('📍 Loaded LEGACY recommendations:', this.hostRecommendations.length);
-            } else {
-                this.hostRecommendations = [];
-            }
-        } catch (error) {
-            console.error('Error loading recommendations:', error);
-            this.hostRecommendations = [];
-        }
-    }
-
-        // HOST APPLIANCES METHODS - UPDATED
-    loadAppliances() {
-        try {
-            // FIRST: Try property-specific appliances
-            const propertyId = getPropertyFromURL();
-            
-            if (propertyId) {
-                const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-                const property = properties[propertyId];
-                
-                if (property && property.config && property.config.appliances) {
-                    this.hostAppliances = property.config.appliances;
-                    console.log('🛠️ Loaded PROPERTY-SPECIFIC appliances:', this.hostAppliances.length);
-                    return;
-                }
-            }
-            
-            // FALLBACK: Old system
-            const saved = localStorage.getItem(this.appliancesKey);
-            if (saved) {
-                this.hostAppliances = JSON.parse(saved);
-                console.log('🛠️ Loaded LEGACY appliances:', this.hostAppliances.length);
-            } else {
-                this.hostAppliances = [];
-            }
-        } catch (error) {
-            console.error('Error loading appliances:', error);
-            this.hostAppliances = [];
         }
     }
 
@@ -911,7 +780,7 @@ class RentalAIChat {
         return text;
     }
 
-    // ADDED: Get appliances text for AI context
+    // Get appliances text for AI context
     getAppliancesText() {
         if (!this.hostAppliances || this.hostAppliances.length === 0) {
             return "";
@@ -938,11 +807,8 @@ class RentalAIChat {
             return;
         }
 
-        // Send message on button click
         sendButton.addEventListener('click', () => this.sendMessage());
-        console.log('✅ Send button listener added');
-
-        // Send message on Enter key
+        
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -950,10 +816,8 @@ class RentalAIChat {
             }
         });
 
-        // Update character count
         messageInput.addEventListener('input', () => this.updateCharCount());
-
-        // Enable/disable send button based on input
+        
         messageInput.addEventListener('input', () => {
             sendButton.disabled = messageInput.value.trim().length === 0;
         });
@@ -961,7 +825,7 @@ class RentalAIChat {
         console.log('✅ All event listeners initialized');
     }
 
-    // ADDED: Setup quick question buttons including appliance presets
+    // Setup quick question buttons including appliance presets
     setupQuickQuestionButtons() {
         console.log('🔍 Setting up quick question buttons...');
         const quickQuestionsContainer = document.querySelector('.quick-questions');
@@ -970,14 +834,11 @@ class RentalAIChat {
             return;
         }
 
-        // Check if appliance section already exists
         const existingApplianceSection = quickQuestionsContainer.querySelector('.quick-appliance-section');
         if (existingApplianceSection) {
-            console.log('⚠️ Appliance section already exists, removing...');
             existingApplianceSection.remove();
         }
 
-        // ADDED: Appliance-specific quick questions
         const applianceButtons = [
             { id: 'appliance-help', text: '🛠️ Appliance Help', question: 'How do I use the appliances?' },
             { id: 'oven-help', text: '🍳 Oven/Microwave', question: 'How do I use the oven or microwave?' },
@@ -985,7 +846,6 @@ class RentalAIChat {
             { id: 'thermostat-help', text: '🌡️ Thermostat', question: 'How do I adjust the thermostat?' }
         ];
 
-        // Create appliance quick questions section
         const applianceSection = document.createElement('div');
         applianceSection.className = 'quick-appliance-section';
         applianceSection.innerHTML = '<h4 class="quick-section-title">Appliance Help</h4>';
@@ -1004,13 +864,11 @@ class RentalAIChat {
         });
         
         applianceSection.appendChild(applianceGrid);
-        
-        // Insert appliance section after the existing quick questions
         quickQuestionsContainer.appendChild(applianceSection);
         console.log('✅ Appliance quick questions added');
     }
 
-    // ADDED: Handle appliance question button clicks
+    // Handle appliance question button clicks
     askApplianceQuestion(question) {
         const messageInput = document.getElementById('messageInput');
         messageInput.value = question;
@@ -1018,1175 +876,24 @@ class RentalAIChat {
         this.sendMessage();
     }
 
-    // HEADER CONTROLS METHODS - FIXED WITH DEBUGGING
+    // HEADER CONTROLS METHODS
     createHeaderControls() {
         console.log('🔄 Creating header controls...');
         
-        // Check if header exists
         const header = document.querySelector('.chat-header');
-        console.log('🔍 Header element found:', !!header);
-        
         if (!header) {
-            console.error('❌ Chat header not found! Looking for .chat-header');
-            // Try alternative selectors
-            const altHeader = document.querySelector('header');
-            console.log('🔍 Alternative header found:', !!altHeader);
-            
-            // Emergency: Create a temporary header if none exists
-            if (!altHeader) {
-                console.error('❌ No header found at all!');
-                this.createEmergencyHeader();
-                return;
-            }
+            console.error('❌ Chat header not found!');
             return;
-            // Add a debug button
-const debugPropsBtn = document.createElement('button');
-debugPropsBtn.className = 'setup-btn';
-debugPropsBtn.innerHTML = '🔍 Props';
-debugPropsBtn.title = 'Debug stored properties';
-debugPropsBtn.addEventListener('click', debugStoredProperties);
-headerControls.appendChild(debugPropsBtn);
-console.log('✅ Added Properties debug button');
         }
         
-        // Check if controls already exist
         const existingControls = header.querySelector('.header-controls');
         if (existingControls) {
-            console.log('⚠️ Header controls already exist, removing...');
             existingControls.remove();
         }
         
         const headerControls = document.createElement('div');
         headerControls.className = 'header-controls';
-        console.log('✅ Created headerControls div');
         
         // Add Setup button
         const setupBtn = document.createElement('button');
-        setupBtn.className = 'setup-btn';
-        setupBtn.innerHTML = '⚙️ Setup';
-        setupBtn.title = 'Configure your property information';
-        setupBtn.addEventListener('click', () => {
-            window.location.href = '/admin';
-        });
-        headerControls.appendChild(setupBtn);
-        console.log('✅ Added Setup button');
-        
-        // Add Clear Chat button
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'clear-chat-btn';
-        clearBtn.innerHTML = '🗑️ Clear';
-        clearBtn.title = 'Clear conversation history';
-        clearBtn.addEventListener('click', () => this.clearChat());
-        headerControls.appendChild(clearBtn);
-        console.log('✅ Added Clear button');
-        
-        // Add Theme Toggle button
-        const themeToggle = document.createElement('button');
-        themeToggle.id = 'themeToggle';
-        themeToggle.className = 'theme-toggle';
-        themeToggle.innerHTML = '🌙 Dark';
-        themeToggle.title = 'Toggle dark/light mode';
-        themeToggle.addEventListener('click', () => this.toggleTheme());
-        headerControls.appendChild(themeToggle);
-        console.log('✅ Added Theme toggle');
-        
-        // Add Language Selector
-        const langSelect = document.createElement('select');
-        langSelect.id = 'languageSelect';
-        langSelect.className = 'language-select';
-        langSelect.title = 'Select language / Seleccionar idioma / Choisir la langue';
-        
-        const languages = [
-            { code: 'en', name: '🇺🇸 English', native: 'English' },
-            { code: 'es', name: '🇪🇸 Español', native: 'Español' },
-            { code: 'fr', name: '🇫🇷 Français', native: 'Français' }
-        ];
-        
-        languages.forEach(lang => {
-            const option = document.createElement('option');
-            option.value = lang.code;
-            option.textContent = lang.name;
-            option.setAttribute('data-native', lang.native);
-            langSelect.appendChild(option);
-        });
-        
-        langSelect.addEventListener('change', (e) => {
-            this.changeLanguage(e.target.value);
-        });
-        headerControls.appendChild(langSelect);
-        console.log('✅ Added Language selector');
-        
-        // Find where to insert
-        const statusIndicator = header.querySelector('.status-indicator');
-        console.log('🔍 Status indicator found:', !!statusIndicator);
-        
-        if (statusIndicator) {
-            header.insertBefore(headerControls, statusIndicator);
-            console.log('✅ Inserted controls before status indicator');
-        } else {
-            header.appendChild(headerControls);
-            console.log('✅ Appended controls to header');
-        }
-        
-        // Force visibility
-        headerControls.style.display = 'flex';
-        headerControls.style.alignItems = 'center';
-        headerControls.style.gap = '8px';
-        headerControls.style.marginLeft = 'auto';
-        headerControls.style.visibility = 'visible';
-        headerControls.style.opacity = '1';
-        
-        console.log('✅ Header controls created successfully!');
-    }
-
-    // Emergency header creation if no header exists
-    createEmergencyHeader() {
-        console.log('🚨 Creating emergency header...');
-        const emergencyHeader = document.createElement('div');
-        emergencyHeader.className = 'emergency-header-controls';
-        emergencyHeader.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            gap: 8px;
-            z-index: 1000;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 8px;
-        `;
-        
-        // Add Setup button
-        const setupBtn = document.createElement('button');
-        setupBtn.textContent = '⚙️ Setup';
-        setupBtn.style.cssText = 'padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;';
-        setupBtn.addEventListener('click', () => window.location.href = '/admin');
-        emergencyHeader.appendChild(setupBtn);
-        
-        // Add Clear button
-        const clearBtn = document.createElement('button');
-        clearBtn.textContent = '🗑️ Clear';
-        clearBtn.style.cssText = 'padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;';
-        clearBtn.addEventListener('click', () => this.clearChat());
-        emergencyHeader.appendChild(clearBtn);
-        
-        document.body.appendChild(emergencyHeader);
-        console.log('✅ Emergency header created');
-    }
-
-    createSetupButton() {
-        const setupBtn = document.createElement('button');
-        setupBtn.className = 'setup-btn';
-        setupBtn.innerHTML = '⚙️ Setup';
-        setupBtn.title = 'Configure your property information';
-        setupBtn.addEventListener('click', () => {
-            window.location.href = '/admin';
-        });
-        return setupBtn;
-    }
-
-    // REMOVED: createRecommendationsButton() - Users shouldn't manage recommendations
-
-    createClearButton() {
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'clear-chat-btn';
-        clearBtn.innerHTML = '🗑️ Clear';
-        clearBtn.title = 'Clear conversation history';
-        clearBtn.addEventListener('click', () => this.clearChat());
-        return clearBtn;
-    }
-
-    createThemeToggle() {
-        const themeToggle = document.createElement('button');
-        themeToggle.id = 'themeToggle';
-        themeToggle.className = 'theme-toggle';
-        themeToggle.innerHTML = '🌙 Dark';
-        themeToggle.title = 'Toggle dark/light mode';
-        themeToggle.addEventListener('click', () => this.toggleTheme());
-        return themeToggle;
-    }
-
-    createLanguageSelector() {
-        // Create language selector
-        const langSelect = document.createElement('select');
-        langSelect.id = 'languageSelect';
-        langSelect.className = 'language-select';
-        langSelect.title = 'Select language / Seleccionar idioma / Choisir la langue';
-        
-        const languages = [
-            { code: 'en', name: '🇺🇸 English', native: 'English' },
-            { code: 'es', name: '🇪🇸 Español', native: 'Español' },
-            { code: 'fr', name: '🇫🇷 Français', native: 'Français' }
-        ];
-        
-        languages.forEach(lang => {
-            const option = document.createElement('option');
-            option.value = lang.code;
-            option.textContent = lang.name;
-            option.setAttribute('data-native', lang.native);
-            langSelect.appendChild(option);
-        });
-        
-        langSelect.addEventListener('change', (e) => {
-            this.changeLanguage(e.target.value);
-        });
-
-        return langSelect;
-    }
-
-    // Recommendations Modal - KEPT for potential admin use, but not accessible from user interface
-    showRecommendationsModal() {
-        // Create modal for managing recommendations
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Manage Local Recommendations</h3>
-                    <button class="close-modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="add-recommendation-form">
-                        <h4>Add New Recommendation</h4>
-                        <div class="form-group">
-                            <input type="text" id="rec-name" placeholder="Place Name *" class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <select id="rec-category" class="form-select">
-                                <option value="Restaurant">Restaurant</option>
-                                <option value="Cafe">Cafe</option>
-                                <option value="Bar">Bar</option>
-                                <option value="Beach">Beach</option>
-                                <option value="Park">Park</option>
-                                <option value="Attraction">Attraction</option>
-                                <option value="Shop">Shop</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <textarea id="rec-description" placeholder="Description" class="form-textarea"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" id="rec-notes" placeholder="Special notes or tips" class="form-input">
-                        </div>
-                        <button class="add-rec-btn">Add Recommendation</button>
-                    </div>
-                    
-                    <div class="recommendations-list">
-                        <h4>Current Recommendations</h4>
-                        <div id="current-recommendations"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-        this.updateRecommendationsList();
-
-        // Event listeners for modal
-        modal.querySelector('.close-modal').addEventListener('click', () => {
-            modal.remove();
-        });
-
-        modal.querySelector('.add-rec-btn').addEventListener('click', () => {
-            this.addRecommendationFromModal();
-        });
-
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        });
-    }
-
-    updateRecommendationsList() {
-        const container = document.getElementById('current-recommendations');
-        if (!container) return;
-
-        if (this.hostRecommendations.length === 0) {
-            container.innerHTML = '<p class="no-recommendations">No recommendations yet. Add some above!</p>';
-            return;
-        }
-
-        container.innerHTML = '';
-        this.hostRecommendations.forEach((place, index) => {
-            const item = document.createElement('div');
-            item.className = 'recommendation-item';
-            item.innerHTML = `
-                <div class="place-info">
-                    <strong>${place.name}</strong> <span class="category">(${place.category})</span>
-                    ${place.description ? `<p>${place.description}</p>` : ''}
-                    ${place.notes ? `<p class="notes">💡 ${place.notes}</p>` : ''}
-                </div>
-                <button class="remove-rec-btn" data-index="${index}">Remove</button>
-            `;
-            container.appendChild(item);
-        });
-
-        // Add remove event listeners
-        container.querySelectorAll('.remove-rec-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const index = parseInt(e.target.getAttribute('data-index'));
-                this.removeRecommendation(index);
-            });
-        });
-    }
-
-    addRecommendationFromModal() {
-        const name = document.getElementById('rec-name').value.trim();
-        const category = document.getElementById('rec-category').value;
-        const description = document.getElementById('rec-description').value.trim();
-        const notes = document.getElementById('rec-notes').value.trim();
-
-        if (!name) {
-            this.showTempMessage('Please enter a place name', 'error');
-            return;
-        }
-
-        const newPlace = {
-            name,
-            category,
-            description,
-            notes
-        };
-
-        this.hostRecommendations.push(newPlace);
-        this.saveRecommendations();
-        this.updateRecommendationsList();
-
-        // Clear form
-        document.getElementById('rec-name').value = '';
-        document.getElementById('rec-description').value = '';
-        document.getElementById('rec-notes').value = '';
-
-        this.showTempMessage('Recommendation added successfully!', 'success');
-    }
-
-    removeRecommendation(index) {
-        if (confirm('Are you sure you want to remove this recommendation?')) {
-            this.hostRecommendations.splice(index, 1);
-            this.saveRecommendations();
-            this.updateRecommendationsList();
-            this.showTempMessage('Recommendation removed', 'info');
-        }
-    }
-
-    // LANGUAGE SUPPORT METHODS
-    changeLanguage(langCode) {
-        this.saveLanguagePreference(langCode);
-        this.updateUIForLanguage(langCode);
-        this.showTempMessage(`Language changed to ${this.getLanguageName(langCode)}`, 'info');
-    }
-
-    updateUIForLanguage(langCode) {
-        // Update placeholder text based on language
-        const messageInput = document.getElementById('messageInput');
-        const placeholders = {
-            en: "Ask about your stay, local recommendations, or appliance instructions...",
-            es: "Pregunte sobre su estadía, recomendaciones locales o instrucciones de electrodomésticos...",
-            fr: "Demandez des informations sur votre séjour, des recommandations locales ou des instructions pour les appareils..."
-        };
-        if (messageInput) {
-            messageInput.placeholder = placeholders[langCode] || placeholders.en;
-        }
-
-        // Update quick question buttons
-        this.updateQuickQuestions(langCode);
-    }
-
-    updateQuickQuestions(langCode) {
-        const quickQuestions = {
-            en: {
-                checkin: "Check-in/out times",
-                wifi: "WiFi Information", 
-                restaurants: "Nearby Restaurants",
-                emergency: "Emergency Contacts",
-                // ADDED: Appliance questions
-                applianceHelp: "🛠️ Appliance Help",
-                ovenHelp: "🍳 Oven/Microwave",
-                washerHelp: "🧺 Washer/Dryer",
-                thermostatHelp: "🌡️ Thermostat"
-            },
-            es: {
-                checkin: "Horarios de check-in/out",
-                wifi: "Información del WiFi",
-                restaurants: "Restaurantes cercanos",
-                emergency: "Contactos de emergencia",
-                // ADDED: Appliance questions in Spanish
-                applianceHelp: "🛠️ Ayuda con Electrodomésticos",
-                ovenHelp: "🍳 Horno/Microondas",
-                washerHelp: "🧺 Lavadora/Secadora",
-                thermostatHelp: "🌡️ Termostato"
-            },
-            fr: {
-                checkin: "Horaires check-in/out",
-                wifi: "Informations WiFi",
-                restaurants: "Restaurants à proximité",
-                emergency: "Contacts d'urgence",
-                // ADDED: Appliance questions in French
-                applianceHelp: "🛠️ Aide aux Appareils",
-                ovenHelp: "🍳 Four/Micro-ondes",
-                washerHelp: "🧺 Lave-linge/Sèche-linge",
-                thermostatHelp: "🌡️ Thermostat"
-            }
-        };
-
-        const questions = quickQuestions[langCode] || quickQuestions.en;
-        
-        // Update existing quick question buttons
-        const buttons = document.querySelectorAll('.quick-btn');
-        if (buttons.length >= 4) {
-            buttons[0].textContent = questions.checkin;
-            buttons[1].textContent = questions.wifi;
-            buttons[2].textContent = questions.restaurants;
-            buttons[3].textContent = questions.emergency;
-        }
-        
-        // Update appliance quick question buttons
-        const applianceButtons = document.querySelectorAll('.appliance-quick-btn');
-        if (applianceButtons.length >= 4) {
-            applianceButtons[0].textContent = questions.applianceHelp;
-            applianceButtons[1].textContent = questions.ovenHelp;
-            applianceButtons[2].textContent = questions.washerHelp;
-            applianceButtons[3].textContent = questions.thermostatHelp;
-        }
-    }
-
-    getLanguageName(langCode) {
-        const languages = {
-            en: 'English',
-            es: 'Español', 
-            fr: 'Français'
-        };
-        return languages[langCode] || 'English';
-    }
-
-    loadLanguagePreference() {
-        try {
-            const savedLang = localStorage.getItem(this.languageKey) || 'en';
-            const langSelect = document.getElementById('languageSelect');
-            if (langSelect) {
-                langSelect.value = savedLang;
-            }
-            this.updateUIForLanguage(savedLang);
-            console.log('🌍 Language loaded:', savedLang);
-        } catch (error) {
-            console.error('Error loading language preference:', error);
-        }
-    }
-
-    saveLanguagePreference(langCode) {
-        try {
-            localStorage.setItem(this.languageKey, langCode);
-        } catch (error) {
-            console.error('Error saving language preference:', error);
-        }
-    }
-
-    getCurrentLanguage() {
-        const langSelect = document.getElementById('languageSelect');
-        return langSelect ? langSelect.value : 'en';
-    }
-
-    // THEME MANAGEMENT METHODS
-    toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-theme', newTheme);
-        this.updateThemeButton(newTheme);
-        this.saveThemePreference(newTheme);
-        this.showTempMessage(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode enabled`, 'info');
-    }
-
-    updateThemeButton(theme) {
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
-        }
-    }
-
-    loadThemePreference() {
-        try {
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const savedTheme = localStorage.getItem(this.themeKey);
-            let theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-            
-            document.documentElement.setAttribute('data-theme', theme);
-            this.updateThemeButton(theme);
-            
-            console.log('🎨 Theme loaded:', theme, '(system prefers dark:', systemPrefersDark, ')');
-        } catch (error) {
-            console.error('Error loading theme preference:', error);
-        }
-    }
-
-    saveThemePreference(theme) {
-        try {
-            localStorage.setItem(this.themeKey, theme);
-        } catch (error) {
-            console.error('Error saving theme preference:', error);
-        }
-    }
-
-    // CHAT HISTORY METHODS
-    clearChat() {
-        if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
-            localStorage.removeItem(this.storageKey);
-            const chatMessages = document.getElementById('chatMessages');
-            
-            const welcomeMessage = chatMessages.querySelector('.message:first-child');
-            chatMessages.innerHTML = '';
-            if (welcomeMessage) {
-                chatMessages.appendChild(welcomeMessage);
-            }
-            
-            this.showTempMessage('Chat history cleared successfully!', 'success');
-        }
-    }
-
-    showTempMessage(text, type = 'info') {
-        const tempMsg = document.createElement('div');
-        tempMsg.className = `temp-message temp-message-${type}`;
-        tempMsg.textContent = text;
-        document.body.appendChild(tempMsg);
-
-        setTimeout(() => {
-            tempMsg.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (tempMsg.parentNode) {
-                    tempMsg.parentNode.removeChild(tempMsg);
-                }
-            }, 300);
-        }, 3000);
-    }
-
-    saveChatHistory() {
-        try {
-            const chatMessages = document.getElementById('chatMessages');
-            const messages = [];
-            
-            const messageElements = chatMessages.querySelectorAll('.message');
-            
-            messageElements.forEach((messageEl, index) => {
-                if (index === 0) return;
-                
-                const isBot = messageEl.classList.contains('bot-message');
-                const contentEl = messageEl.querySelector('.message-content');
-                const content = contentEl.textContent || contentEl.innerText;
-                
-                messages.push({
-                    type: isBot ? 'bot' : 'user',
-                    content: content,
-                    timestamp: new Date().toISOString()
-                });
-            });
-
-            localStorage.setItem(this.storageKey, JSON.stringify(messages));
-            console.log('💾 Chat history saved:', messages.length, 'messages');
-            
-        } catch (error) {
-            console.error('Error saving chat history:', error);
-        }
-    }
-
-    loadChatHistory() {
-        try {
-            const saved = localStorage.getItem(this.storageKey);
-            if (saved) {
-                const messages = JSON.parse(saved);
-                const chatMessages = document.getElementById('chatMessages');
-                
-                const welcomeMessage = chatMessages.querySelector('.message:first-child');
-                chatMessages.innerHTML = '';
-                if (welcomeMessage) {
-                    chatMessages.appendChild(welcomeMessage);
-                }
-
-                messages.forEach(msg => {
-                    this.addMessage(msg.content, msg.type, true);
-                });
-
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                console.log('📂 Chat history loaded:', messages.length, 'messages');
-                
-                this.showTempMessage(`Loaded ${messages.length} previous messages`, 'info');
-            }
-        } catch (error) {
-            console.error('Error loading chat history:', error);
-        }
-    }
-
-    updateCharCount() {
-        const messageInput = document.getElementById('messageInput');
-        const charCount = document.getElementById('charCount');
-        if (messageInput && charCount) {
-            const length = messageInput.value.length;
-            charCount.textContent = `${length}/500`;
-            
-            if (length > 450) {
-                charCount.style.color = '#e74c3c';
-            } else if (length > 400) {
-                charCount.style.color = '#f39c12';
-            } else {
-                charCount.style.color = '#7f8c8d';
-            }
-        }
-    }
-
-    // UPDATED: sendMessage method with FAQ tracking and knowledge base check
-    async sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        const message = messageInput.value.trim();
-
-        if (!message) return;
-
-        // TRACK QUESTION FOR FAQ AUTO-LEARNING
-        FAQTracker.trackQuestion(message);
-        
-        messageInput.value = '';
-        this.updateCharCount();
-        document.getElementById('sendButton').disabled = true;
-
-        this.addMessage(message, 'user');
-        this.showTypingIndicator();
-
-        try {
-            const currentLanguage = this.getCurrentLanguage();
-            
-            // FIRST: Check if we have an FAQ answer in knowledge base
-            const faqAnswer = FAQTracker.findAnswer(message);
-            
-            if (faqAnswer) {
-                console.log("✅ Found FAQ answer in knowledge base");
-                this.hideTypingIndicator();
-                this.addMessage(faqAnswer, 'bot');
-                return; // Skip AI API call
-            }
-            
-            // Get FRESH host configuration every time
-            const hostConfig = this.getHostConfig();
-            
-            // Prepare system messages with recommendations AND appliances for relevant queries
-            let systemMessage = '';
-            
-            // Check if question is about local recommendations
-            const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 
-                'beach', 'park', 'attraction', 'nearby', 'local', 
-                'recommend', 'things to do', 'activity', 'tour', 
-                'sightseeing', 'place to visit', 'what to do', 'see',
-                'visit', 'explore', 'destination'];
-            
-            // Check if question is about appliances
-            const applianceKeywords = ['appliance', 'oven', 'microwave', 'stove', 'cooktop',
-                'washer', 'dryer', 'laundry', 'washing machine',
-                'dishwasher', 'refrigerator', 'fridge', 'freezer',
-                'thermostat', 'heating', 'cooling', 'air conditioning',
-                'AC', 'heat', 'coffee maker', 'toaster', 'blender',
-                'microwave', 'TV', 'television', 'remote', 'control',
-                'instructions', 'how to use', 'operate', 'work',
-                'not working', 'troubleshoot', 'help with', 'use the',
-                'how do I', 'turn on', 'start', 'begin'];
-            
-            if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
-                systemMessage += `When users ask about local places, share these host recommendations:\n\n${this.getRecommendationsText()}`;
-            }
-            
-            // Include appliances context for appliance questions
-            if (anyKeywordInMessage(message, applianceKeywords) && this.hostAppliances.length > 0) {
-                if (systemMessage) systemMessage += "\n\n";
-                systemMessage += `When users ask about appliances, use these instructions:\n\n${this.getAppliancesText()}`;
-            }
-
-            // DEBUG: Log what we're sending to the backend
-            console.log('🔄 Sending to AI:', {
-                message: message,
-                language: currentLanguage,
-                hostConfig: hostConfig,
-                hasRecommendations: this.hostRecommendations.length,
-                hasAppliances: this.hostAppliances.length,
-                hasSystemMessage: !!systemMessage,
-                checkedFAQ: true
-            });
-
-            // Add timeout to prevent hanging requests
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    message: message,
-                    language: currentLanguage,
-                    hostConfig: hostConfig,
-                    systemMessage: systemMessage
-                }),
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            const data = await response.json();
-            this.hideTypingIndicator();
-
-            if (data.success) {
-                this.addMessage(data.response, 'bot');
-                console.log('🌍 Response language:', data.detectedLanguage);
-                console.log('🏠 Using custom config:', data.usingCustomConfig);
-                console.log('🛠️ Using appliances data:', data.usingAppliances || false);
-                
-                // Auto-learn from successful AI answers for frequently asked questions
-                FAQTracker.autoLearnFromAnswer(message, data.response);
-                
-                // Show notification if using custom config
-                if (data.usingCustomConfig && hostConfig) {
-                    console.log('✅ AI is using your custom property configuration');
-                }
-            } else {
-                this.addMessage(
-                    "I'm having trouble connecting right now. Please try again in a moment.",
-                    'bot'
-                );
-            }
-
-        } catch (error) {
-            this.hideTypingIndicator();
-            
-            if (error.name === 'AbortError') {
-                this.addMessage(
-                    "The request took too long. Please try again with a simpler question.",
-                    'bot'
-                );
-            } else {
-                this.addMessage(
-                    "Sorry, I'm experiencing connection issues. Please check your internet connection and try again.",
-                    'bot'
-                );
-            }
-            console.error('Network error:', error);
-        }
-    }
-
-    addMessage(content, sender, isRestored = false) {
-        const chatMessages = document.getElementById('chatMessages');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender}-message`;
-
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar';
-        avatar.innerHTML = sender === 'bot' 
-            ? '<i class="fas fa-robot"></i>' 
-            : '<i class="fas fa-user"></i>';
-
-        const messageContent = document.createElement('div');
-        messageContent.className = 'message-content';
-
-        if (sender === 'bot') {
-            const formattedContent = this.formatBotResponse(content);
-            messageContent.innerHTML = formattedContent;
-        } else {
-            messageContent.textContent = content;
-        }
-
-        messageDiv.appendChild(avatar);
-        messageDiv.appendChild(messageContent);
-        chatMessages.appendChild(messageDiv);
-
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        if (!isRestored && chatMessages.children.length > 1) {
-            this.saveChatHistory();
-        }
-    }
-
-    formatBotResponse(text) {
-        let formatted = text.replace(/\n/g, '<br>');
-        formatted = formatted.replace(/(\d+)\.\s/g, '<strong>$1.</strong> ');
-        formatted = formatted.replace(/Emergency:/g, '<strong>🚨 Emergency:</strong>');
-        formatted = formatted.replace(/Contact:/g, '<strong>📞 Contact:</strong>');
-        formatted = formatted.replace(/Address:/g, '<strong>📍 Address:</strong>');
-        formatted = formatted.replace(/Check-in:/g, '<strong>🕒 Check-in:</strong>');
-        formatted = formatted.replace(/Check-out:/g, '<strong>🕒 Check-out:</strong>');
-        formatted = formatted.replace(/WiFi:/g, '<strong>📶 WiFi:</strong>');
-        formatted = formatted.replace(/Parking:/g, '<strong>🚗 Parking:</strong>');
-        // ADDED: Trash/Garbage formatting
-        formatted = formatted.replace(/Trash:/g, '<strong>🗑️ Trash:</strong>');
-        formatted = formatted.replace(/Garbage:/g, '<strong>🗑️ Garbage:</strong>');
-        // ADDED: Appliance formatting
-        formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
-        formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
-        formatted = formatted.replace(/Troubleshooting:/g, '<strong>🔧 Troubleshooting:</strong>');
-        formatted = formatted.replace(/Type:/g, '<strong>📝 Type:</strong>');
-        
-        return formatted;
-    }
-
-    showTypingIndicator() {
-        const typingIndicator = document.getElementById('typingIndicator');
-        if (typingIndicator) {
-            typingIndicator.style.display = 'flex';
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        }
-    }
-
-    hideTypingIndicator() {
-        const typingIndicator = document.getElementById('typingIndicator');
-        if (typingIndicator) {
-            typingIndicator.style.display = 'none';
-        }
-    }
-}
-
-// Helper function to check for local keywords
-function anyKeywordInMessage(message, keywords) {
-    const lowerMessage = message.toLowerCase();
-    return keywords.some(keyword => lowerMessage.includes(keyword));
-}
-
-// Global function for quick questions
-function askQuestion(question) {
-    const messageInput = document.getElementById('messageInput');
-    messageInput.value = question;
-    document.getElementById('sendButton').disabled = false;
-    
-    const chat = window.chat || new RentalAIChat();
-    chat.sendMessage();
-}
-
-// Debug function to check configuration
-function debugConfig() {
-    const config = localStorage.getItem('rentalAIPropertyConfig');
-    const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances');
-    const faqLog = localStorage.getItem('rental_ai_faq_log');
-    const faqStats = localStorage.getItem('rental_ai_faq_stats');
-    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
-    
-    if (config) {
-        const parsed = JSON.parse(config);
-        console.log('🔧 Current Host Configuration:', parsed);
-        
-        let alertText = `Current Configuration:\nProperty: ${parsed.name}\nWiFi: ${parsed.amenities?.wifi || 'Not set'}`;
-        
-        if (appliances) {
-            const applianceList = JSON.parse(appliances);
-            alertText += `\nAppliances: ${applianceList.length} configured`;
-        }
-        
-        if (faqLog) {
-            const faqList = JSON.parse(faqLog);
-            alertText += `\nQuestions Tracked: ${faqList.length}`;
-        }
-        
-        if (faqStats) {
-            const stats = JSON.parse(faqStats);
-            alertText += `\nFrequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}`;
-        }
-        
-        if (knowledgeBase) {
-            const kb = JSON.parse(knowledgeBase);
-            alertText += `\nFAQ Knowledge Base: ${kb.length} entries`;
-        }
-        
-        alert(alertText);
-    } else {
-        console.log('🔧 No host configuration found');
-        alert('No host configuration found. Please run setup first.');
-    }
-}
-
-// Enhanced debug function
-function debugFullConfig() {
-    const config = localStorage.getItem('rentalAIPropertyConfig');
-    const recommendations = localStorage.getItem('rental_ai_recommendations');
-    const appliances = localStorage.getItem('rental_ai_appliances');
-    const faqLog = localStorage.getItem('rental_ai_faq_log');
-    const faqStats = localStorage.getItem('rental_ai_faq_stats');
-    const knowledgeBase = localStorage.getItem('rental_ai_knowledge_base');
-    
-    if (config) {
-        const parsed = JSON.parse(config);
-        console.log('🔧 FULL Host Configuration:', parsed);
-        
-        let debugInfo = 'Current Configuration:\n';
-        debugInfo += `Property: ${parsed.name || 'Not set'}\n`;
-        debugInfo += `Address: ${parsed.address || 'Not set'}\n`;
-        debugInfo += `Host Contact: ${parsed.hostContact || 'Not set'}\n`;
-        debugInfo += `Maintenance Contact: ${parsed.maintenanceContact || 'Not set'}\n`;
-        debugInfo += `Check-in: ${parsed.checkinTime || 'Not set'}\n`;
-        debugInfo += `Check-out: ${parsed.checkoutTime || 'Not set'}\n`;
-        debugInfo += `WiFi: ${parsed.amenities?.wifi || 'Not set'}\n`;
-        debugInfo += `Other Amenities: ${parsed.amenities?.other || 'Not set'}\n`;
-        debugInfo += `House Rules: ${parsed.houseRules ? 'Set' : 'Not set'}\n`;
-        
-        const recs = recommendations ? JSON.parse(recommendations) : [];
-        debugInfo += `Recommendations: ${recs.length} places\n`;
-        
-        const applianceList = appliances ? JSON.parse(appliances) : [];
-        debugInfo += `Appliances: ${applianceList.length} configured\n`;
-        if (applianceList.length > 0) {
-            applianceList.forEach((appliance, index) => {
-                debugInfo += `  ${index + 1}. ${appliance.name} (${appliance.type})\n`;
-            });
-        }
-        
-        if (faqLog) {
-            const faqList = JSON.parse(faqLog);
-            debugInfo += `\nFAQ Tracking:\n`;
-            debugInfo += `  Questions Tracked: ${faqList.length}\n`;
-        }
-        
-        if (faqStats) {
-            const stats = JSON.parse(faqStats);
-            debugInfo += `  Frequent Questions: ${stats.frequentQuestions ? stats.frequentQuestions.length : 0}\n`;
-        }
-        
-        if (knowledgeBase) {
-            const kb = JSON.parse(knowledgeBase);
-            debugInfo += `  Knowledge Base Entries: ${kb.length}\n`;
-            kb.slice(0, 5).forEach((entry, index) => {
-                debugInfo += `    ${index + 1}. "${entry.question.substring(0, 30)}..." (Uses: ${entry.uses || 0})\n`;
-            });
-            if (kb.length > 5) debugInfo += `    ... and ${kb.length - 5} more\n`;
-        }
-        
-        alert(debugInfo);
-    } else {
-        console.log('🔧 No host configuration found');
-        alert('No host configuration found. Please run setup first.');
-    }
-}
-
-// ADDED: FAQ Manager shortcut
-function openFAQManager() {
-    window.open('/faq-manage.html', '_blank');
-}
-
-// ADDED: Test FAQ matching
-function testFAQMatch(question) {
-    console.log('🧪 Testing FAQ match for:', question);
-    const result = FAQTracker.findAnswer(question);
-    if (result) {
-        console.log('✅ Found match:', result.substring(0, 100) + '...');
-        return result;
-    } else {
-        console.log('❌ No match found');
-        return null;
-    }
-}
-
-// Initialize chat when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOM Content Loaded - Initializing RentalAIChat...');
-    try {
-        window.chat = new RentalAIChat();
-        console.log('✅ RentalAIChat initialized successfully!');
-        
-        // Add FAQ Manager button to header controls if needed
-        setTimeout(() => {
-            const headerControls = document.querySelector('.header-controls');
-            if (headerControls) {
-                const faqBtn = document.createElement('button');
-                faqBtn.className = 'setup-btn';
-                faqBtn.innerHTML = '🧠 FAQ Manager';
-                faqBtn.title = 'Manage FAQ auto-learning';
-                faqBtn.addEventListener('click', openFAQManager);
-                headerControls.appendChild(faqBtn);
-                console.log('✅ FAQ Manager button added to header');
-            }
-        }, 1000);
-        
-        // Add CSS for header controls
-        const style = document.createElement('style');
-        style.textContent = `
-            .header-controls {
-                display: flex !important;
-                align-items: center;
-                gap: 8px;
-                margin-left: auto;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-            
-            .setup-btn, .clear-chat-btn, .theme-toggle {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                color: white;
-                padding: 6px 10px;
-                border-radius: 10px;
-                font-size: 0.8rem;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            
-            .setup-btn:hover, .clear-chat-btn:hover, .theme-toggle:hover {
-                background: rgba(255, 255, 255, 0.2);
-            }
-            
-            .language-select {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                color: white;
-                padding: 6px 10px;
-                border-radius: 10px;
-                font-size: 0.8rem;
-                cursor: pointer;
-            }
-            
-            .language-select option {
-                background: #2c3e50;
-                color: white;
-            }
-            
-            /* Appliance quick questions */
-            .quick-appliance-section {
-                margin-top: 20px;
-                padding-top: 20px;
-                border-top: 1px solid var(--border-color);
-            }
-            
-            .quick-section-title {
-                margin-bottom: 10px;
-                color: var(--text-secondary);
-                font-size: 0.9rem;
-            }
-            
-            .quick-appliance-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-            
-            .appliance-quick-btn {
-                background: var(--accent-secondary);
-                color: white;
-                border: none;
-                padding: 10px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 0.85rem;
-                text-align: center;
-            }
-            
-            .appliance-quick-btn:hover {
-                background: var(--accent-primary);
-            }
-            
-            /* Animation styles */
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            
-            @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-    } catch (error) {
-        console.error('❌ Error initializing RentalAIChat:', error);
-        alert('Error initializing chat. Please check console for details.');
-    }
-});
-
-// Handle page visibility changes
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    }
-    // Handle page visibility changes
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    }
-});
-
-// ================================================
-// DEBUG FUNCTIONS - ADDED
-// ================================================
-
-// Debug function to check stored properties
-function debugStoredProperties() {
-    console.log('🔍 DEBUG STORED PROPERTIES');
-    
-    // Check all rental_properties data
-    const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-    console.log('Total properties in localStorage:', Object.keys(properties).length);
-    
-    // List all property IDs and names
-    Object.keys(properties).forEach((key, index) => {
-        console.log(`${index + 1}. ID: "${key}"`);
-        console.log(`   Name: ${properties[key].name}`);
-        console.log(`   Has Config: ${!!properties[key].config}`);
-    });
-    
-    // Check the exact URL parameter
-    const urlParam = getPropertyFromURL();
-    console.log('URL Parameter value:', urlParam);
-    
-    // Check if it exists in properties
-    if (urlParam) {
-        console.log('Exists in properties?', !!properties[urlParam]);
-        if (properties[urlParam]) {
-            console.log('Found property:', properties[urlParam]);
-        }
-    }
-    
-    // Show in alert for easy reading
-    const propertyKeys = Object.keys(properties);
-    let alertMsg = `Stored Properties (${propertyKeys.length}):\n\n`;
-    
-    propertyKeys.forEach((key, index) => {
-        alertMsg += `${index + 1}. "${key}"\n`;
-        alertMsg += `   ${properties[key].name}\n\n`;
-    });
-    
-    alertMsg += `URL Parameter: "${urlParam || 'none'}"\n`;
-    alertMsg += `Exists in storage: ${urlParam ? !!properties[urlParam] : 'N/A'}`;
-    
-    alert(alertMsg);
-}
-
-// Quick property test function
-function quickPropertyTest() {
-    console.log('🚀 QUICK PROPERTY TEST');
-    
-    const propertyId = getPropertyFromURL();
-    console.log('1. Property ID from URL:', propertyId);
-    
-    const properties = JSON.parse(localStorage.getItem('rental_properties') || '{}');
-    console.log('2. All properties:', Object.keys(properties));
-    
-    if (propertyId) {
-        const property = properties[propertyId];
-        console.log('3. Found property:', property?.name);
-        console.log('4. Property config:', property?.config ? 'EXISTS' : 'MISSING');
-        
-        if (property?.config) {
-            console.log('5. Recommendations:', property.config.recommendations?.length || 0);
-            console.log('6. Appliances:', property.config.appliances?.length || 0);
-        }
-    }
-    
-    if (window.chat) {
-        console.log('7. Chat loaded recommendations:', window.chat.hostRecommendations?.length || 0);
-        console.log('8. Chat loaded appliances:', window.chat.hostAppliances?.length || 0);
-    }
-    
-    console.log('✅ Test complete');
-}
-});
+        setupBtn
