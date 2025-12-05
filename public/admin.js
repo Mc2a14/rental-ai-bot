@@ -996,38 +996,29 @@ function createNewProperty() {
     // Generate unique ID
     const id = 'property-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
-    // Get CURRENT form data using propertySetup instance
+    // Get CURRENT form data
     let formData = {};
     if (window.propertySetup) {
         formData = window.propertySetup.getFormData();
     }
     
-    // Create property object with ALL configuration
+    // Create property object
     properties[id] = {
         id: id,
         name: name,
         address: address || '',
         config: {
-            // Basic info
             propertyName: name,
             propertyAddress: address,
             propertyType: formData.type || '',
-            
-            // Contact info
             hostContact: formData.hostContact || '',
             maintenanceContact: formData.maintenanceContact || '',
-            
-            // Check-in/out
             checkInTime: formData.checkInTime || '3:00 PM',
             checkOutTime: formData.checkOutTime || '11:00 AM',
             lateCheckout: formData.lateCheckout || '',
-            
-            // Amenities
             wifiDetails: formData.wifiDetails || '',
             amenities: formData.amenities || '',
             houseRules: formData.houseRules || '',
-            
-            // Recommendations and appliances
             recommendations: window.propertySetup ? window.propertySetup.recommendations : [],
             appliances: window.propertySetup ? window.propertySetup.appliances : []
         },
@@ -1039,15 +1030,64 @@ function createNewProperty() {
     // Save to localStorage
     localStorage.setItem('rental_properties', JSON.stringify(properties));
     
-    // Clear inputs
+    // Clear the "new property" form inputs
     document.getElementById('newPropertyName').value = '';
     document.getElementById('newPropertyAddress').value = '';
     
-    // Update display
+    // =============================================
+    // 🔥 AUTO-CLEAR THE MAIN FORM
+    // =============================================
+    if (window.propertySetup) {
+        // Clear all form fields
+        document.getElementById('propertyName').value = '';
+        document.getElementById('propertyAddress').value = '';
+        document.getElementById('propertyType').value = 'Vacation Home';
+        document.getElementById('hostContact').value = '';
+        document.getElementById('maintenanceContact').value = '';
+        document.getElementById('checkInTime').value = '3:00 PM'; // Default value
+        document.getElementById('checkOutTime').value = '11:00 AM'; // Default value
+        document.getElementById('lateCheckout').value = '';
+        document.getElementById('wifiDetails').value = '';
+        document.getElementById('amenities').value = '';
+        document.getElementById('houseRules').value = '';
+        
+        // Clear recommendations and appliances
+        window.propertySetup.recommendations = [];
+        window.propertySetup.appliances = [];
+        window.propertySetup.updateRecommendationsList();
+        window.propertySetup.updateAppliancesList();
+        
+        // Reset to step 1
+        window.propertySetup.currentStep = 1;
+        window.propertySetup.updateStepDisplay();
+        
+        // Clear the saved config from localStorage
+        localStorage.removeItem('rentalAIPropertyConfig');
+        
+        // Remove any edit mode banner
+        const banner = document.querySelector('.edit-mode-banner');
+        if (banner) banner.remove();
+        
+        // Show success message in the form
+        const successMessage = document.getElementById('successMessage');
+        if (successMessage) {
+            successMessage.style.display = 'none';
+        }
+        
+        // Show the form (in case it was hidden)
+        const propertyConfig = document.getElementById('propertyConfig');
+        if (propertyConfig) {
+            propertyConfig.style.display = 'block';
+        }
+        
+        console.log('✅ Form cleared for next property');
+    }
+    
+    // Update properties display
     renderProperties();
     
-    // Auto-switch to this property
-    switchProperty(id);
+    // Auto-switch to this property (optional - you might want to keep it)
+    // switchProperty(id);
     
     // Copy link to clipboard
     const tempInput = document.createElement('input');
@@ -1057,7 +1097,10 @@ function createNewProperty() {
     document.execCommand('copy');
     document.body.removeChild(tempInput);
     
-    alert(`Property "${name}" created! The unique link has been copied to your clipboard.\n\nGuest Link: ${properties[id].guestLink}`);
+    alert(`✅ Property "${name}" created!\n\n📋 Guest link copied to clipboard:\n${properties[id].guestLink}\n\n📝 Form cleared - ready for next property!`);
+    
+    // Optional: Switch back to setup form
+    togglePropertyManager();
 }
 
 // Render properties list
