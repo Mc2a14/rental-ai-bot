@@ -485,9 +485,9 @@ function addLogoutButton() {
         background: white;
         color: #e74c3c;
         border: 2px solid #e74c3c;
-        padding: 8px 15px;
+        padding: 6px 12px;
         border-radius: 20px;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
         z-index: 1000;
