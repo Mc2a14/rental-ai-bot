@@ -268,14 +268,16 @@ getHostConfig() {
     }
 
     setupQuickQuestionButtons() {
-        const quickQuestionsContainer = document.querySelector('.quick-questions');
-        if (!quickQuestionsContainer) return;
+    const quickQuestionsContainer = document.querySelector('.quick-questions');
+    if (!quickQuestionsContainer) return;
 
-        const existingApplianceSection = quickQuestionsContainer.querySelector('.quick-appliance-section');
-        if (existingApplianceSection) {
-            existingApplianceSection.remove();
-        }
+    const existingApplianceSection = quickQuestionsContainer.querySelector('.quick-appliance-section');
+    if (existingApplianceSection) {
+        existingApplianceSection.remove();
+    }
 
+    // Only show appliance section if we have appliances
+    if (this.hostAppliances && this.hostAppliances.length > 0) {
         const applianceButtons = [
             { id: 'appliance-help', text: '🛠️ Appliance Help', question: 'How do I use the appliances?' },
             { id: 'oven-help', text: '🍳 Oven/Microwave', question: 'How do I use the oven or microwave?' },
@@ -303,6 +305,7 @@ getHostConfig() {
         applianceSection.appendChild(applianceGrid);
         quickQuestionsContainer.appendChild(applianceSection);
     }
+}
 
   // In script.js - Update the askApplianceQuestion method
 askApplianceQuestion(question) {
