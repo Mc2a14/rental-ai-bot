@@ -4,7 +4,12 @@
 
 class RentalAIChat {
     constructor() {
-        console.log('🔄 Chat Initialized');
+    console.log('🔄 Chat Initialized - CLEARING CACHE');
+    
+    // Clear any cached data
+    this.hostConfig = null;
+    this.hostRecommendations = [];
+    this.hostAppliances = [];
         
         this.apiUrl = window.location.origin + '/chat/ai';
         this.storageKey = 'rental_ai_chat_history';
@@ -39,53 +44,67 @@ class RentalAIChat {
         console.log('✅ Chat initialization complete!');
     }
 
-    // Load ALL property data from rentalAIPropertyConfig
-    loadAllPropertyData() {
-        console.log('=== LOADING PROPERTY DATA FROM rentalAIPropertyConfig ===');
-        
-        this.loadPropertyConfig();
-        this.loadRecommendations();
-        this.loadAppliances();
-        
-        console.log('=== PROPERTY DATA LOADED ===');
-        console.log('Host Config:', this.hostConfig?.name || 'None');
-        console.log('Recommendations:', this.hostRecommendations?.length || 0);
-        console.log('Appliances:', this.hostAppliances?.length || 0);
-        
-        if (this.hostConfig) {
-            console.log('WiFi details:', this.hostConfig.amenities?.wifi || 'None');
-        }
-    }
+  // In script.js - Update loadAllPropertyData to clear cache
+loadAllPropertyData() {
+    console.log('=== CLEARING CACHE AND LOADING PROPERTY DATA ===');
+    
+    // Clear all cached data to prevent stale data
+    this.hostConfig = null;
+    this.hostRecommendations = [];
+    this.hostAppliances = [];
+    
+    // Force reload from localStorage
+    this.loadPropertyConfig();
+    this.loadRecommendations();
+    this.loadAppliances();
+    
+    console.log('=== PROPERTY DATA LOADED ===');
+    console.log('Host Config:', this.hostConfig?.name || 'None');
+    console.log('Recommendations:', this.hostRecommendations?.length || 0);
+    console.log('Appliances:', this.hostAppliances?.length || 0);
+    
+    // Update quick questions based on current data
+    this.setupQuickQuestionButtons();
+    
+    // Update UI with current property info
+    this.updateUIWithPropertyInfo();
+}
 
-    // Load property configuration from rentalAIPropertyConfig
-    loadPropertyConfig() {
-        try {
-            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-            if (savedConfig) {
-                this.hostConfig = JSON.parse(savedConfig);
-                
-                // Update UI with property info
-                const headerText = document.querySelector('.header-text h2');
-                const headerSubtext = document.querySelector('.header-text p');
-                
-                if (headerText && this.hostConfig.name) {
-                    headerText.textContent = `Rental AI Assistant - ${this.hostConfig.name}`;
-                }
-                
-                if (headerSubtext && this.hostConfig.name) {
-                    headerSubtext.textContent = `${this.hostConfig.name} • 24/7 Support`;
-                }
-                
-                console.log(`✅ Loaded config for: ${this.hostConfig.name}`);
-            } else {
-                console.log('🏠 No configuration found - using default');
-                this.hostConfig = null;
-            }
-        } catch (error) {
-            console.error('Error loading property config:', error);
+// Add this new method to update UI
+updateUIWithPropertyInfo() {
+    if (!this.hostConfig) return;
+    
+    const headerText = document.querySelector('.header-text h2');
+    const headerSubtext = document.querySelector('.header-text p');
+    
+    if (headerText && this.hostConfig.name) {
+        headerText.textContent = `Rental AI Assistant - ${this.hostConfig.name}`;
+    }
+    
+    if (headerSubtext && this.hostConfig.name) {
+        headerSubtext.textContent = `${this.hostConfig.name} • 24/7 Support`;
+    }
+}
+
+// Update loadPropertyConfig to use updateUIWithPropertyInfo
+loadPropertyConfig() {
+    try {
+        const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+        if (savedConfig) {
+            this.hostConfig = JSON.parse(savedConfig);
+            console.log(`✅ Loaded config for: ${this.hostConfig.name}`);
+            
+            // Update UI
+            this.updateUIWithPropertyInfo();
+        } else {
+            console.log('🏠 No configuration found - using default');
             this.hostConfig = null;
         }
+    } catch (error) {
+        console.error('Error loading property config:', error);
+        this.hostConfig = null;
     }
+}
 
     // Load recommendations from rental_ai_recommendations
     loadRecommendations() {
@@ -133,16 +152,62 @@ class RentalAIChat {
         }
     }
 
-    // Get host config - always from rentalAIPropertyConfig
-    getHostConfig() {
-        try {
-            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-            return savedConfig ? JSON.parse(savedConfig) : null;
-        } catch (error) {
-            console.error('Error getting host config:', error);
-            return null;
-        }
+   // In script.js - Update the getHostConfig method
+getHostConfig() {
+    try {
+        const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+        if (!savedConfig) return null;
+        
+        const config = JSON.parse(savedConfig);
+        
+        // Ensure consistent contact structure
+        return {
+            name: config.name || '',
+            address: config.address || '',
+            type: config.type || '',
+            
+            // Standardize contact information
+            hostContact: config.hostContact || config.contact || '',
+            maintenanceContact: config.maintenanceContact || '',
+            emergencyContact: config.maintenanceContact || config.hostContact || config.contact || '',
+            
+            // Check-in/out
+            checkinTime: config.checkinTime || config.checkInTime || '3:00 PM',
+            checkoutTime: config.checkoutTime || config.checkOutTime || '11:00 AM',
+            lateCheckout: config.lateCheckout || '',
+            
+            // Amenities
+            amenities: {
+                wifi: config.amenities?.wifi || config.wifiDetails || '',
+                parking: config.amenities?.parking || '',
+                other: config.amenities?.other || config.amenities || ''
+            },
+            
+            // Rules
+            houseRules: config.houseRules || '',
+            
+            // Appliances
+            appliances: config.appliances || [],
+            hasAppliances: (config.appliances && config.appliances.length > 0) || config.hasAppliances || false,
+            
+            // Metadata
+            lastUpdated: config.lastUpdated || new Date().toISOString(),
+            
+            // Recommendations
+            hasRecommendations: (config.recommendations && config.recommendations.length > 0) || config.hasRecommendations || false,
+            
+            // Backward compatibility
+            contact: config.hostContact || config.contact || '',
+            checkInOut: {
+                checkIn: config.checkinTime || config.checkInTime || '3:00 PM',
+                checkOut: config.checkoutTime || config.checkOutTime || '11:00 AM'
+            }
+        };
+    } catch (error) {
+        console.error('Error getting host config:', error);
+        return null;
     }
+}
 
     getRecommendationsText() {
         if (!this.hostRecommendations || this.hostRecommendations.length === 0) {
@@ -239,12 +304,61 @@ class RentalAIChat {
         quickQuestionsContainer.appendChild(applianceSection);
     }
 
-    askApplianceQuestion(question) {
-        const messageInput = document.getElementById('messageInput');
-        messageInput.value = question;
-        document.getElementById('sendButton').disabled = false;
+  // In script.js - Update the askApplianceQuestion method
+askApplianceQuestion(question) {
+    // Reload property data FIRST
+    this.loadAllPropertyData();
+    
+    const messageInput = document.getElementById('messageInput');
+    messageInput.value = question;
+    document.getElementById('sendButton').disabled = false;
+    
+    // Add a small delay to ensure data is loaded
+    setTimeout(() => {
         this.sendMessage();
+    }, 100);
+}
+
+// Also update the setupQuickQuestionButtons to reload data:
+setupQuickQuestionButtons() {
+    const quickQuestionsContainer = document.querySelector('.quick-questions');
+    if (!quickQuestionsContainer) return;
+
+    const existingApplianceSection = quickQuestionsContainer.querySelector('.quick-appliance-section');
+    if (existingApplianceSection) {
+        existingApplianceSection.remove();
     }
+
+    // Only show appliance section if we have appliances
+    if (this.hostAppliances && this.hostAppliances.length > 0) {
+        const applianceButtons = [
+            { id: 'appliance-help', text: '🛠️ Appliance Help', question: 'How do I use the appliances?' },
+            { id: 'oven-help', text: '🍳 Oven/Microwave', question: 'How do I use the oven or microwave?' },
+            { id: 'washer-help', text: '🧺 Washer/Dryer', question: 'How do I use the washer and dryer?' },
+            { id: 'thermostat-help', text: '🌡️ Thermostat', question: 'How do I adjust the thermostat?' }
+        ];
+
+        const applianceSection = document.createElement('div');
+        applianceSection.className = 'quick-appliance-section';
+        applianceSection.innerHTML = '<h4 class="quick-section-title">Appliance Help</h4>';
+        
+        const applianceGrid = document.createElement('div');
+        applianceGrid.className = 'quick-appliance-grid';
+        
+        applianceButtons.forEach(btn => {
+            const button = document.createElement('button');
+            button.className = 'appliance-quick-btn';
+            button.id = btn.id;
+            button.textContent = btn.text;
+            button.setAttribute('data-question', btn.question);
+            button.addEventListener('click', () => this.askApplianceQuestion(btn.question));
+            applianceGrid.appendChild(button);
+        });
+        
+        applianceSection.appendChild(applianceGrid);
+        quickQuestionsContainer.appendChild(applianceSection);
+    }
+}
 
     createHeaderControls() {
         const header = document.querySelector('.chat-header');
