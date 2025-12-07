@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const fetch = require('node-fetch');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +36,167 @@ app.get('/', (req, res) => {
 
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// ============ PROPERTY DATA API ENDPOINTS ============
+
+// Get property configuration
+app.get('/admin/get-property-config', (req, res) => {
+    try {
+        const dataPath = path.join(__dirname, 'data', 'propertyConfig.json');
+        
+        // Check if file exists
+        if (!fs.existsSync(dataPath)) {
+            return res.json({});
+        }
+        
+        const config = fs.readFileSync(dataPath, 'utf8');
+        const jsonData = JSON.parse(config);
+        
+        // Ensure consistent structure
+        const cleanConfig = {
+            name: jsonData.name || '',
+            address: jsonData.address || '',
+            type: jsonData.type || '',
+            hostContact: jsonData.hostContact || jsonData.contact || '',
+            maintenanceContact: jsonData.maintenanceContact || '',
+            checkinTime: jsonData.checkinTime || jsonData.checkInTime || '3:00 PM',
+            checkoutTime: jsonData.checkoutTime || jsonData.checkOutTime || '11:00 AM',
+            amenities: jsonData.amenities || {
+                wifi: jsonData.wifiDetails || '',
+                parking: '',
+                other: ''
+            },
+            houseRules: jsonData.houseRules || '',
+            appliances: jsonData.appliances || [],
+            recommendations: jsonData.recommendations || []
+        };
+        
+        res.json(cleanConfig);
+    } catch (error) {
+        console.error('Error reading property config:', error);
+        res.json({});
+    }
+});
+
+// Get recommendations
+app.get('/admin/get-recommendations', (req, res) => {
+    try {
+        const dataPath = path.join(__dirname, 'data', 'recommendations.json');
+        
+        // Check if file exists
+        if (!fs.existsSync(dataPath)) {
+            return res.json([]);
+        }
+        
+        const data = fs.readFileSync(dataPath, 'utf8');
+        const jsonData = JSON.parse(data);
+        
+        // Ensure it's always an array
+        const recommendations = Array.isArray(jsonData) ? jsonData : 
+                               (jsonData.recommendations || []);
+        
+        res.json(recommendations);
+    } catch (error) {
+        console.error('Error reading recommendations:', error);
+        res.json([]);
+    }
+});
+
+// Get appliances
+app.get('/admin/get-appliances', (req, res) => {
+    try {
+        const dataPath = path.join(__dirname, 'data', 'appliances.json');
+        
+        // Check if file exists
+        if (!fs.existsSync(dataPath)) {
+            return res.json([]);
+        }
+        
+        const data = fs.readFileSync(dataPath, 'utf8');
+        const jsonData = JSON.parse(data);
+        
+        // Ensure it's always an array
+        const appliances = Array.isArray(jsonData) ? jsonData : 
+                          (jsonData.appliances || []);
+        
+        res.json(appliances);
+    } catch (error) {
+        console.error('Error reading appliances:', error);
+        res.json([]);
+    }
+});
+
+// Save property configuration
+app.post('/admin/save-property-config', (req, res) => {
+    try {
+        const config = req.body;
+        
+        // Ensure we have a data directory
+        const dataDir = path.join(__dirname, 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        
+        // Save to file
+        const configPath = path.join(dataDir, 'propertyConfig.json');
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        console.log('✅ Property config saved to:', configPath);
+        
+        res.json({ success: true, message: 'Configuration saved successfully' });
+    } catch (error) {
+        console.error('Error saving property config:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Save recommendations
+app.post('/admin/save-recommendations', (req, res) => {
+    try {
+        const recommendations = req.body;
+        
+        // Ensure we have a data directory
+        const dataDir = path.join(__dirname, 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        
+        // Save to file
+        const recommendationsPath = path.join(dataDir, 'recommendations.json');
+        fs.writeFileSync(recommendationsPath, JSON.stringify(recommendations, null, 2));
+        
+        console.log('✅ Recommendations saved to:', recommendationsPath);
+        
+        res.json({ success: true, message: 'Recommendations saved successfully' });
+    } catch (error) {
+        console.error('Error saving recommendations:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Save appliances
+app.post('/admin/save-appliances', (req, res) => {
+    try {
+        const appliances = req.body;
+        
+        // Ensure we have a data directory
+        const dataDir = path.join(__dirname, 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        
+        // Save to file
+        const appliancesPath = path.join(dataDir, 'appliances.json');
+        fs.writeFileSync(appliancesPath, JSON.stringify(appliances, null, 2));
+        
+        console.log('✅ Appliances saved to:', appliancesPath);
+        
+        res.json({ success: true, message: 'Appliances saved successfully' });
+    } catch (error) {
+        console.error('Error saving appliances:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // ============ AI CHAT ENDPOINT ============
@@ -399,7 +561,11 @@ app.get('/api/health', (req, res) => {
       chat: 'POST /chat/ai',
       health: 'GET /api/health',
       main: 'GET /',
-      admin: 'GET /admin'
+      admin: 'GET /admin',
+      // ADDED: New data endpoints
+      getPropertyConfig: 'GET /admin/get-property-config',
+      getRecommendations: 'GET /admin/get-recommendations',
+      getAppliances: 'GET /admin/get-appliances'
     }
   });
 });
@@ -421,7 +587,14 @@ app.use('/api/*', (req, res) => {
     error: 'API endpoint not found',
     path: req.originalUrl,
     method: req.method,
-    available_endpoints: ['POST /chat/ai', 'GET /api/health', 'GET /api/data']
+    available_endpoints: [
+      'POST /chat/ai', 
+      'GET /api/health', 
+      'GET /api/data',
+      'GET /admin/get-property-config',
+      'GET /admin/get-recommendations',
+      'GET /admin/get-appliances'
+    ]
   });
 });
 
@@ -441,8 +614,12 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🏠 Main App: http://localhost:${PORT}`);
   console.log(`⚙️  Admin Panel: http://localhost:${PORT}/admin`);
   console.log(`🤖 AI Chat Endpoint: POST http://localhost:${PORT}/chat/ai`);
+  console.log(`📊 Data Endpoints:`);
+  console.log(`   GET http://localhost:${PORT}/admin/get-property-config`);
+  console.log(`   GET http://localhost:${PORT}/admin/get-recommendations`);
+  console.log(`   GET http://localhost:${PORT}/admin/get-appliances`);
   console.log(`❤️  Health Check: GET http://localhost:${PORT}/api/health`);
-  console.log(`✨ Features: AI Chat, Property Setup, Recommendations, Appliance Instructions`); // UPDATED
+  console.log(`✨ Features: AI Chat, Property Setup, Recommendations, Appliance Instructions`);
   console.log('='.repeat(60));
   console.log('📢 Server is ready to handle requests!');
   console.log('='.repeat(60));
