@@ -14,6 +14,7 @@ const PROPERTIES_FILE = path.join(__dirname, 'data', 'properties.json');
 // Add middleware to parse JSON requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize files
 function initDataFiles() {
