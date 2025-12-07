@@ -5,8 +5,15 @@ const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
 
+// CREATE THE EXPRESS APP HERE (THIS WAS MISSING!)
+const app = express();
+
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 const PROPERTIES_FILE = path.join(__dirname, 'data', 'properties.json');
+
+// Add middleware to parse JSON requests
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Initialize files
 function initDataFiles() {
@@ -209,4 +216,10 @@ app.get('/api/property-config/:propertyId', (req, res) => {
         console.error('Property config error:', error);
         res.json({});
     }
+});
+
+// ADD THIS AT THE VERY END OF THE FILE:
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
