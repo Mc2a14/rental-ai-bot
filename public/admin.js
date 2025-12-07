@@ -422,7 +422,7 @@ autoLoadExistingConfig() {
         };
     }
 
-    saveConfiguration(e) {
+    async saveConfiguration(e) {
         console.log("💾 Save configuration started!");
         if (e) e.preventDefault();
         
@@ -481,16 +481,54 @@ autoLoadExistingConfig() {
         };
 
         try {
-            // Save the main config
+            // Save the main config to localStorage
             localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(config));
             
-            // Save recommendations separately
+            // Save recommendations separately to localStorage
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
             
-            // Save appliances separately
+            // Save appliances separately to localStorage
             this.saveAppliances();
             
-            console.log('✅ Configuration saved!', config);
+            console.log('✅ Configuration saved to localStorage!', config);
+            
+            // ALSO SAVE TO SERVER (for cross-tab sync and persistence)
+            console.log('🔄 Saving to server...');
+            
+            try {
+                // Save property config to server
+                const configResponse = await fetch('/admin/save-property-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                // Save recommendations to server
+                const recommendationsResponse = await fetch('/admin/save-recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.recommendations)
+                });
+                
+                // Save appliances to server
+                const appliancesResponse = await fetch('/admin/save-appliances', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.appliances)
+                });
+                
+                console.log('✅ Configuration saved to server!');
+                
+            } catch (serverError) {
+                console.error('⚠️ Could not save to server:', serverError);
+                // Continue anyway - at least localStorage worked
+            }
             
             // Show success message with guest link
             this.showSuccessMessage();
@@ -616,10 +654,24 @@ autoLoadExistingConfig() {
         }
     }
 
-    saveRecommendations() {
+    async saveRecommendations() {
         try {
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
-            console.log(`📍 Saved ${this.recommendations.length} recommendations`);
+            console.log(`📍 Saved ${this.recommendations.length} recommendations to localStorage`);
+            
+            // Also save to server
+            try {
+                await fetch('/admin/save-recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.recommendations)
+                });
+                console.log(`📍 Saved ${this.recommendations.length} recommendations to server`);
+            } catch (serverError) {
+                console.error('⚠️ Could not save recommendations to server:', serverError);
+            }
         } catch (error) {
             console.error('Error saving recommendations:', error);
         }
@@ -661,7 +713,7 @@ autoLoadExistingConfig() {
         console.log(`📍 Displayed ${this.recommendations.length} recommendations`);
     }
 
-    addRecommendation() {
+    async addRecommendation() {
         console.log("🔄 Adding recommendation...");
         const nameInput = document.getElementById('place-name');
         const categoryInput = document.getElementById('place-category');
@@ -692,7 +744,7 @@ autoLoadExistingConfig() {
         };
 
         this.recommendations.push(newPlace);
-        this.saveRecommendations();
+        await this.saveRecommendations();
         this.updateRecommendationsList();
 
         // Clear form
@@ -704,11 +756,11 @@ autoLoadExistingConfig() {
         console.log("✅ Recommendation added:", newPlace);
     }
 
-    removeRecommendation(index) {
+    async removeRecommendation(index) {
         console.log(`🔄 Removing recommendation at index ${index}...`);
         if (confirm('Are you sure you want to remove this recommendation?')) {
             this.recommendations.splice(index, 1);
-            this.saveRecommendations();
+            await this.saveRecommendations();
             this.updateRecommendationsList();
             this.showTempMessage('Recommendation removed', 'success');
             console.log("✅ Recommendation removed");
@@ -729,10 +781,24 @@ autoLoadExistingConfig() {
         }
     }
 
-    saveAppliances() {
+    async saveAppliances() {
         try {
             localStorage.setItem('rental_ai_appliances', JSON.stringify(this.appliances));
-            console.log(`🛠️ Saved ${this.appliances.length} appliances`);
+            console.log(`🛠️ Saved ${this.appliances.length} appliances to localStorage`);
+            
+            // Also save to server
+            try {
+                await fetch('/admin/save-appliances', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.appliances)
+                });
+                console.log(`🛠️ Saved ${this.appliances.length} appliances to server`);
+            } catch (serverError) {
+                console.error('⚠️ Could not save appliances to server:', serverError);
+            }
         } catch (error) {
             console.error('Error saving appliances:', error);
         }
@@ -775,7 +841,7 @@ autoLoadExistingConfig() {
         console.log(`🛠️ Displayed ${this.appliances.length} appliances`);
     }
 
-    addAppliance() {
+    async addAppliance() {
         console.log("🛠️ Adding appliance...");
         const nameInput = document.getElementById('appliance-name');
         const typeInput = document.getElementById('appliance-type');
@@ -804,7 +870,7 @@ autoLoadExistingConfig() {
         };
 
         this.appliances.push(newAppliance);
-        this.saveAppliances();
+        await this.saveAppliances();
         this.updateAppliancesList();
 
         // Clear form
@@ -817,11 +883,11 @@ autoLoadExistingConfig() {
         console.log("✅ Appliance added:", newAppliance);
     }
 
-    removeAppliance(index) {
+    async removeAppliance(index) {
         console.log(`🛠️ Removing appliance at index ${index}...`);
         if (confirm('Are you sure you want to remove this appliance?')) {
             this.appliances.splice(index, 1);
-            this.saveAppliances();
+            await this.saveAppliances();
             this.updateAppliancesList();
             this.showTempMessage('Appliance removed', 'success');
             console.log("✅ Appliance removed");
