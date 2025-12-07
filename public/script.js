@@ -63,9 +63,6 @@ loadAllPropertyData() {
     console.log('Recommendations:', this.hostRecommendations?.length || 0);
     console.log('Appliances:', this.hostAppliances?.length || 0);
     
-    // Update quick questions based on current data
-    this.setupQuickQuestionButtons();
-    
     // Update UI with current property info
     this.updateUIWithPropertyInfo();
 }
