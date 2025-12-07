@@ -264,46 +264,6 @@ getHostConfig() {
         });
     }
 
-    setupQuickQuestionButtons() {
-    const quickQuestionsContainer = document.querySelector('.quick-questions');
-    if (!quickQuestionsContainer) return;
-
-    const existingApplianceSection = quickQuestionsContainer.querySelector('.quick-appliance-section');
-    if (existingApplianceSection) {
-        existingApplianceSection.remove();
-    }
-
-    // Only show appliance section if we have appliances
-    if (this.hostAppliances && this.hostAppliances.length > 0) {
-        const applianceButtons = [
-            { id: 'appliance-help', text: '🛠️ Appliance Help', question: 'How do I use the appliances?' },
-            { id: 'oven-help', text: '🍳 Oven/Microwave', question: 'How do I use the oven or microwave?' },
-            { id: 'washer-help', text: '🧺 Washer/Dryer', question: 'How do I use the washer and dryer?' },
-            { id: 'thermostat-help', text: '🌡️ Thermostat', question: 'How do I adjust the thermostat?' }
-        ];
-
-        const applianceSection = document.createElement('div');
-        applianceSection.className = 'quick-appliance-section';
-        applianceSection.innerHTML = '<h4 class="quick-section-title">Appliance Help</h4>';
-        
-        const applianceGrid = document.createElement('div');
-        applianceGrid.className = 'quick-appliance-grid';
-        
-        applianceButtons.forEach(btn => {
-            const button = document.createElement('button');
-            button.className = 'appliance-quick-btn';
-            button.id = btn.id;
-            button.textContent = btn.text;
-            button.setAttribute('data-question', btn.question);
-            button.addEventListener('click', () => this.askApplianceQuestion(btn.question));
-            applianceGrid.appendChild(button);
-        });
-        
-        applianceSection.appendChild(applianceGrid);
-        quickQuestionsContainer.appendChild(applianceSection);
-    }
-}
-
   // In script.js - Update the askApplianceQuestion method
 askApplianceQuestion(question) {
     // Reload property data FIRST
