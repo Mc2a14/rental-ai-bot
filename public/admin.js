@@ -81,7 +81,7 @@ addPreviewStyles() {
 initializeEventListeners() {
     console.log("🔄 Setting up event listeners...");
     
-    // Navigation buttons
+    // Navigation buttons - FIXED: Use proper event listeners
     const nextBtn = document.getElementById('nextBtn');
     const prevBtn = document.getElementById('prevBtn');
     const submitBtn = document.getElementById('submitBtn');
@@ -89,25 +89,50 @@ initializeEventListeners() {
     console.log("📝 Buttons found:", { nextBtn, prevBtn, submitBtn });
     
     if (nextBtn) {
-        nextBtn.addEventListener('click', () => this.nextStep());
-        console.log("✅ Next button listener added");
+        // Remove any existing event listeners first
+        const newNextBtn = nextBtn.cloneNode(true);
+        nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+        
+        // Get the new reference
+        const freshNextBtn = document.getElementById('nextBtn');
+        
+        // Add fresh event listener
+        freshNextBtn.addEventListener('click', (e) => {
+            console.log("👉 NEXT BUTTON CLICKED - Event:", e);
+            e.preventDefault();
+            e.stopPropagation();
+            this.nextStep();
+        });
+        
+        // Also add enter key support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && this.currentStep < this.totalSteps) {
+                e.preventDefault();
+                this.nextStep();
+            }
+        });
+        
+        console.log("✅ Next button listener added (fresh)");
     }
     
     if (prevBtn) {
-        prevBtn.addEventListener('click', () => this.prevStep());
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.prevStep();
+        });
         console.log("✅ Previous button listener added");
     }
     
     if (submitBtn) {
         submitBtn.addEventListener('click', (e) => {
             console.log("💾 Save Configuration button clicked!");
+            e.preventDefault();
             this.saveConfiguration(e);
         });
         console.log("✅ Submit button listener added");
     }
     
     console.log("✅ All event listeners initialized");
-    // Note: setupRealTimeValidation is called separately with delay
 }
 
 setupRealTimeValidation() {
@@ -141,7 +166,6 @@ setupRealTimeValidation() {
     console.log("✅ Real-time validation setup complete");
 }
 
-// Also update the validateField method (find it in your code and replace with this):
 validateField(field) {
     // Get the actual value (trim whitespace)
     const value = field.value.trim();
@@ -151,7 +175,7 @@ validateField(field) {
     // Special handling for select elements
     if (field.tagName === 'SELECT') {
         // For select elements, check if a value is selected (not empty string)
-        const selectIsValid = field.value !== '';
+        const selectIsValid = field.value !== '' && field.value !== 'Select a property type';
         
         if (selectIsValid) {
             field.classList.remove('field-invalid');
@@ -180,7 +204,47 @@ validateField(field) {
     return isValid;
 }
 
-// Also update the autoLoadExistingConfig method to add a validation call:
+validateCurrentStep() {
+    console.log("🔄 Validating current step...");
+    const currentSection = document.getElementById(`section${this.currentStep}`);
+    if (!currentSection) {
+        console.log("❌ Current section not found");
+        return false;
+    }
+    
+    const requiredFields = currentSection.querySelectorAll('input[required], textarea[required], select[required]');
+    let isValid = true;
+
+    console.log(`📝 Checking ${requiredFields.length} required fields in step ${this.currentStep}:`);
+    
+    requiredFields.forEach(field => {
+        const isFieldValid = this.validateField(field);
+        console.log(`  - ${field.id}: "${field.value}" -> ${isFieldValid ? 'VALID' : 'INVALID'}`);
+        
+        if (!isFieldValid) {
+            isValid = false;
+        }
+    });
+
+    // Update button states
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (nextBtn) {
+        nextBtn.disabled = !isValid;
+        nextBtn.title = isValid ? 'Continue to next step' : 'Please fill in all required fields';
+        console.log(`🔘 Next button ${isValid ? 'ENABLED' : 'DISABLED'}`);
+    }
+    
+    if (submitBtn) {
+        submitBtn.disabled = !isValid;
+        submitBtn.title = isValid ? 'Save configuration' : 'Please fill in all required fields';
+    }
+
+    console.log(`✅ Step ${this.currentStep} validation: ${isValid ? 'VALID' : 'INVALID'}`);
+    return isValid;
+}
+
 autoLoadExistingConfig() {
     console.log("🔄 Attempting to auto-load existing configuration...");
     
@@ -194,9 +258,13 @@ autoLoadExistingConfig() {
             const config = JSON.parse(savedConfig);
             
             // Populate basic info (Step 1)
-            document.getElementById('propertyName').value = config.name || '';
-            document.getElementById('propertyAddress').value = config.address || '';
-            document.getElementById('propertyType').value = config.type || 'Apartment';
+            const propertyName = document.getElementById('propertyName');
+            const propertyAddress = document.getElementById('propertyAddress');
+            const propertyType = document.getElementById('propertyType');
+            
+            if (propertyName) propertyName.value = config.name || '';
+            if (propertyAddress) propertyAddress.value = config.address || '';
+            if (propertyType) propertyType.value = config.type || 'Vacation Home';
             
             // Populate contact info (Step 2)
             document.getElementById('hostContact').value = config.hostContact || '';
@@ -212,7 +280,7 @@ autoLoadExistingConfig() {
             
             console.log('✅ Configuration loaded into form');
             
-            // Quick validation fix - remove red styling from pre-filled fields
+            // Force validation on pre-filled fields
             setTimeout(() => {
                 const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
                 requiredFields.forEach(field => {
@@ -223,7 +291,9 @@ autoLoadExistingConfig() {
                         if (validationMsg) validationMsg.classList.remove('show');
                     }
                 });
-            }, 50);
+                // Re-validate current step
+                this.validateCurrentStep();
+            }, 200);
             
             // Show edit mode indicator
             this.showEditModeIndicator();
@@ -231,6 +301,19 @@ autoLoadExistingConfig() {
         
         if (!savedConfig && !savedAppliances && !savedRecommendations) {
             console.log('ℹ️ No existing configuration found - starting fresh');
+            
+            // Set default property type
+            setTimeout(() => {
+                const propertyType = document.getElementById('propertyType');
+                if (propertyType) {
+                    // Ensure it has a value if empty
+                    if (!propertyType.value || propertyType.value === '') {
+                        propertyType.value = 'Vacation Home';
+                        this.validateField(propertyType);
+                        this.validateCurrentStep();
+                    }
+                }
+            }, 300);
         }
         
     } catch (error) {
@@ -238,66 +321,14 @@ autoLoadExistingConfig() {
     }
 }
 
-    validateField(field) {
-        const isValid = field.value.trim().length > 0;
-        const validationMsg = field.parentNode.querySelector('.validation-message');
-        
-        if (isValid) {
-            field.classList.remove('field-invalid');
-            field.classList.add('field-valid');
-            if (validationMsg) validationMsg.classList.remove('show');
-        } else {
-            field.classList.remove('field-valid');
-            field.classList.add('field-invalid');
-            if (validationMsg) validationMsg.classList.add('show');
-        }
-        
-        return isValid;
-    }
-
-    validateCurrentStep() {
-        console.log("🔄 Validating current step...");
-        const currentSection = document.getElementById(`section${this.currentStep}`);
-        if (!currentSection) {
-            console.log("❌ Current section not found");
-            return false;
-        }
-        
-        const requiredFields = currentSection.querySelectorAll('input[required], textarea[required], select[required]');
-        let isValid = true;
-
-        console.log(`📝 Checking ${requiredFields.length} required fields in step ${this.currentStep}:`);
-        
-        requiredFields.forEach(field => {
-            const isFieldValid = this.validateField(field);
-            console.log(`  - ${field.id}: "${field.value}" -> ${isFieldValid ? 'VALID' : 'INVALID'}`);
-            
-            if (!isFieldValid) {
-                isValid = false;
-            }
-        });
-
-        // Update button states
-        const nextBtn = document.getElementById('nextBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        if (nextBtn) {
-            nextBtn.disabled = !isValid;
-            nextBtn.title = isValid ? 'Continue to next step' : 'Please fill in all required fields';
-        }
-        
-        if (submitBtn) {
-            submitBtn.disabled = !isValid;
-            submitBtn.title = isValid ? 'Save configuration' : 'Please fill in all required fields';
-        }
-
-        console.log(`✅ Step ${this.currentStep} validation: ${isValid ? 'VALID' : 'INVALID'}`);
-        return isValid;
-    }
-
     nextStep() {
         console.log("🔄 Moving to next step...");
-        if (this.currentStep < this.totalSteps && this.validateCurrentStep()) {
+        
+        // Validate current step first
+        const isValid = this.validateCurrentStep();
+        console.log(`Next step validation result: ${isValid ? 'PASS' : 'FAIL'}`);
+        
+        if (this.currentStep < this.totalSteps && isValid) {
             this.currentStep++;
             this.updateStepDisplay();
             console.log(`✅ Moved to step ${this.currentStep}`);
@@ -306,6 +337,17 @@ autoLoadExistingConfig() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             console.log("❌ Cannot move to next step - validation failed");
+            
+            // Highlight first invalid field
+            const currentSection = document.getElementById(`section${this.currentStep}`);
+            if (currentSection) {
+                const invalidFields = currentSection.querySelectorAll('.field-invalid');
+                if (invalidFields.length > 0) {
+                    invalidFields[0].focus();
+                    invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+            
             this.showTempMessage('Please fill in all required fields before continuing', 'warning');
         }
     }
@@ -367,7 +409,11 @@ autoLoadExistingConfig() {
             this.updatePreview();
         }
 
-        this.validateCurrentStep();
+        // Validate the new step
+        setTimeout(() => {
+            this.validateCurrentStep();
+        }, 100);
+
         console.log("✅ Step display updated");
     }
 
@@ -389,6 +435,9 @@ autoLoadExistingConfig() {
             </div>
             <div class="preview-item">
                 <strong>Address:</strong> ${formData.address || 'Not set'}
+            </div>
+            <div class="preview-item">
+                <strong>Property Type:</strong> ${formData.type || 'Not set'}
             </div>
             <div class="preview-item">
                 <strong>Host Contact:</strong> ${formData.hostContact || 'Not set'}
@@ -441,7 +490,7 @@ autoLoadExistingConfig() {
         };
     }
 
-    saveConfiguration(e) {
+    async saveConfiguration(e) {
         console.log("💾 Save configuration started!");
         if (e) e.preventDefault();
         
@@ -500,16 +549,54 @@ autoLoadExistingConfig() {
         };
 
         try {
-            // Save the main config
+            // Save the main config to localStorage
             localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(config));
             
-            // Save recommendations separately
+            // Save recommendations separately to localStorage
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
             
-            // Save appliances separately
+            // Save appliances separately to localStorage
             this.saveAppliances();
             
-            console.log('✅ Configuration saved!', config);
+            console.log('✅ Configuration saved to localStorage!', config);
+            
+            // ALSO SAVE TO SERVER (for cross-tab sync and persistence)
+            console.log('🔄 Saving to server...');
+            
+            try {
+                // Save property config to server
+                const configResponse = await fetch('/admin/save-property-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                // Save recommendations to server
+                const recommendationsResponse = await fetch('/admin/save-recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.recommendations)
+                });
+                
+                // Save appliances to server
+                const appliancesResponse = await fetch('/admin/save-appliances', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.appliances)
+                });
+                
+                console.log('✅ Configuration saved to server!');
+                
+            } catch (serverError) {
+                console.error('⚠️ Could not save to server:', serverError);
+                // Continue anyway - at least localStorage worked
+            }
             
             // Show success message with guest link
             this.showSuccessMessage();
@@ -608,6 +695,7 @@ autoLoadExistingConfig() {
                     <div style="border-top: 1px solid #eee; padding-top: 15px;">
                         <h5 style="color: #2c3e50; margin-bottom: 10px;">📝 What was saved:</h5>
                         <p><strong>Property Name:</strong> ${document.getElementById('propertyName')?.value || 'Not set'}</p>
+                        <p><strong>Property Type:</strong> ${document.getElementById('propertyType')?.value || 'Not set'}</p>
                         <p><strong>Recommendations:</strong> ${this.recommendations.length} places saved</p>
                         <p><strong>Appliances:</strong> ${this.appliances.length} appliances saved</p>
                     </div>
@@ -635,10 +723,24 @@ autoLoadExistingConfig() {
         }
     }
 
-    saveRecommendations() {
+    async saveRecommendations() {
         try {
             localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
-            console.log(`📍 Saved ${this.recommendations.length} recommendations`);
+            console.log(`📍 Saved ${this.recommendations.length} recommendations to localStorage`);
+            
+            // Also save to server
+            try {
+                await fetch('/admin/save-recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.recommendations)
+                });
+                console.log(`📍 Saved ${this.recommendations.length} recommendations to server`);
+            } catch (serverError) {
+                console.error('⚠️ Could not save recommendations to server:', serverError);
+            }
         } catch (error) {
             console.error('Error saving recommendations:', error);
         }
@@ -680,7 +782,7 @@ autoLoadExistingConfig() {
         console.log(`📍 Displayed ${this.recommendations.length} recommendations`);
     }
 
-    addRecommendation() {
+    async addRecommendation() {
         console.log("🔄 Adding recommendation...");
         const nameInput = document.getElementById('place-name');
         const categoryInput = document.getElementById('place-category');
@@ -711,7 +813,7 @@ autoLoadExistingConfig() {
         };
 
         this.recommendations.push(newPlace);
-        this.saveRecommendations();
+        await this.saveRecommendations();
         this.updateRecommendationsList();
 
         // Clear form
@@ -723,11 +825,11 @@ autoLoadExistingConfig() {
         console.log("✅ Recommendation added:", newPlace);
     }
 
-    removeRecommendation(index) {
+    async removeRecommendation(index) {
         console.log(`🔄 Removing recommendation at index ${index}...`);
         if (confirm('Are you sure you want to remove this recommendation?')) {
             this.recommendations.splice(index, 1);
-            this.saveRecommendations();
+            await this.saveRecommendations();
             this.updateRecommendationsList();
             this.showTempMessage('Recommendation removed', 'success');
             console.log("✅ Recommendation removed");
@@ -748,10 +850,24 @@ autoLoadExistingConfig() {
         }
     }
 
-    saveAppliances() {
+    async saveAppliances() {
         try {
             localStorage.setItem('rental_ai_appliances', JSON.stringify(this.appliances));
-            console.log(`🛠️ Saved ${this.appliances.length} appliances`);
+            console.log(`🛠️ Saved ${this.appliances.length} appliances to localStorage`);
+            
+            // Also save to server
+            try {
+                await fetch('/admin/save-appliances', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.appliances)
+                });
+                console.log(`🛠️ Saved ${this.appliances.length} appliances to server`);
+            } catch (serverError) {
+                console.error('⚠️ Could not save appliances to server:', serverError);
+            }
         } catch (error) {
             console.error('Error saving appliances:', error);
         }
@@ -794,7 +910,7 @@ autoLoadExistingConfig() {
         console.log(`🛠️ Displayed ${this.appliances.length} appliances`);
     }
 
-    addAppliance() {
+    async addAppliance() {
         console.log("🛠️ Adding appliance...");
         const nameInput = document.getElementById('appliance-name');
         const typeInput = document.getElementById('appliance-type');
@@ -823,7 +939,7 @@ autoLoadExistingConfig() {
         };
 
         this.appliances.push(newAppliance);
-        this.saveAppliances();
+        await this.saveAppliances();
         this.updateAppliancesList();
 
         // Clear form
@@ -836,11 +952,11 @@ autoLoadExistingConfig() {
         console.log("✅ Appliance added:", newAppliance);
     }
 
-    removeAppliance(index) {
+    async removeAppliance(index) {
         console.log(`🛠️ Removing appliance at index ${index}...`);
         if (confirm('Are you sure you want to remove this appliance?')) {
             this.appliances.splice(index, 1);
-            this.saveAppliances();
+            await this.saveAppliances();
             this.updateAppliancesList();
             this.showTempMessage('Appliance removed', 'success');
             console.log("✅ Appliance removed");
@@ -874,51 +990,6 @@ autoLoadExistingConfig() {
                 message.parentNode.removeChild(message);
             }
         }, 4000);
-    }
-
-    // Auto-load existing configuration
-    autoLoadExistingConfig() {
-        console.log("🔄 Attempting to auto-load existing configuration...");
-        
-        try {
-            const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-            const savedAppliances = localStorage.getItem('rental_ai_appliances');
-            const savedRecommendations = localStorage.getItem('rental_ai_recommendations');
-            
-            if (savedConfig) {
-                console.log('📁 Found saved configuration, loading...');
-                const config = JSON.parse(savedConfig);
-                
-                // Populate basic info (Step 1)
-                document.getElementById('propertyName').value = config.name || '';
-                document.getElementById('propertyAddress').value = config.address || '';
-                document.getElementById('propertyType').value = config.type || 'Apartment';
-                
-                // Populate contact info (Step 2)
-                document.getElementById('hostContact').value = config.hostContact || '';
-                document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
-                document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
-                document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
-                document.getElementById('lateCheckout').value = config.lateCheckout || '';
-                
-                // Populate details (Step 3)
-                document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
-                document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
-                document.getElementById('houseRules').value = config.houseRules || '';
-                
-                console.log('✅ Configuration loaded into form');
-                
-                // Show edit mode indicator
-                this.showEditModeIndicator();
-            }
-            
-            if (!savedConfig && !savedAppliances && !savedRecommendations) {
-                console.log('ℹ️ No existing configuration found - starting fresh');
-            }
-            
-        } catch (error) {
-            console.error('❌ Error auto-loading configuration:', error);
-        }
     }
 
     showEditModeIndicator() {
