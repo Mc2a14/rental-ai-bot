@@ -558,8 +558,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="propertyType">Property Type</label>
-                    <select id="propertyType">
+                    <label for="propertyType">Property Type *</label>
+                    <select id="propertyType" required>
+                        <option value="">Select a property type</option>
                         <option value="Vacation Home">Vacation Home</option>
                         <option value="Apartment">Apartment</option>
                         <option value="Villa">Villa</option>
@@ -569,6 +570,7 @@
                         <option value="Mountain Retreat">Mountain Retreat</option>
                         <option value="City Loft">City Loft</option>
                     </select>
+                    <div class="validation-message" id="propertyTypeValidation">Please select a property type</div>
                 </div>
             </div>
 
@@ -783,12 +785,17 @@
         </div>
     </div>
 
-    <!-- Scripts - IMPORTANT ORDER -->
+    <!-- Scripts - CRITICAL FIX: Load auth.js FIRST, then handle auth, THEN load admin.js -->
     <script src="./auth.js"></script>
     <script>
         // Wait for auth system to initialize
         document.addEventListener('DOMContentLoaded', function() {
             console.log("🔐 Checking authentication...");
+            
+            // Initialize auth system
+            if (typeof initAuthSystem === 'function') {
+                initAuthSystem();
+            }
             
             // Use your existing auth.js functions
             if (typeof isAuthenticated === 'function' && isAuthenticated()) {
@@ -797,13 +804,29 @@
                 document.getElementById('loadingIndicator').style.display = 'none';
                 document.getElementById('adminContainer').style.display = 'block';
                 
-                // Load admin.js dynamically since we need the setup form
-                const adminScript = document.createElement('script');
-                adminScript.src = './admin.js';
-                adminScript.onload = function() {
-                    console.log("✅ admin.js loaded successfully");
+                // Load admin.js dynamically but WAIT for DOM to be ready
+                const loadAdminJS = function() {
+                    console.log("🔄 Loading admin.js...");
+                    const adminScript = document.createElement('script');
+                    adminScript.src = './admin.js';
+                    adminScript.onload = function() {
+                        console.log("✅ admin.js loaded successfully");
+                        // Force validation to run after everything is loaded
+                        if (window.propertySetup && typeof window.propertySetup.validateCurrentStep === 'function') {
+                            setTimeout(() => {
+                                window.propertySetup.validateCurrentStep();
+                            }, 200);
+                        }
+                    };
+                    adminScript.onerror = function() {
+                        console.error("❌ Failed to load admin.js");
+                        alert("Failed to load admin interface. Please refresh the page.");
+                    };
+                    document.body.appendChild(adminScript);
                 };
-                document.body.appendChild(adminScript);
+                
+                // Wait a bit to ensure DOM is fully ready
+                setTimeout(loadAdminJS, 100);
                 
             } else {
                 // Not authenticated - show login modal using existing auth.js function
@@ -816,12 +839,13 @@
                 if (typeof showLoginModal === 'function') {
                     showLoginModal();
                     
-                    // Listen for successful login
+                    // Override authenticate function to reload on success
                     const originalAuthenticate = authenticate;
                     window.authenticate = function(username, password) {
                         const result = originalAuthenticate(username, password);
                         if (result) {
-                            // Login successful - refresh to show admin interface
+                            // Login successful - show message and reload
+                            console.log("✅ Login successful, reloading...");
                             setTimeout(() => {
                                 window.location.reload();
                             }, 500);
