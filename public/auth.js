@@ -1,121 +1,81 @@
 // ================================================
-// MULTI-USER PASSWORD PROTECTION SYSTEM
+// CROSS-DEVICE AUTHENTICATION SYSTEM
 // ================================================
 
-// User database (stored in localStorage)
-const USERS_KEY = 'rental_admin_users';
-const SESSIONS_KEY = 'rental_admin_sessions';
+const AUTH_KEY = 'rentalai_user_auth';
 
-// Initialize users if none exist
-function initUsers() {
-    if (!localStorage.getItem(USERS_KEY)) {
-        const defaultUsers = [
-            {
-                id: 'admin-' + Date.now(),
-                username: 'admin',
-                password: 'rental2024', // Change this!
-                email: '',
-                created: new Date().toISOString(),
-                role: 'admin'
-            }
-        ];
-        localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
-    }
-}
-
-// Get all users
-function getUsers() {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-}
-
-// Save users
-function saveUsers(users) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-// Check if user is authenticated
+// Check if logged in
 function isAuthenticated() {
     try {
-        const session = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '{}');
-        return session.authenticated === true && session.expires > Date.now();
+        const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
+        return !!auth.userId && !!auth.username;
     } catch (error) {
-        console.error('Error checking authentication:', error);
+        console.error('Auth check error:', error);
         return false;
     }
 }
 
-// Authenticate user
-function authenticate(username, password) {
-    const users = getUsers();
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        // Create session (expires in 24 hours)
-        const session = {
-            authenticated: true,
-            userId: user.id,
-            username: user.username,
-            expires: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
-            loginTime: new Date().toISOString()
-        };
-        localStorage.setItem(SESSIONS_KEY, JSON.stringify(session));
-        return true;
+// Login with server
+async function login(username, password) {
+    try {
+        const response = await fetch('/api/user/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Save to localStorage for this session
+            localStorage.setItem(AUTH_KEY, JSON.stringify({
+                userId: data.user.id,
+                username: data.user.username,
+                loggedInAt: new Date().toISOString()
+            }));
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Login error:', error);
+        return false;
     }
-    return false;
+}
+
+// Register new user
+async function register(username, password) {
+    try {
+        const response = await fetch('/api/user/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Auto-login after successful registration
+            return await login(username, password);
+        }
+        return false;
+    } catch (error) {
+        console.error('Register error:', error);
+        return false;
+    }
 }
 
 // Get current user
 function getCurrentUser() {
     if (!isAuthenticated()) return null;
-    const session = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '{}');
-    const users = getUsers();
-    return users.find(u => u.id === session.userId);
+    return JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
 }
 
-// Logout user
+// Logout
 function logout() {
-    localStorage.removeItem(SESSIONS_KEY);
+    localStorage.removeItem(AUTH_KEY);
 }
 
-// Create new user (for admin to create host accounts)
-function createUser(username, password, email = '', role = 'host') {
-    const users = getUsers();
-    
-    // Check if username exists
-    if (users.some(u => u.username === username)) {
-        return { success: false, message: 'Username already exists' };
-    }
-    
-    const newUser = {
-        id: 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-        username,
-        password,
-        email,
-        role,
-        created: new Date().toISOString(),
-        properties: [] // Array of property IDs this host manages
-    };
-    
-    users.push(newUser);
-    saveUsers(users);
-    return { success: true, user: newUser };
-}
-
-// Change password
-function changePassword(username, oldPassword, newPassword) {
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.username === username && u.password === oldPassword);
-    
-    if (userIndex === -1) {
-        return { success: false, message: 'Current password is incorrect' };
-    }
-    
-    users[userIndex].password = newPassword;
-    saveUsers(users);
-    return { success: true };
-}
-
-// Show enhanced login modal with user creation
+// Show login modal
 function showLoginModal() {
     // Prevent multiple modals
     if (document.getElementById('adminLoginModal')) {
@@ -143,7 +103,7 @@ function showLoginModal() {
             <div style="margin-bottom: 25px;">
                 <i class="fas fa-lock" style="font-size: 3rem; color: #3498db; margin-bottom: 15px;"></i>
                 <h2 style="color: #2c3e50; margin-bottom: 10px;">Host Portal</h2>
-                <p style="color: #7f8c8d;">Login to manage your properties</p>
+                <p style="color: #7f8c8d;">Login to create and manage your property</p>
             </div>
             
             <!-- Login Form -->
@@ -180,8 +140,6 @@ function showLoginModal() {
                            style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1rem; margin-bottom: 15px;">
                     <input type="password" id="confirmPassword" placeholder="Confirm password" 
                            style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1rem; margin-bottom: 15px;">
-                    <input type="email" id="newEmail" placeholder="Email (optional)" 
-                           style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1rem;">
                     <div id="createError" style="color: #e74c3c; font-size: 0.9rem; min-height: 20px; margin-top: 5px; display: none;"></div>
                     <div id="createSuccess" style="color: #2ecc71; font-size: 0.9rem; min-height: 20px; margin-top: 5px; display: none;"></div>
                 </div>
@@ -232,12 +190,14 @@ function showLoginModal() {
 }
 
 // Form handlers
-function handleLogin() {
+async function handleLogin() {
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
     const errorDiv = document.getElementById('loginError');
     
-    if (authenticate(username, password)) {
+    const success = await login(username, password);
+    
+    if (success) {
         // Success - remove modal and reload page
         const modal = document.getElementById('adminLoginModal');
         if (modal) {
@@ -254,11 +214,10 @@ function handleLogin() {
     }
 }
 
-function handleCreateAccount() {
+async function handleCreateAccount() {
     const username = document.getElementById('newUsername').value;
     const password = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const email = document.getElementById('newEmail').value;
     const errorDiv = document.getElementById('createError');
     const successDiv = document.getElementById('createSuccess');
     
@@ -285,10 +244,10 @@ function handleCreateAccount() {
         return;
     }
     
-    // Create user
-    const result = createUser(username, password, email);
+    // Register user
+    const success = await register(username, password);
     
-    if (result.success) {
+    if (success) {
         successDiv.textContent = 'Account created successfully! Please login.';
         successDiv.style.display = 'block';
         
@@ -296,7 +255,6 @@ function handleCreateAccount() {
         document.getElementById('newUsername').value = '';
         document.getElementById('newPassword').value = '';
         document.getElementById('confirmPassword').value = '';
-        document.getElementById('newEmail').value = '';
         
         // Switch back to login form after 2 seconds
         setTimeout(() => {
@@ -305,7 +263,7 @@ function handleCreateAccount() {
             document.getElementById('loginPassword').focus();
         }, 2000);
     } else {
-        errorDiv.textContent = result.message;
+        errorDiv.textContent = 'Username already exists';
         errorDiv.style.display = 'block';
     }
 }
@@ -322,163 +280,9 @@ function showLoginForm() {
     document.getElementById('loginUsername').focus();
 }
 
-// Check authentication on admin pages
-function checkAdminAccess() {
-    // Pages that require authentication
-    const adminPages = [
-        '/admin',
-        '/admin.html',
-        '/faq-manage.html',
-        '/faq-manage'
-    ];
-    
-    const currentPath = window.location.pathname;
-    
-    // Check if current page is an admin page
-    const isAdminPage = adminPages.some(page => 
-        currentPath.includes(page) || 
-        currentPath.endsWith(page.replace('.html', ''))
-    );
-    
-    if (!isAdminPage) {
-        return; // Not an admin page, no protection needed
-    }
-    
-    // If not authenticated, show login modal
-    if (!isAuthenticated()) {
-        showLoginModal();
-    }
-}
-
-// Add user management to admin panel
-function addUserManagementToAdmin() {
-    // Only add to admin page
-    if (!window.location.pathname.includes('/admin')) {
-        return;
-    }
-    
-    // Wait for admin panel to load
-    setTimeout(() => {
-        const currentUser = getCurrentUser();
-        if (!currentUser || currentUser.role !== 'admin') {
-            return; // Only show to admin users
-        }
-        
-        // Add user management section to admin panel
-        const adminContainer = document.querySelector('.admin-container');
-        if (!adminContainer) return;
-        
-        const userSection = document.createElement('div');
-        userSection.className = 'form-section';
-        userSection.style.marginTop = '30px';
-        userSection.innerHTML = `
-            <h3><i class="fas fa-users"></i> Host Account Management</h3>
-            <p>Create and manage host accounts.</p>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                <h4>Create New Host Account</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="hostUsername" placeholder="Username" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="password" id="hostPassword" placeholder="Password" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="email" id="hostEmail" placeholder="Email (optional)" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <button id="createHostBtn" class="btn btn-primary" style="padding: 10px 20px;">
-                    <i class="fas fa-user-plus"></i> Create Host Account
-                </button>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                <h4>Existing Host Accounts</h4>
-                <div id="hostAccountsList" style="margin-top: 15px;">
-                    <!-- Host accounts will appear here -->
-                </div>
-            </div>
-        `;
-        
-        adminContainer.appendChild(userSection);
-        
-        // Load and display host accounts
-        renderHostAccounts();
-        
-        // Add event listener for create button
-        document.getElementById('createHostBtn').addEventListener('click', createHostAccount);
-    }, 1000);
-}
-
-function renderHostAccounts() {
-    const container = document.getElementById('hostAccountsList');
-    if (!container) return;
-    
-    const users = getUsers();
-    const hosts = users.filter(u => u.role === 'host');
-    
-    if (hosts.length === 0) {
-        container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">No host accounts yet.</p>';
-        return;
-    }
-    
-    container.innerHTML = hosts.map(host => `
-        <div class="host-account" style="background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #3498db; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <strong style="color: #2c3e50;">${host.username}</strong>
-                ${host.email ? `<div style="color: #7f8c8d; font-size: 0.9em;">${host.email}</div>` : ''}
-                <div style="color: #95a5a6; font-size: 0.8em; margin-top: 5px;">
-                    Created: ${new Date(host.created).toLocaleDateString()}
-                </div>
-            </div>
-            <button onclick="deleteHostAccount('${host.id}')" class="btn-danger" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8em;">
-                <i class="fas fa-trash"></i> Delete
-            </button>
-        </div>
-    `).join('');
-}
-
-function createHostAccount() {
-    const username = document.getElementById('hostUsername').value;
-    const password = document.getElementById('hostPassword').value;
-    const email = document.getElementById('hostEmail').value;
-    
-    if (!username || !password) {
-        alert('Username and password are required');
-        return;
-    }
-    
-    const result = createUser(username, password, email, 'host');
-    
-    if (result.success) {
-        alert(`Host account "${username}" created successfully!`);
-        document.getElementById('hostUsername').value = '';
-        document.getElementById('hostPassword').value = '';
-        document.getElementById('hostEmail').value = '';
-        renderHostAccounts();
-    } else {
-        alert(result.message);
-    }
-}
-
-function deleteHostAccount(userId) {
-    if (!confirm('Are you sure you want to delete this host account? This cannot be undone.')) {
-        return;
-    }
-    
-    const users = getUsers();
-    const updatedUsers = users.filter(u => u.id !== userId);
-    saveUsers(updatedUsers);
-    renderHostAccounts();
-}
-
-// Add enhanced logout button
+// Add logout button
 function addLogoutButton() {
-    const adminPages = ['/admin', '/admin.html', '/faq-manage.html'];
-    const currentPath = window.location.pathname;
-    
-    if (!adminPages.some(page => currentPath.includes(page))) {
-        return;
-    }
-    
-    // Remove existing logout button if any
-    const existingBtn = document.getElementById('adminLogoutBtn');
-    if (existingBtn) existingBtn.remove();
+    if (document.getElementById('adminLogoutBtn')) return;
     
     const currentUser = getCurrentUser();
     if (!currentUser) return;
@@ -521,7 +325,7 @@ function addLogoutButton() {
     });
     
     logoutBtn.addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent any parent event handlers
+        e.stopPropagation();
         if (confirm(`Logout ${currentUser.username}?`)) {
             logout();
             window.location.href = '/';
@@ -531,35 +335,38 @@ function addLogoutButton() {
     document.body.appendChild(logoutBtn);
 }
 
-// Auto-logout after 24 hours
-function setupAutoLogout() {
-    const session = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '{}');
-    if (session.expires && session.expires < Date.now()) {
-        logout();
-    }
-}
-
-// Initialize authentication system
-function initAuthSystem() {
-    console.log("🔐 Initializing auth system...");
-    initUsers(); // Initialize user database
-    setupAutoLogout();
-    checkAdminAccess();
+// Check authentication
+function checkAdminAccess() {
+    const adminPages = ['/admin', '/admin.html'];
+    const currentPath = window.location.pathname;
     
-    // Only add features if authenticated
-    if (isAuthenticated()) {
+    const isAdminPage = adminPages.some(page => 
+        currentPath.includes(page) || currentPath.endsWith(page.replace('.html', ''))
+    );
+    
+    if (!isAdminPage) return;
+    
+    // If not authenticated, show login modal
+    if (!isAuthenticated()) {
+        showLoginModal();
+    } else {
         addLogoutButton();
-        addUserManagementToAdmin();
     }
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initAuthSystem);
+// Initialize auth system
+function initAuthSystem() {
+    checkAdminAccess();
+}
 
 // Make functions available globally
 window.isAuthenticated = isAuthenticated;
-window.authenticate = authenticate;
+window.login = login;
+window.register = register;
+window.getCurrentUser = getCurrentUser;
+window.logout = logout;
 window.showLoginModal = showLoginModal;
-window.adminLogout = logout;
-window.deleteHostAccount = deleteHostAccount;
 window.initAuthSystem = initAuthSystem;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initAuthSystem);
