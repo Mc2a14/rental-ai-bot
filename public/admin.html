@@ -3,10 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Property Setup - Rental AI Assistant</title>
+    <title>Host Portal - Rental AI Assistant</title>
     <link rel="stylesheet" href="./style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Loading indicator styles */
+        #loadingIndicator {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .fa-spinner {
+            margin-bottom: 20px;
+        }
+        
+        /* Your existing admin styles - KEEP ALL OF THESE */
         .admin-container {
             max-width: 800px;
             margin: 0 auto;
@@ -16,6 +33,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             max-height: 90vh;
             overflow-y: auto;
+            display: none; /* HIDDEN until authenticated */
         }
         
         .admin-container::-webkit-scrollbar {
@@ -495,7 +513,14 @@
     </style>
 </head>
 <body>
-    <div class="admin-container">
+    <!-- Loading indicator (shown while checking auth) -->
+    <div id="loadingIndicator">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p>Loading Host Portal...</p>
+    </div>
+    
+    <!-- The entire admin setup form (hidden until auth) -->
+    <div class="admin-container" id="adminContainer">
         <div class="admin-header">
             <h1><i class="fas fa-cogs"></i> Property Setup</h1>
             <p>Configure your Rental AI Assistant in 3 simple steps</p>
@@ -758,7 +783,58 @@
         </div>
     </div>
 
-    <script src="./admin.js"></script>
+    <!-- Scripts - IMPORTANT ORDER -->
     <script src="./auth.js"></script>
+    <script>
+        // Wait for auth system to initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🔐 Checking authentication...");
+            
+            // Use your existing auth.js functions
+            if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+                // User is authenticated - show admin interface
+                console.log("✅ User authenticated, showing admin interface");
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('adminContainer').style.display = 'block';
+                
+                // Load admin.js dynamically since we need the setup form
+                const adminScript = document.createElement('script');
+                adminScript.src = './admin.js';
+                adminScript.onload = function() {
+                    console.log("✅ admin.js loaded successfully");
+                };
+                document.body.appendChild(adminScript);
+                
+            } else {
+                // Not authenticated - show login modal using existing auth.js function
+                console.log("🔒 User not authenticated, showing login modal");
+                
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+                
+                // Use the showLoginModal function from auth.js
+                if (typeof showLoginModal === 'function') {
+                    showLoginModal();
+                    
+                    // Listen for successful login
+                    const originalAuthenticate = authenticate;
+                    window.authenticate = function(username, password) {
+                        const result = originalAuthenticate(username, password);
+                        if (result) {
+                            // Login successful - refresh to show admin interface
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        }
+                        return result;
+                    };
+                } else {
+                    // Fallback: redirect to main page
+                    alert('Authentication system not available. Redirecting to main page.');
+                    window.location.href = '/';
+                }
+            }
+        });
+    </script>
 </body>
 </html>
