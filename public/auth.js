@@ -35,8 +35,13 @@ function saveUsers(users) {
 
 // Check if user is authenticated
 function isAuthenticated() {
-    const session = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '{}');
-    return session.authenticated === true && session.expires > Date.now();
+    try {
+        const session = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '{}');
+        return session.authenticated === true && session.expires > Date.now();
+    } catch (error) {
+        console.error('Error checking authentication:', error);
+        return false;
+    }
 }
 
 // Authenticate user
@@ -234,7 +239,10 @@ function handleLogin() {
     
     if (authenticate(username, password)) {
         // Success - remove modal and reload page
-        document.body.removeChild(document.getElementById('adminLoginModal'));
+        const modal = document.getElementById('adminLoginModal');
+        if (modal) {
+            document.body.removeChild(modal);
+        }
         document.body.style.overflow = '';
         window.location.reload();
     } else {
@@ -533,6 +541,7 @@ function setupAutoLogout() {
 
 // Initialize authentication system
 function initAuthSystem() {
+    console.log("🔐 Initializing auth system...");
     initUsers(); // Initialize user database
     setupAutoLogout();
     checkAdminAccess();
@@ -548,5 +557,9 @@ function initAuthSystem() {
 document.addEventListener('DOMContentLoaded', initAuthSystem);
 
 // Make functions available globally
+window.isAuthenticated = isAuthenticated;
+window.authenticate = authenticate;
+window.showLoginModal = showLoginModal;
 window.adminLogout = logout;
 window.deleteHostAccount = deleteHostAccount;
+window.initAuthSystem = initAuthSystem;
