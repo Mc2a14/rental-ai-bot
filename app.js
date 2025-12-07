@@ -1,4 +1,10 @@
 // ============ USER & PROPERTY MANAGEMENT API ============
+const path = require('path');
+const express = require('express');
+const session = require('express-session');
+const multer = require('multer');
+const fs = require('fs');
+
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 const PROPERTIES_FILE = path.join(__dirname, 'data', 'properties.json');
 
