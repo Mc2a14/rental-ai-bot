@@ -1126,3 +1126,139 @@ setupResetButton() {
             // Reset to step 1
             this.currentStep = 1;
             this.updateStepDisplay();
+            
+            // Clear appliances and recommendations lists
+            this.appliances = [];
+            this.recommendations = [];
+            this.updateAppliancesList();
+            this.updateRecommendationsList();
+            
+            // Remove edit mode banner
+            const banner = document.querySelector('.edit-mode-banner');
+            if (banner) banner.remove();
+            
+            // Set default property type
+            const propertyType = document.getElementById('propertyType');
+            if (propertyType) {
+                propertyType.value = 'Vacation Home';
+                this.validateField(propertyType);
+            }
+            
+            // Show confirmation
+            this.showTempMessage('All data has been reset. You can now start fresh.', 'success');
+            console.log('🧹 All data reset successfully');
+        }
+    });
+}
+
+setupBackupButton() {
+    // Check if button already exists
+    if (document.getElementById('backupBtn')) return;
+    
+    // Create backup button
+    const backupBtn = document.createElement('button');
+    backupBtn.id = 'backupBtn';
+    backupBtn.className = 'btn btn-info';
+    backupBtn.innerHTML = '<i class="fas fa-download"></i> Download Backup';
+    backupBtn.style.marginLeft = '10px';
+    
+    // Add it to the button group
+    const navButtons = document.querySelector('.nav-buttons');
+    if (navButtons) {
+        navButtons.appendChild(backupBtn);
+    }
+    
+    backupBtn.addEventListener('click', () => {
+        const config = {
+            property: JSON.parse(localStorage.getItem('rentalAIPropertyConfig') || '{}'),
+            appliances: JSON.parse(localStorage.getItem('rental_ai_appliances') || '[]'),
+            recommendations: JSON.parse(localStorage.getItem('rental_ai_recommendations') || '[]'),
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        const dataStr = JSON.stringify(config, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `rental-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        
+        this.showTempMessage('Backup downloaded successfully!', 'success');
+    });
+}
+}
+
+// Global function for the add recommendation button
+function addRecommendation() {
+    console.log("🔄 Global addRecommendation called");
+    if (window.propertySetup) {
+        window.propertySetup.addRecommendation();
+    } else {
+        console.log("❌ PropertySetup not initialized");
+        alert('System not ready. Please wait for page to load completely.');
+    }
+}
+
+// Global function for the add appliance button
+function addAppliance() {
+    console.log("🛠️ Global addAppliance called");
+    if (window.propertySetup) {
+        window.propertySetup.addAppliance();
+    } else {
+        console.log("❌ PropertySetup not initialized");
+        alert('System not ready. Please wait for page to load completely.');
+    }
+}
+
+// Helper function to copy to clipboard
+function copyToClipboard(text) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    
+    // Show confirmation
+    if (window.propertySetup) {
+        window.propertySetup.showTempMessage('Link copied to clipboard!', 'success');
+    }
+}
+
+// SINGLE DOMContentLoaded listener
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("🚀 DOM Content Loaded - Initializing PropertySetup...");
+    
+    // Check if we're on the admin page
+    if (!window.location.pathname.includes('/admin')) {
+        console.log("ℹ️ Not on admin page, skipping PropertySetup initialization");
+        return;
+    }
+    
+    try {
+        window.propertySetup = new PropertySetup();
+        console.log("✅ PropertySetup initialized successfully!");
+        
+        // Extra safety: Ensure WiFi field is visible
+        setTimeout(() => {
+            const wifiInput = document.getElementById('wifiDetails');
+            if (wifiInput) {
+                wifiInput.style.display = 'block';
+                wifiInput.style.visibility = 'visible';
+                wifiInput.style.opacity = '1';
+            }
+            
+            // Force validation one more time
+            if (window.propertySetup && typeof window.propertySetup.validateCurrentStep === 'function') {
+                window.propertySetup.validateCurrentStep();
+            }
+        }, 500);
+    } catch (error) {
+        console.error("❌ Error initializing PropertySetup:", error);
+        alert("Error initializing property setup. Please refresh the page.");
+    }
+});
