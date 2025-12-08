@@ -47,21 +47,28 @@ class RentalAIChat {
     loadAllPropertyData() {
         console.log('=== LOADING PROPERTY DATA ===');
         
-        // Clear cached data
-        this.hostConfig = null;
-        this.hostRecommendations = [];
-        this.hostAppliances = [];
-        
-        // Check if we're on a property page (URL like /property/abc123)
+        // Don't clear if we already have server-loaded data
         const pathParts = window.location.pathname.split('/');
         const isPropertyPage = pathParts[1] === 'property' && pathParts[2];
+        
+        // Only clear if we're NOT on a property page (localStorage mode)
+        if (!isPropertyPage) {
+            this.hostConfig = null;
+            this.hostRecommendations = [];
+            this.hostAppliances = [];
+        }
         
         if (isPropertyPage) {
             const propertyId = pathParts[2];
             console.log(`📱 Loading property from URL: ${propertyId}`);
             
             // Load property from server using property ID
-            this.loadPropertyFromServer(propertyId);
+            // Don't clear existing data - just load if missing
+            if (!this.hostConfig) {
+                this.loadPropertyFromServer(propertyId);
+            } else {
+                console.log('✅ Property data already loaded, skipping reload');
+            }
         } else {
             // Load from localStorage (for backward compatibility)
             this.loadPropertyConfig();
@@ -190,11 +197,22 @@ class RentalAIChat {
 
     // In script.js - Update the getHostConfig method
     getHostConfig() {
+        // PRIORITY 1: Use server-loaded data (for property links)
+        if (this.hostConfig) {
+            console.log('✅ Using server-loaded host config:', this.hostConfig.name);
+            return this.hostConfig;
+        }
+        
+        // PRIORITY 2: Fall back to localStorage (for backward compatibility)
         try {
             const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-            if (!savedConfig) return null;
+            if (!savedConfig) {
+                console.log('⚠️ No host config available');
+                return null;
+            }
             
             const config = JSON.parse(savedConfig);
+            console.log('📁 Using localStorage host config:', config.name);
             
             // Ensure consistent contact structure
             return {
@@ -701,10 +719,29 @@ class RentalAIChat {
                 return;
             }
             
-            // Reload data for this message
-            this.loadAllPropertyData();
+            // Only reload data if we don't have it yet (for property links)
+            // Don't reload on every message - it's expensive and can cause race conditions
+            const pathParts = window.location.pathname.split('/');
+            const isPropertyPage = pathParts[1] === 'property' && pathParts[2];
+            
+            if (isPropertyPage && !this.hostConfig) {
+                console.log('🔄 Property page detected but no data loaded, loading now...');
+                await this.loadPropertyFromServer(pathParts[2]);
+            } else if (!isPropertyPage && !this.hostConfig) {
+                // Only reload from localStorage if not on property page and no data
+                this.loadAllPropertyData();
+            }
             
             const hostConfig = this.getHostConfig();
+            
+            // Log what we're sending to AI for debugging
+            if (hostConfig) {
+                console.log('📤 Sending to AI - Property:', hostConfig.name);
+                console.log('📤 Recommendations:', this.hostRecommendations.length);
+                console.log('📤 Appliances:', this.hostAppliances.length);
+            } else {
+                console.warn('⚠️ No host config available for AI request');
+            }
             
             let systemMessage = '';
             
