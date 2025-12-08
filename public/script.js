@@ -77,7 +77,7 @@ class RentalAIChat {
         try {
             console.log(`🔄 Loading property ${propertyId} from server...`);
             
-            const response = await fetch(`/api/property/${propertyId}`);
+            const response = await fetch(`${window.location.origin}/api/property/${propertyId}`);
             const data = await response.json();
             
             if (data.success && data.property) {

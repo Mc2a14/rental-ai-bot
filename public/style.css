@@ -52,6 +52,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     background: var(--bg-primary, linear-gradient(135deg, #667eea 0%, #764ba2 100%)) !important;
+    background-attachment: fixed !important; /* Keep gradient visible on scroll */
     color: var(--text-primary);
     height: 100vh;
     min-height: 100vh;
@@ -64,6 +65,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    position: relative;
 }
 
 .chat-container {
@@ -71,7 +73,7 @@ body {
     max-width: 800px;
     max-height: 90vh;
     min-height: 500px;
-    background: var(--bg-chat);
+    background: var(--bg-chat) !important;
     border-radius: 20px;
     box-shadow: var(--shadow);
     display: flex;
@@ -79,6 +81,7 @@ body {
     overflow: hidden;
     position: relative;
     margin: 0 auto;
+    z-index: 1;
 }
 
 /* Header */
