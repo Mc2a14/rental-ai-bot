@@ -75,6 +75,29 @@ http://localhost:3000/property/property_1234567890_abc123
 - Railway handles HTTPS automatically
 - Your app will be accessible 24/7
 
+## Important: Data Persistence
+
+⚠️ **Railway uses an ephemeral filesystem** - data files are lost when the container restarts!
+
+**Current Issue:** Properties are saved but disappear after Railway restarts.
+
+**Solutions:**
+1. **Use Railway PostgreSQL** (Recommended)
+   - Add PostgreSQL service in Railway
+   - Properties will persist in database
+   - More reliable for production
+
+2. **Use Railway Volumes** (Alternative)
+   - Add a volume in Railway dashboard
+   - Mount it to `/app/data` directory
+   - Data will persist across restarts
+
+3. **Use External Database** (Best for production)
+   - Use Railway PostgreSQL, Supabase, or MongoDB Atlas
+   - Most reliable solution
+
+**For now:** Properties work until Railway restarts. Check Railway logs to see when restarts happen.
+
 ## Troubleshooting
 
 **Can't find the URL?**
@@ -86,4 +109,9 @@ http://localhost:3000/property/property_1234567890_abc123
 - Check Railway logs (in dashboard)
 - Verify environment variables are set
 - Make sure `AI_API_KEY` is correct
+
+**Properties disappearing?**
+- This is expected with ephemeral filesystem
+- Check Railway logs for restart events
+- Consider using PostgreSQL (see Data Persistence above)
 
