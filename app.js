@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 const config = require('./config/config');
 const logger = require('./utils/logger');
 const database = require('./utils/database');
@@ -48,7 +49,8 @@ app.use(cors({
 }));
 
 // Session Configuration
-app.use(session({
+// Use PostgreSQL store if DATABASE_URL is available, otherwise use memory store
+const sessionConfig = {
   secret: config.security.sessionSecret,
   resave: false,
   saveUninitialized: false,
@@ -59,7 +61,21 @@ app.use(session({
     sameSite: 'lax' // CSRF protection
   },
   name: 'rentalai.sid' // Custom session name
-}));
+};
+
+// Use PostgreSQL for session storage if database is available
+if (config.database.useDatabase && process.env.DATABASE_URL) {
+  sessionConfig.store = new pgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'user_sessions',
+    createTableIfMissing: true
+  });
+  logger.info('Using PostgreSQL for session storage');
+} else {
+  logger.info('Using memory store for sessions (sessions will be lost on restart)');
+}
+
+app.use(session(sessionConfig));
 
 // Body Parsing
 app.use(express.json({ limit: '10mb' }));
