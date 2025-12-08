@@ -29,7 +29,17 @@ class PropertyService {
       
       // Save to properties file
       properties[propertyId] = property;
+      logger.info(`Writing property ${propertyId} to file: ${this.propertiesFile.filePath}`);
       await this.propertiesFile.write(properties);
+      logger.info(`Property file written successfully`);
+      
+      // Verify it was written
+      const verifyRead = await this.propertiesFile.read();
+      if (!verifyRead[propertyId]) {
+        logger.error(`ERROR: Property ${propertyId} was not found in file after write!`);
+        throw new Error('Property was not saved correctly');
+      }
+      logger.info(`Verified: Property ${propertyId} exists in file after write`);
       
       // Also update propertyConfig.json for backward compatibility
       const { userId: _, id: __, created: ___, updated: ____, ...configData } = property;
@@ -59,17 +69,34 @@ class PropertyService {
 
   async getProperty(propertyId) {
     try {
+      logger.info(`Reading properties file: ${this.propertiesFile.filePath}`);
       const properties = await this.propertiesFile.read();
+      logger.info(`Properties file contains ${Object.keys(properties).length} properties`);
+      logger.info(`Looking for property ID: ${propertyId}`);
+      logger.info(`Available property IDs: ${Object.keys(properties).join(', ')}`);
+      
       const property = properties[propertyId];
       
       if (!property) {
+        logger.warn(`Property ${propertyId} not found in properties file`);
         return null;
       }
       
+      logger.info(`Property found: ${property.name || propertyId}`);
       return property;
     } catch (error) {
       logger.error('Error getting property:', error);
       throw error;
+    }
+  }
+
+  async getAllProperties() {
+    try {
+      const properties = await this.propertiesFile.read();
+      return properties;
+    } catch (error) {
+      logger.error('Error getting all properties:', error);
+      return {};
     }
   }
 

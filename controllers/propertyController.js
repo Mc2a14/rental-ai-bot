@@ -7,6 +7,9 @@ class PropertyController {
     try {
       const { userId, propertyData } = req.body;
       
+      logger.info(`Saving property for user: ${userId}`);
+      logger.info(`Property name: ${propertyData?.name}`);
+      
       if (!userId) {
         return res.status(400).json({
           success: false,
@@ -23,6 +26,16 @@ class PropertyController {
       
       const result = await propertyService.saveProperty(userId, propertyData);
       
+      logger.info(`Property saved successfully: ${result.propertyId}`);
+      
+      // Verify the property was actually saved
+      const verifyProperty = await propertyService.getProperty(result.propertyId);
+      if (!verifyProperty) {
+        logger.error(`WARNING: Property ${result.propertyId} was not found after saving!`);
+      } else {
+        logger.info(`Verified: Property ${result.propertyId} exists in database`);
+      }
+      
       return res.json({
         success: true,
         propertyId: result.propertyId,
@@ -32,7 +45,8 @@ class PropertyController {
       logger.error('Property save error:', error);
       return res.status(500).json({
         success: false,
-        message: 'Error saving property'
+        message: 'Error saving property',
+        error: error.message
       });
     }
   }
@@ -40,6 +54,8 @@ class PropertyController {
   async getProperty(req, res) {
     try {
       const { propertyId } = req.params;
+      
+      logger.info(`Getting property: ${propertyId}`);
       
       if (!propertyId) {
         return res.status(400).json({
@@ -51,11 +67,19 @@ class PropertyController {
       const property = await propertyService.getProperty(propertyId);
       
       if (!property) {
+        // Log all available properties for debugging
+        const allProperties = await propertyService.getAllProperties();
+        logger.warn(`Property ${propertyId} not found. Available properties: ${Object.keys(allProperties).join(', ')}`);
+        
         return res.status(404).json({
           success: false,
-          message: 'Property not found'
+          message: 'Property not found',
+          requestedId: propertyId,
+          availableCount: Object.keys(allProperties).length
         });
       }
+      
+      logger.info(`Property found: ${property.name || propertyId}`);
       
       return res.json({
         success: true,
@@ -65,7 +89,8 @@ class PropertyController {
       logger.error('Property get error:', error);
       return res.status(500).json({
         success: false,
-        message: 'Error retrieving property'
+        message: 'Error retrieving property',
+        error: error.message
       });
     }
   }

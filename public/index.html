@@ -394,11 +394,7 @@
                 clearChatBtn.addEventListener('click', clearChatHistory);
             }
             
-            const themeToggle = document.getElementById('themeToggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', toggleTheme);
-            }
-            
+            // Theme toggle already handled in script.js
             const languageSelect = document.getElementById('languageSelect');
             if (languageSelect) {
                 languageSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
