@@ -92,15 +92,26 @@ class RentalAIChat {
     // Add this new method to script.js
     async loadPropertyFromServer(propertyId) {
         try {
-            console.log(`🔄 Loading property ${propertyId} from server...`);
-            console.log(`🌐 Fetch URL: ${window.location.origin}/api/property/${propertyId}`);
+            // Clean property ID (remove any URL encoding or special characters)
+            const cleanPropertyId = propertyId.trim();
+            console.log(`🔄 Loading property from server...`);
+            console.log(`📋 Raw Property ID: "${propertyId}"`);
+            console.log(`📋 Clean Property ID: "${cleanPropertyId}"`);
+            console.log(`🌐 Fetch URL: ${window.location.origin}/api/property/${cleanPropertyId}`);
             
-            const response = await fetch(`${window.location.origin}/api/property/${propertyId}`, {
+            // Encode property ID for URL (in case it has special characters)
+            const encodedPropertyId = encodeURIComponent(cleanPropertyId);
+            const apiUrl = `${window.location.origin}/api/property/${encodedPropertyId}`;
+            console.log(`🌐 Encoded URL: ${apiUrl}`);
+            
+            const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                cache: 'no-cache' // Prevent Safari from caching
+                cache: 'no-cache', // Prevent Safari from caching
+                credentials: 'same-origin' // Include cookies if needed
             });
             
             console.log(`📡 Response status: ${response.status}`);
@@ -111,6 +122,8 @@ class RentalAIChat {
             
             const data = await response.json();
             console.log('📦 Response data:', data);
+            console.log('📦 Response success:', data.success);
+            console.log('📦 Response has property:', !!data.property);
             
             if (data.success && data.property) {
                 this.hostConfig = data.property;
@@ -124,9 +137,11 @@ class RentalAIChat {
                 // Update UI immediately with server data
                 this.updateUIWithPropertyInfo();
             } else {
-                console.error('❌ Property not found on server:', data);
-                // Don't fall back to localStorage on property pages - show error instead
-                this.showPropertyLoadError();
+                console.error('❌ Property not found on server');
+                console.error('❌ Response:', JSON.stringify(data, null, 2));
+                console.error('❌ Property ID requested:', cleanPropertyId);
+                // Show more detailed error
+                this.showPropertyLoadError(data.message || 'Property not found', cleanPropertyId);
             }
         } catch (error) {
             console.error('❌ Error loading property from server:', error);
@@ -136,21 +151,56 @@ class RentalAIChat {
                 url: `${window.location.origin}/api/property/${propertyId}`
             });
             // Don't fall back to localStorage on property pages - show error instead
-            this.showPropertyLoadError();
+            const cleanPropertyId = propertyId ? propertyId.trim() : 'unknown';
+            this.showPropertyLoadError(error.message || 'Network error', cleanPropertyId);
         }
     }
     
-    showPropertyLoadError() {
+    showPropertyLoadError(errorMessage = 'Property not found', propertyId = 'unknown') {
         console.error('❌ Failed to load property data from server');
-        // Update UI to show error state
-        const headerText = document.querySelector('.header-text h2');
-        const headerSubtext = document.querySelector('.header-text p');
+        console.error('❌ Error message:', errorMessage);
+        console.error('❌ Property ID:', propertyId);
+        console.error('❌ Full URL:', `${window.location.origin}/api/property/${propertyId}`);
+        console.error('❌ Current pathname:', window.location.pathname);
+        
+        // Update UI to show error state with more details
+        const headerText = document.querySelector('.header-text h2') || document.getElementById('headerTitle');
+        const headerSubtext = document.querySelector('.header-text p') || document.getElementById('propertySubtitle');
         
         if (headerText) {
             headerText.textContent = 'Rental AI Assistant - Property Not Found';
         }
         if (headerSubtext) {
-            headerSubtext.textContent = 'Unable to load property information. Please check the link.';
+            headerSubtext.textContent = `Unable to load property. ID: ${propertyId.substring(0, 20)}...`;
+        }
+        
+        // Also show error in chat area for debugging (visible in Safari)
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            // Remove any existing error messages
+            const existingErrors = chatMessages.querySelectorAll('.debug-error');
+            existingErrors.forEach(el => el.remove());
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'message bot debug-error';
+            errorDiv.style.color = '#e74c3c';
+            errorDiv.style.padding = '15px';
+            errorDiv.style.margin = '10px';
+            errorDiv.style.border = '1px solid #e74c3c';
+            errorDiv.style.borderRadius = '8px';
+            errorDiv.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+            errorDiv.innerHTML = `
+                <strong>🔍 Debug Information:</strong><br><br>
+                <strong>Property ID:</strong> ${propertyId}<br>
+                <strong>Error:</strong> ${errorMessage}<br>
+                <strong>API URL:</strong> ${window.location.origin}/api/property/${propertyId}<br>
+                <strong>Current URL:</strong> ${window.location.href}<br><br>
+                <small>💡 To see console logs:<br>
+                <strong>Safari (Mac):</strong> Safari > Settings > Advanced > Enable "Show Develop menu" > Develop > Show Web Inspector<br>
+                <strong>iPhone:</strong> Settings > Safari > Advanced > Web Inspector (connect to Mac Safari)</small>
+            `;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     }
 
