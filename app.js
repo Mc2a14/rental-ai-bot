@@ -10,6 +10,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const config = require('./config/config');
 const logger = require('./utils/logger');
+const database = require('./utils/database');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 // Import Routes
@@ -127,6 +128,18 @@ app.listen(PORT, () => {
   logger.info(`🌐 Access at: http://localhost:${PORT}`);
   logger.info(`🤖 AI Provider: ${config.ai.provider}`);
   
+  // Initialize database connection
+  database.connect().then(pool => {
+    if (pool) {
+      logger.info('✅ Database connected and ready');
+    } else {
+      logger.info('📁 Using file-based storage (no database)');
+    }
+  }).catch(err => {
+    logger.warn('⚠️  Database connection failed, using file-based storage');
+    logger.warn(`   Error: ${err.message}`);
+  });
+
   if (!config.ai.apiKey) {
     logger.warn('⚠️  AI_API_KEY not set. AI chat will not work properly.');
     logger.warn('   Set AI_API_KEY environment variable for production.');
@@ -134,13 +147,15 @@ app.listen(PORT, () => {
 });
 
 // Graceful Shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully...');
+  await database.close();
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully...');
+  await database.close();
   process.exit(0);
 });
 

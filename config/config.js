@@ -22,7 +22,13 @@ module.exports = {
     corsOrigin: process.env.CORS_ORIGIN || '*'
   },
   
-  // Data paths
+  // Database Configuration
+  database: {
+    connectionString: process.env.DATABASE_URL || '',
+    useDatabase: !!process.env.DATABASE_URL // Use database if DATABASE_URL is set
+  },
+  
+  // Data paths (fallback for file-based storage)
   dataPath: {
     users: './data/users.json',
     properties: './data/properties.json',
