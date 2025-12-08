@@ -400,25 +400,8 @@
                 languageSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
             }
             
-            // Attach event listeners for quick question buttons (will be re-attached by chat init)
-            // But attach here as backup
-            setTimeout(() => {
-                document.querySelectorAll('.quick-btn, .appliance-quick-btn').forEach(btn => {
-                    const question = btn.getAttribute('data-question');
-                    if (question && !btn.hasAttribute('data-listener-attached')) {
-                        btn.setAttribute('data-listener-attached', 'true');
-                        btn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            console.log('Quick question clicked from index.html:', question);
-                            if (typeof askQuestion === 'function') {
-                                askQuestion(question);
-                            } else {
-                                console.error('askQuestion function not available');
-                            }
-                        });
-                    }
-                });
-            }, 1000);
+            // Quick question buttons are handled by RentalAIChat.setupQuickQuestionButtons()
+            // No need to attach listeners here to avoid duplicates
             
             console.log('✅ Header controls initialized successfully!');
         });

@@ -443,14 +443,15 @@ class RentalAIChat {
         }
 
         // Attach event listeners to existing quick question buttons
+        // Use data attribute to prevent duplicate listeners
         const quickButtons = quickQuestionsContainer.querySelectorAll('.quick-btn');
         quickButtons.forEach(btn => {
             const question = btn.getAttribute('data-question');
-            if (question) {
-                // Remove existing listeners and add new one
-                const newBtn = btn.cloneNode(true);
-                btn.parentNode.replaceChild(newBtn, btn);
-                newBtn.addEventListener('click', () => {
+            if (question && !btn.hasAttribute('data-listener-attached')) {
+                btn.setAttribute('data-listener-attached', 'true');
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent event bubbling
                     console.log('Quick question clicked:', question);
                     askQuestion(question);
                 });
@@ -461,10 +462,11 @@ class RentalAIChat {
         const applianceButtons = quickQuestionsContainer.querySelectorAll('.appliance-quick-btn');
         applianceButtons.forEach(btn => {
             const question = btn.getAttribute('data-question');
-            if (question) {
-                const newBtn = btn.cloneNode(true);
-                btn.parentNode.replaceChild(newBtn, btn);
-                newBtn.addEventListener('click', () => {
+            if (question && !btn.hasAttribute('data-listener-attached')) {
+                btn.setAttribute('data-listener-attached', 'true');
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent event bubbling
                     console.log('Appliance question clicked:', question);
                     askQuestion(question);
                 });
@@ -493,7 +495,10 @@ class RentalAIChat {
                 button.id = btn.id;
                 button.textContent = btn.text;
                 button.setAttribute('data-question', btn.question);
-                button.addEventListener('click', () => {
+                button.setAttribute('data-listener-attached', 'true');
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent event bubbling
                     console.log('Appliance question clicked:', btn.question);
                     askQuestion(btn.question);
                 });
@@ -1003,13 +1008,24 @@ function anyKeywordInMessage(message, keywords) {
 }
 
 // Quick question function - Make it global and robust
+// Add debouncing to prevent duplicate calls
+let isSendingQuestion = false;
+
 function askQuestion(question) {
+    // Prevent duplicate calls
+    if (isSendingQuestion) {
+        console.log('⚠️ Question already being sent, ignoring duplicate');
+        return;
+    }
+    
+    isSendingQuestion = true;
     console.log('askQuestion called with:', question);
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     
     if (!messageInput) {
         console.error('Message input not found');
+        isSendingQuestion = false;
         return;
     }
     
@@ -1021,14 +1037,26 @@ function askQuestion(question) {
     // Use existing chat instance or create new one
     if (window.chat && typeof window.chat.sendMessage === 'function') {
         console.log('Using existing chat instance');
-        window.chat.sendMessage();
+        window.chat.sendMessage().finally(() => {
+            // Reset flag after message is sent
+            setTimeout(() => {
+                isSendingQuestion = false;
+            }, 1000);
+        });
     } else {
         console.log('Creating new chat instance');
         window.chat = new RentalAIChat();
         // Wait a bit for initialization, then send
         setTimeout(() => {
             if (window.chat && typeof window.chat.sendMessage === 'function') {
-                window.chat.sendMessage();
+                window.chat.sendMessage().finally(() => {
+                    // Reset flag after message is sent
+                    setTimeout(() => {
+                        isSendingQuestion = false;
+                    }, 1000);
+                });
+            } else {
+                isSendingQuestion = false;
             }
         }, 100);
     }
@@ -1046,21 +1074,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Attach quick question button listeners after chat is initialized
         setTimeout(() => {
-            const quickButtons = document.querySelectorAll('.quick-btn, .appliance-quick-btn');
-            quickButtons.forEach(btn => {
-                const question = btn.getAttribute('data-question');
-                if (question) {
-                    // Remove any existing listeners
-                    const newBtn = btn.cloneNode(true);
-                    btn.parentNode.replaceChild(newBtn, btn);
-                    newBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        console.log('Quick question button clicked:', question);
-                        askQuestion(question);
-                    });
-                }
-            });
-            console.log(`✅ Attached listeners to ${quickButtons.length} quick question buttons`);
+            // Don't attach listeners here - they're already attached in setupQuickQuestionButtons()
+            // This was causing duplicate listeners
+            console.log('✅ Quick question buttons already set up by RentalAIChat');
         }, 500);
         
         // Add CSS for header controls
