@@ -378,28 +378,10 @@
             }
             updateUIForLanguage(savedLang);
             
-            // Update property name from saved config
-            try {
-                const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
-                if (savedConfig) {
-                    const hostConfig = JSON.parse(savedConfig);
-                    const headerTitle = document.getElementById('headerTitle');
-                    const propertySubtitle = document.getElementById('propertySubtitle');
-                    const welcomePropertyName = document.getElementById('welcomePropertyName');
-                    
-                    if (headerTitle && hostConfig.name) {
-                        headerTitle.textContent = `Rental AI Assistant - ${hostConfig.name}`;
-                    }
-                    if (propertySubtitle && hostConfig.name) {
-                        propertySubtitle.textContent = `${hostConfig.name} • 24/7 Support`;
-                    }
-                    if (welcomePropertyName && hostConfig.name) {
-                        welcomePropertyName.textContent = hostConfig.name;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading property config:', error);
-            }
+            // Don't update from localStorage here - let RentalAIChat load from server first
+            // This prevents showing wrong property data on property pages
+            // The RentalAIChat class will update the UI after loading server data
+            console.log('⏳ Waiting for RentalAIChat to load property data from server...');
             
             // Attach event listeners for header controls
             const setupBtn = document.getElementById('setupBtn');

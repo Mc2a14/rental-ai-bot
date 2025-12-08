@@ -24,7 +24,10 @@ class RentalAIChat {
         this.hostAppliances = [];
         
         console.log('🔍 Step 1: Loading property data from rentalAIPropertyConfig...');
-        this.loadAllPropertyData();
+        // Load property data asynchronously - don't block initialization
+        this.loadAllPropertyData().catch(err => {
+            console.error('Error loading property data:', err);
+        });
         
         console.log('🔍 Step 2: Initializing event listeners...');
         this.initializeEventListeners();
@@ -44,12 +47,19 @@ class RentalAIChat {
         console.log('✅ Chat initialization complete!');
     }
 
-    loadAllPropertyData() {
+    async loadAllPropertyData() {
         console.log('=== LOADING PROPERTY DATA ===');
+        console.log('📍 Current URL:', window.location.pathname);
         
         // Don't clear if we already have server-loaded data
-        const pathParts = window.location.pathname.split('/');
-        const isPropertyPage = pathParts[1] === 'property' && pathParts[2];
+        const pathParts = window.location.pathname.split('/').filter(p => p); // Remove empty strings
+        console.log('📍 Path parts:', pathParts);
+        
+        // Check if we're on a property page: /property/abc123
+        // pathParts will be ['property', 'abc123'] if URL is /property/abc123
+        const isPropertyPage = pathParts.length >= 2 && pathParts[0] === 'property' && pathParts[1];
+        
+        console.log('📍 Is property page?', isPropertyPage);
         
         // Only clear if we're NOT on a property page (localStorage mode)
         if (!isPropertyPage) {
@@ -59,13 +69,13 @@ class RentalAIChat {
         }
         
         if (isPropertyPage) {
-            const propertyId = pathParts[2];
+            const propertyId = pathParts[1]; // Get property ID from path
             console.log(`📱 Loading property from URL: ${propertyId}`);
             
             // Load property from server using property ID
             // Don't clear existing data - just load if missing
             if (!this.hostConfig) {
-                this.loadPropertyFromServer(propertyId);
+                await this.loadPropertyFromServer(propertyId);
             } else {
                 console.log('✅ Property data already loaded, skipping reload');
             }
@@ -83,9 +93,24 @@ class RentalAIChat {
     async loadPropertyFromServer(propertyId) {
         try {
             console.log(`🔄 Loading property ${propertyId} from server...`);
+            console.log(`🌐 Fetch URL: ${window.location.origin}/api/property/${propertyId}`);
             
-            const response = await fetch(`${window.location.origin}/api/property/${propertyId}`);
+            const response = await fetch(`${window.location.origin}/api/property/${propertyId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                cache: 'no-cache' // Prevent Safari from caching
+            });
+            
+            console.log(`📡 Response status: ${response.status}`);
+            
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
+            console.log('📦 Response data:', data);
             
             if (data.success && data.property) {
                 this.hostConfig = data.property;
@@ -96,36 +121,73 @@ class RentalAIChat {
                 console.log(`📍 Recommendations: ${this.hostRecommendations.length}`);
                 console.log(`🛠️ Appliances: ${this.hostAppliances.length}`);
                 
-                // Update UI
+                // Update UI immediately with server data
                 this.updateUIWithPropertyInfo();
             } else {
-                console.log('⚠️ Property not found on server, using defaults');
-                this.loadPropertyConfig();
-                this.loadRecommendations();
-                this.loadAppliances();
+                console.error('❌ Property not found on server:', data);
+                // Don't fall back to localStorage on property pages - show error instead
+                this.showPropertyLoadError();
             }
         } catch (error) {
             console.error('❌ Error loading property from server:', error);
-            // Fall back to localStorage
-            this.loadPropertyConfig();
-            this.loadRecommendations();
-            this.loadAppliances();
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                url: `${window.location.origin}/api/property/${propertyId}`
+            });
+            // Don't fall back to localStorage on property pages - show error instead
+            this.showPropertyLoadError();
+        }
+    }
+    
+    showPropertyLoadError() {
+        console.error('❌ Failed to load property data from server');
+        // Update UI to show error state
+        const headerText = document.querySelector('.header-text h2');
+        const headerSubtext = document.querySelector('.header-text p');
+        
+        if (headerText) {
+            headerText.textContent = 'Rental AI Assistant - Property Not Found';
+        }
+        if (headerSubtext) {
+            headerSubtext.textContent = 'Unable to load property information. Please check the link.';
         }
     }
 
     // Add this new method to update UI
     updateUIWithPropertyInfo() {
-        if (!this.hostConfig) return;
+        if (!this.hostConfig) {
+            console.log('⚠️ No host config to update UI with');
+            return;
+        }
         
-        const headerText = document.querySelector('.header-text h2');
-        const headerSubtext = document.querySelector('.header-text p');
+        console.log('🎨 Updating UI with property:', this.hostConfig.name);
+        
+        // Update header
+        const headerText = document.querySelector('.header-text h2') || document.getElementById('headerTitle');
+        const headerSubtext = document.querySelector('.header-text p') || document.getElementById('propertySubtitle');
         
         if (headerText && this.hostConfig.name) {
             headerText.textContent = `Rental AI Assistant - ${this.hostConfig.name}`;
+            console.log('✅ Updated header title');
         }
         
         if (headerSubtext && this.hostConfig.name) {
             headerSubtext.textContent = `${this.hostConfig.name} • 24/7 Support`;
+            console.log('✅ Updated header subtitle');
+        }
+        
+        // Update welcome message
+        const welcomePropertyName = document.getElementById('welcomePropertyName');
+        if (welcomePropertyName && this.hostConfig.name) {
+            welcomePropertyName.textContent = this.hostConfig.name;
+            console.log('✅ Updated welcome message');
+        }
+        
+        // Update page title
+        if (this.hostConfig.name) {
+            document.title = `Rental AI Assistant - ${this.hostConfig.name}`;
+            console.log('✅ Updated page title');
         }
     }
 
@@ -721,15 +783,15 @@ class RentalAIChat {
             
             // Only reload data if we don't have it yet (for property links)
             // Don't reload on every message - it's expensive and can cause race conditions
-            const pathParts = window.location.pathname.split('/');
-            const isPropertyPage = pathParts[1] === 'property' && pathParts[2];
+            const pathParts = window.location.pathname.split('/').filter(p => p);
+            const isPropertyPage = pathParts.length >= 2 && pathParts[0] === 'property' && pathParts[1];
             
             if (isPropertyPage && !this.hostConfig) {
                 console.log('🔄 Property page detected but no data loaded, loading now...');
-                await this.loadPropertyFromServer(pathParts[2]);
+                await this.loadPropertyFromServer(pathParts[1]);
             } else if (!isPropertyPage && !this.hostConfig) {
                 // Only reload from localStorage if not on property page and no data
-                this.loadAllPropertyData();
+                await this.loadAllPropertyData();
             }
             
             const hostConfig = this.getHostConfig();
