@@ -846,7 +846,7 @@
     </script>
     <script>
         // Wait for auth system to initialize
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log("🔐 Checking authentication...");
             
             // Initialize auth system
@@ -854,8 +854,10 @@
                 initAuthSystem();
             }
             
-            // Use your existing auth.js functions
-            if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+            // Use your existing auth.js functions (now async)
+            if (typeof isAuthenticated === 'function') {
+                const authCheck = await isAuthenticated();
+                if (authCheck) {
                 // User is authenticated - show admin interface
                 console.log("✅ User authenticated, showing admin interface");
                 document.getElementById('loadingIndicator').style.display = 'none';
@@ -905,8 +907,7 @@
                 
                 // Wait a bit to ensure DOM is fully ready
                 setTimeout(loadAdminJS, 100);
-                
-            } else {
+                } else {
                 // Not authenticated - show login modal using existing auth.js function
                 console.log("🔒 User not authenticated, showing login modal");
                 

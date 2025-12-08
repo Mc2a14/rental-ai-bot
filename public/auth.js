@@ -4,9 +4,33 @@
 
 const AUTH_KEY = 'rentalai_user_auth';
 
-// Check if logged in
-function isAuthenticated() {
+// Check if logged in (checks both session and localStorage for backward compatibility)
+async function isAuthenticated() {
     try {
+        // First check server session
+        try {
+            const response = await fetch('/api/user/me', {
+                method: 'GET',
+                credentials: 'include' // Important: include cookies
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.user) {
+                    // Update localStorage for backward compatibility
+                    localStorage.setItem(AUTH_KEY, JSON.stringify({
+                        userId: data.user.id || data.user.userId,
+                        username: data.user.username,
+                        loggedInAt: new Date().toISOString()
+                    }));
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.warn('Session check failed, falling back to localStorage:', error);
+        }
+        
+        // Fallback to localStorage (for backward compatibility)
         const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
         return !!auth.userId && !!auth.username;
     } catch (error) {
@@ -21,15 +45,16 @@ async function login(username, password) {
         const response = await fetch('/api/user/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Important: include cookies for session
             body: JSON.stringify({ username, password })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            // Save to localStorage for this session
+            // Session is stored in cookie, but also save to localStorage for backward compatibility
             localStorage.setItem(AUTH_KEY, JSON.stringify({
-                userId: data.user.id,
+                userId: data.user.id || data.user.userId,
                 username: data.user.username,
                 loggedInAt: new Date().toISOString()
             }));
@@ -71,8 +96,19 @@ function getCurrentUser() {
 }
 
 // Logout
-function logout() {
-    localStorage.removeItem(AUTH_KEY);
+async function logout() {
+    try {
+        // Clear server session
+        await fetch('/api/user/logout', {
+            method: 'POST',
+            credentials: 'include' // Important: include cookies
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        // Always clear localStorage
+        localStorage.removeItem(AUTH_KEY);
+    }
 }
 
 // Show login modal

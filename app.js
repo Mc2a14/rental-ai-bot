@@ -8,6 +8,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
+const session = require('express-session');
 const config = require('./config/config');
 const logger = require('./utils/logger');
 const database = require('./utils/database');
@@ -44,6 +45,20 @@ app.use(helmet({
 app.use(cors({
   origin: config.security.corsOrigin,
   credentials: true
+}));
+
+// Session Configuration
+app.use(session({
+  secret: config.security.sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: config.nodeEnv === 'production', // HTTPS only in production
+    httpOnly: true, // Prevent XSS attacks
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: 'lax' // CSRF protection
+  },
+  name: 'rentalai.sid' // Custom session name
 }));
 
 // Body Parsing
