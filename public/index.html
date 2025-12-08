@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Rental AI Assistant - Sunset Beach Villa</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -103,7 +105,7 @@
         }
     </style>
 </head>
-<body>
+<body style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; margin: 0; padding: 20px;">
     <div class="chat-container">
         <!-- Header -->
         <div class="chat-header">
@@ -117,10 +119,10 @@
             
             <!-- Header Controls - ADDED -->
             <div class="header-controls">
-                <button class="setup-btn" onclick="window.location.href='/admin'">⚙️ Setup</button>
-                <button class="clear-chat-btn" onclick="clearChatHistory()">🗑️ Clear</button>
-                <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
-                <select id="languageSelect" class="language-select" onchange="changeLanguage(this.value)">
+                <button class="setup-btn" id="setupBtn">⚙️ Setup</button>
+                <button class="clear-chat-btn" id="clearChatBtn">🗑️ Clear</button>
+                <button id="themeToggle" class="theme-toggle">🌙 Dark</button>
+                <select id="languageSelect" class="language-select">
                     <option value="en">🇺🇸 English</option>
                     <option value="es">🇪🇸 Español</option>
                     <option value="fr">🇫🇷 Français</option>
@@ -153,16 +155,16 @@
                     </ul>
                     <p>How can I assist you with your stay today?</p>
                     <div class="quick-questions">
-                        <button class="quick-btn" onclick="askQuestion('What time is check-in and check-out?')">
+                        <button class="quick-btn" data-question="What time is check-in and check-out?">
                             Check-in/out times
                         </button>
-                        <button class="quick-btn" onclick="askQuestion('What are the WiFi details?')">
+                        <button class="quick-btn" data-question="What are the WiFi details?">
                             WiFi Information
                         </button>
-                        <button class="quick-btn" onclick="askQuestion('What restaurants are nearby?')">
+                        <button class="quick-btn" data-question="What restaurants are nearby?">
                             Nearby Restaurants
                         </button>
-                        <button class="quick-btn" onclick="askQuestion('What are the emergency contacts?')">
+                        <button class="quick-btn" data-question="What are the emergency contacts?">
                             Emergency Contacts
                         </button>
                         
@@ -170,16 +172,16 @@
                         <div class="quick-appliance-section">
                             <h4 class="quick-section-title">Appliance Help</h4>
                             <div class="quick-appliance-grid">
-                                <button class="appliance-quick-btn" onclick="askQuestion('How do I use the appliances?')">
+                                <button class="appliance-quick-btn" data-question="How do I use the appliances?">
                                     🛠️ Appliance Help
                                 </button>
-                                <button class="appliance-quick-btn" onclick="askQuestion('How do I use the oven or microwave?')">
+                                <button class="appliance-quick-btn" data-question="How do I use the oven or microwave?">
                                     🍳 Oven/Microwave
                                 </button>
-                                <button class="appliance-quick-btn" onclick="askQuestion('How do I use the washer and dryer?')">
+                                <button class="appliance-quick-btn" data-question="How do I use the washer and dryer?">
                                     🧺 Washer/Dryer
                                 </button>
-                                <button class="appliance-quick-btn" onclick="askQuestion('How do I adjust the thermostat?')">
+                                <button class="appliance-quick-btn" data-question="How do I adjust the thermostat?">
                                     🌡️ Thermostat
                                 </button>
                             </div>
@@ -398,6 +400,47 @@
             } catch (error) {
                 console.error('Error loading property config:', error);
             }
+            
+            // Attach event listeners for header controls
+            const setupBtn = document.getElementById('setupBtn');
+            if (setupBtn) {
+                setupBtn.addEventListener('click', () => window.location.href = '/admin');
+            }
+            
+            const clearChatBtn = document.getElementById('clearChatBtn');
+            if (clearChatBtn) {
+                clearChatBtn.addEventListener('click', clearChatHistory);
+            }
+            
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+            
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) {
+                languageSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
+            }
+            
+            // Attach event listeners for quick question buttons (will be re-attached by chat init)
+            // But attach here as backup
+            setTimeout(() => {
+                document.querySelectorAll('.quick-btn, .appliance-quick-btn').forEach(btn => {
+                    const question = btn.getAttribute('data-question');
+                    if (question && !btn.hasAttribute('data-listener-attached')) {
+                        btn.setAttribute('data-listener-attached', 'true');
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            console.log('Quick question clicked from index.html:', question);
+                            if (typeof askQuestion === 'function') {
+                                askQuestion(question);
+                            } else {
+                                console.error('askQuestion function not available');
+                            }
+                        });
+                    }
+                });
+            }, 1000);
             
             console.log('✅ Header controls initialized successfully!');
         });

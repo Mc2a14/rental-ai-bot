@@ -541,7 +541,7 @@
             </div>
         </div>
 
-        <form id="propertyConfig" novalidate>
+        <form id="propertyConfig" novalidate onsubmit="return false;">
             <!-- Step 1: Basic Information -->
             <div class="form-section" id="section1">
                 <h3><i class="fas fa-home"></i> Basic Property Information</h3>
@@ -779,7 +779,7 @@
         <div class="success-message" id="successMessage">
             <h3><i class="fas fa-check-circle"></i> Configuration Saved Successfully!</h3>
             <p>Your Rental AI Assistant is now configured with your property information.</p>
-            <button class="btn btn-primary" onclick="window.location.href='/'">
+            <button class="btn btn-primary" id="testAIBtn">
                 <i class="fas fa-robot"></i> Test Your AI Assistant
             </button>
         </div>
@@ -787,6 +787,63 @@
 
     <!-- Scripts - CRITICAL FIX: Load auth.js FIRST, then handle auth, THEN load admin.js -->
     <script src="./auth.js"></script>
+    <script>
+        // Global backup function for Next button
+        function handleNextButton() {
+            console.log("🔘 Global Next button handler called");
+            if (window.propertySetup && typeof window.propertySetup.nextStep === 'function') {
+                window.propertySetup.nextStep();
+            } else {
+                console.error("PropertySetup not available");
+                alert("Please wait for the page to fully load, then try again.");
+            }
+        }
+        
+        // Direct button handler as backup - multiple attempts
+        function attachNextButtonHandler() {
+            const nextBtn = document.getElementById('nextBtn');
+            if (nextBtn) {
+                // Remove any existing onclick
+                nextBtn.removeAttribute('onclick');
+                
+                // Add inline onclick as ultimate backup
+                nextBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("🔘 Inline onclick handler triggered");
+                    if (window.propertySetup && typeof window.propertySetup.nextStep === 'function') {
+                        window.propertySetup.nextStep();
+                    } else {
+                        console.error("PropertySetup not available");
+                        alert("Please wait for page to load completely.");
+                    }
+                    return false;
+                };
+                
+                console.log("✅ Added inline onclick handler to Next button");
+                return true;
+            }
+            return false;
+        }
+        
+        // Try multiple times to ensure it attaches
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(attachNextButtonHandler, 500);
+            setTimeout(attachNextButtonHandler, 1000);
+            setTimeout(attachNextButtonHandler, 2000);
+            
+            // Attach Test AI Assistant button handler
+            setTimeout(function() {
+                const testBtn = document.getElementById('testAIBtn');
+                if (testBtn) {
+                    testBtn.addEventListener('click', function() {
+                        window.location.href = '/';
+                    });
+                    console.log('✅ Test AI Assistant button handler attached');
+                }
+            }, 500);
+        });
+    </script>
     <script>
         // Wait for auth system to initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -811,12 +868,33 @@
                     adminScript.src = './admin.js';
                     adminScript.onload = function() {
                         console.log("✅ admin.js loaded successfully");
+                        
+                        // CRITICAL: Initialize PropertySetup immediately after script loads
+                        // The DOMContentLoaded in admin.js won't fire because script loads dynamically
+                        setTimeout(function() {
+                            if (typeof PropertySetup !== 'undefined') {
+                                try {
+                                    console.log("🔄 Initializing PropertySetup after script load...");
+                                    window.propertySetup = new PropertySetup();
+                                    console.log("✅ PropertySetup initialized successfully!");
+                                    console.log("PropertySetup object:", window.propertySetup);
+                                    
+                                    // Re-attach button handlers now that PropertySetup exists
+                                    attachNextButtonHandler();
+                                } catch (error) {
+                                    console.error("❌ Error initializing PropertySetup:", error);
+                                }
+                            } else {
+                                console.error("❌ PropertySetup class not found in admin.js");
+                            }
+                        }, 100);
+                        
                         // Force validation to run after everything is loaded
-                        if (window.propertySetup && typeof window.propertySetup.validateCurrentStep === 'function') {
-                            setTimeout(() => {
+                        setTimeout(() => {
+                            if (window.propertySetup && typeof window.propertySetup.validateCurrentStep === 'function') {
                                 window.propertySetup.validateCurrentStep();
-                            }, 200);
-                        }
+                            }
+                        }, 500);
                     };
                     adminScript.onerror = function() {
                         console.error("❌ Failed to load admin.js");

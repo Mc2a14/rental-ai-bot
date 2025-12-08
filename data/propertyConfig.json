@@ -1,1 +1,20 @@
-{}
+{
+  "name": "Villa Alark",
+  "address": "Calle Alark, Samana",
+  "type": "Villa",
+  "hostContact": "Ms Alark: 1-888-333-444",
+  "maintenanceContact": "1-888-333-5555",
+  "emergencyContact": "1-888-333-5555",
+  "checkinTime": "2:55pm",
+  "checkoutTime": "10:55am",
+  "lateCheckout": "yes, $10 extra pr Hr",
+  "amenities": {
+    "wifi": "Alarkwifi, Alrk1234",
+    "parking": "",
+    "other": "AC\nPool\nIndoor Jacuzzy"
+  },
+  "houseRules": "Up to 2 Pets allowed\nParties until 12 am\nLeave Sheets and Towels in Laundry Bin",
+  "appliances": [],
+  "recommendations": [],
+  "lastUpdated": "2025-12-08T18:15:46.488Z"
+}

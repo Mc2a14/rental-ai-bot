@@ -312,6 +312,35 @@ class RentalAIChat {
             existingApplianceSection.remove();
         }
 
+        // Attach event listeners to existing quick question buttons
+        const quickButtons = quickQuestionsContainer.querySelectorAll('.quick-btn');
+        quickButtons.forEach(btn => {
+            const question = btn.getAttribute('data-question');
+            if (question) {
+                // Remove existing listeners and add new one
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', () => {
+                    console.log('Quick question clicked:', question);
+                    askQuestion(question);
+                });
+            }
+        });
+
+        // Attach event listeners to appliance buttons
+        const applianceButtons = quickQuestionsContainer.querySelectorAll('.appliance-quick-btn');
+        applianceButtons.forEach(btn => {
+            const question = btn.getAttribute('data-question');
+            if (question) {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', () => {
+                    console.log('Appliance question clicked:', question);
+                    askQuestion(question);
+                });
+            }
+        });
+
         // Only show appliance section if we have appliances
         if (this.hostAppliances && this.hostAppliances.length > 0) {
             const applianceButtons = [
@@ -334,7 +363,10 @@ class RentalAIChat {
                 button.id = btn.id;
                 button.textContent = btn.text;
                 button.setAttribute('data-question', btn.question);
-                button.addEventListener('click', () => this.askApplianceQuestion(btn.question));
+                button.addEventListener('click', () => {
+                    console.log('Appliance question clicked:', btn.question);
+                    askQuestion(btn.question);
+                });
                 applianceGrid.appendChild(button);
             });
             
@@ -821,15 +853,40 @@ function anyKeywordInMessage(message, keywords) {
     return keywords.some(keyword => lowerMessage.includes(keyword));
 }
 
-// Quick question function
+// Quick question function - Make it global and robust
 function askQuestion(question) {
+    console.log('askQuestion called with:', question);
     const messageInput = document.getElementById('messageInput');
-    messageInput.value = question;
-    document.getElementById('sendButton').disabled = false;
+    const sendButton = document.getElementById('sendButton');
     
-    const chat = window.chat || new RentalAIChat();
-    chat.sendMessage();
+    if (!messageInput) {
+        console.error('Message input not found');
+        return;
+    }
+    
+    messageInput.value = question;
+    if (sendButton) {
+        sendButton.disabled = false;
+    }
+    
+    // Use existing chat instance or create new one
+    if (window.chat && typeof window.chat.sendMessage === 'function') {
+        console.log('Using existing chat instance');
+        window.chat.sendMessage();
+    } else {
+        console.log('Creating new chat instance');
+        window.chat = new RentalAIChat();
+        // Wait a bit for initialization, then send
+        setTimeout(() => {
+            if (window.chat && typeof window.chat.sendMessage === 'function') {
+                window.chat.sendMessage();
+            }
+        }, 100);
+    }
 }
+
+// Make it globally available
+window.askQuestion = askQuestion;
 
 // Initialize chat
 document.addEventListener('DOMContentLoaded', function() {
@@ -837,6 +894,25 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         window.chat = new RentalAIChat();
         console.log('✅ RentalAIChat initialized successfully!');
+        
+        // Attach quick question button listeners after chat is initialized
+        setTimeout(() => {
+            const quickButtons = document.querySelectorAll('.quick-btn, .appliance-quick-btn');
+            quickButtons.forEach(btn => {
+                const question = btn.getAttribute('data-question');
+                if (question) {
+                    // Remove any existing listeners
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    newBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Quick question button clicked:', question);
+                        askQuestion(question);
+                    });
+                }
+            });
+            console.log(`✅ Attached listeners to ${quickButtons.length} quick question buttons`);
+        }, 500);
         
         // Add CSS for header controls
         const style = document.createElement('style');

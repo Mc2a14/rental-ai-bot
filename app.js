@@ -1,226 +1,147 @@
-// ============ USER & PROPERTY MANAGEMENT API ============
+// ================================================
+// MAIN APPLICATION ENTRY POINT
+// Clean Architecture Implementation
+// ================================================
+
 const path = require('path');
 const express = require('express');
-const session = require('express-session');
-const multer = require('multer');
-const fs = require('fs');
+const helmet = require('helmet');
+const cors = require('cors');
+const morgan = require('morgan');
+const config = require('./config/config');
+const logger = require('./utils/logger');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
-// CREATE THE EXPRESS APP HERE (THIS WAS MISSING!)
+// Import Routes
+const chatRoutes = require('./routes/chatRoutes');
+const propertyRoutes = require('./routes/propertyRoutes');
+const userRoutes = require('./routes/userRoutes');
+
+// Create Express App
 const app = express();
 
-const USERS_FILE = path.join(__dirname, 'data', 'users.json');
-const PROPERTIES_FILE = path.join(__dirname, 'data', 'properties.json');
+// ================================================
+// MIDDLEWARE SETUP
+// ================================================
 
-// Add middleware to parse JSON requests
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+// Security
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+      scriptSrcAttr: ["'unsafe-inline'", "'unsafe-hashes'"], // Allow inline event handlers and hashes
+      fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"]
+    }
+  }
+}));
 
-// Initialize files
-function initDataFiles() {
-    const dataDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(USERS_FILE)) {
-        fs.writeFileSync(USERS_FILE, JSON.stringify([]));
-    }
-    
-    if (!fs.existsSync(PROPERTIES_FILE)) {
-        fs.writeFileSync(PROPERTIES_FILE, JSON.stringify({}));
-    }
+// CORS
+app.use(cors({
+  origin: config.security.corsOrigin,
+  credentials: true
+}));
+
+// Body Parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Logging
+if (config.nodeEnv === 'development') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
 }
 
-initDataFiles();
+// Static Files
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: config.nodeEnv === 'production' ? '1d' : '0'
+}));
 
-// User login
-app.post('/api/user/login', (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-        
-        const user = users.find(u => u.username === username && u.password === password);
-        
-        if (user) {
-            res.json({ 
-                success: true, 
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    created: user.created
-                }
-            });
-        } else {
-            res.json({ success: false, message: 'Invalid username or password' });
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+// ================================================
+// API ROUTES
+// ================================================
+
+// Chat API
+app.use('/chat', chatRoutes);
+
+// Property API
+app.use('/api/property', propertyRoutes);
+
+// Property Config API (backward compatibility)
+app.get('/api/property-config/:propertyId', async (req, res) => {
+  const propertyController = require('./controllers/propertyController');
+  return propertyController.getPropertyConfig(req, res);
 });
 
-// User registration
-app.post('/api/user/register', (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-        
-        // Check if user exists
-        if (users.some(u => u.username === username)) {
-            return res.json({ success: false, message: 'Username already exists' });
-        }
-        
-        const newUser = {
-            id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            username,
-            password,
-            created: new Date().toISOString(),
-            role: 'host'
-        };
-        
-        users.push(newUser);
-        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-        
-        res.json({ 
-            success: true, 
-            user: {
-                id: newUser.id,
-                username: newUser.username,
-                created: newUser.created
-            }
-        });
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+// User API
+app.use('/api/user', userRoutes);
+
+// User Properties API
+app.get('/api/user/:userId/properties', async (req, res) => {
+  const propertyController = require('./controllers/propertyController');
+  return propertyController.getUserProperties(req, res);
 });
 
-// Save property (host only)
-app.post('/api/property/save', (req, res) => {
-    try {
-        const { userId, propertyData } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, message: 'User ID required' });
-        }
-        
-        const properties = JSON.parse(fs.readFileSync(PROPERTIES_FILE, 'utf8'));
-        
-        // Generate unique property ID
-        const propertyId = 'property_' + Date.now();
-        
-        // Store property with user association
-        const property = {
-            id: propertyId,
-            userId: userId,
-            ...propertyData,
-            created: new Date().toISOString(),
-            updated: new Date().toISOString()
-        };
-        
-        // Save to properties file
-        properties[propertyId] = property;
-        fs.writeFileSync(PROPERTIES_FILE, JSON.stringify(properties, null, 2));
-        
-        // Also update propertyConfig.json for backward compatibility
-        const configPath = path.join(__dirname, 'data', 'propertyConfig.json');
-        fs.writeFileSync(configPath, JSON.stringify(propertyData, null, 2));
-        
-        // Update recommendations and appliances files
-        if (propertyData.recommendations) {
-            const recPath = path.join(__dirname, 'data', 'recommendations.json');
-            fs.writeFileSync(recPath, JSON.stringify(propertyData.recommendations, null, 2));
-        }
-        
-        if (propertyData.appliances) {
-            const appPath = path.join(__dirname, 'data', 'appliances.json');
-            fs.writeFileSync(appPath, JSON.stringify(propertyData.appliances, null, 2));
-        }
-        
-        res.json({ 
-            success: true, 
-            propertyId: propertyId,
-            guestLink: `/property/${propertyId}`
-        });
-        
-    } catch (error) {
-        console.error('Save property error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
+// ================================================
+// FRONTEND ROUTES
+// ================================================
 
-// Get property for guests (no authentication required)
-app.get('/api/property/:propertyId', (req, res) => {
-    try {
-        const { propertyId } = req.params;
-        const properties = JSON.parse(fs.readFileSync(PROPERTIES_FILE, 'utf8'));
-        
-        const property = properties[propertyId];
-        
-        if (property) {
-            res.json({ 
-                success: true, 
-                property: property 
-            });
-        } else {
-            res.status(404).json({ 
-                success: false, 
-                message: 'Property not found' 
-            });
-        }
-    } catch (error) {
-        console.error('Get property error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// Get user's properties
-app.get('/api/user/:userId/properties', (req, res) => {
-    try {
-        const { userId } = req.params;
-        const properties = JSON.parse(fs.readFileSync(PROPERTIES_FILE, 'utf8'));
-        
-        const userProperties = Object.values(properties).filter(p => p.userId === userId);
-        
-        res.json({ 
-            success: true, 
-            properties: userProperties 
-        });
-    } catch (error) {
-        console.error('Get user properties error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// Guest property page
+// Guest Property Page
 app.get('/property/:propertyId', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Make property config endpoints also work with propertyId
-app.get('/api/property-config/:propertyId', (req, res) => {
-    try {
-        const { propertyId } = req.params;
-        const properties = JSON.parse(fs.readFileSync(PROPERTIES_FILE, 'utf8'));
-        
-        const property = properties[propertyId];
-        
-        if (property) {
-            // Remove sensitive data for guest view
-            const { userId, ...guestData } = property;
-            res.json(guestData);
-        } else {
-            res.json({});
-        }
-    } catch (error) {
-        console.error('Property config error:', error);
-        res.json({});
-    }
+// Admin Page
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// ADD THIS AT THE VERY END OF THE FILE:
-const PORT = process.env.PORT || 3000;
+// Root - redirect to main chat
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ================================================
+// ERROR HANDLING
+// ================================================
+
+// 404 Handler
+app.use(notFoundHandler);
+
+// Error Handler (must be last)
+app.use(errorHandler);
+
+// ================================================
+// SERVER STARTUP
+// ================================================
+
+const PORT = config.port;
+
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  logger.success(`🚀 Server running on port ${PORT}`);
+  logger.info(`📱 Environment: ${config.nodeEnv}`);
+  logger.info(`🌐 Access at: http://localhost:${PORT}`);
+  logger.info(`🤖 AI Provider: ${config.ai.provider}`);
+  
+  if (!config.ai.apiKey) {
+    logger.warn('⚠️  AI_API_KEY not set. AI chat will not work properly.');
+    logger.warn('   Set AI_API_KEY environment variable for production.');
+  }
 });
+
+// Graceful Shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully...');
+  process.exit(0);
+});
+
+module.exports = app;

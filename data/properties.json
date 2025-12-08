@@ -1,1 +1,146 @@
-{}
+{
+  "property_1765215746662_dgrhzlfbo": {
+    "id": "property_1765215746662_dgrhzlfbo",
+    "userId": "user_1765214324081_fbn8gnu97",
+    "name": "Villa Alark",
+    "address": "Calle Alark, Samana",
+    "type": "Villa",
+    "hostContact": "Ms Alark: 1-888-333-444",
+    "maintenanceContact": "1-888-333-5555",
+    "emergencyContact": "1-888-333-5555",
+    "checkinTime": "2:55pm",
+    "checkoutTime": "10:55am",
+    "lateCheckout": "yes, $10 extra pr Hr",
+    "amenities": {
+      "wifi": "Alarkwifi, Alrk1234",
+      "parking": "",
+      "other": "AC\nPool\nIndoor Jacuzzy"
+    },
+    "houseRules": "Up to 2 Pets allowed\nParties until 12 am\nLeave Sheets and Towels in Laundry Bin",
+    "appliances": [],
+    "recommendations": [],
+    "lastUpdated": "2025-12-08T17:42:26.613Z",
+    "created": "2025-12-08T17:42:26.662Z",
+    "updated": "2025-12-08T17:42:26.663Z"
+  },
+  "property_1765215937022_kgsitrgjv": {
+    "id": "property_1765215937022_kgsitrgjv",
+    "userId": "user_1765214324081_fbn8gnu97",
+    "name": "Villa Alark",
+    "address": "Calle Alark, Samana",
+    "type": "Villa",
+    "hostContact": "Ms Alark: 1-888-333-444",
+    "maintenanceContact": "1-888-333-5555",
+    "emergencyContact": "1-888-333-5555",
+    "checkinTime": "2:55pm",
+    "checkoutTime": "10:55am",
+    "lateCheckout": "yes, $10 extra pr Hr",
+    "amenities": {
+      "wifi": "Alarkwifi, Alrk1234",
+      "parking": "",
+      "other": "AC\nPool\nIndoor Jacuzzy"
+    },
+    "houseRules": "Up to 2 Pets allowed\nParties until 12 am\nLeave Sheets and Towels in Laundry Bin",
+    "appliances": [],
+    "recommendations": [],
+    "lastUpdated": "2025-12-08T17:45:37.010Z",
+    "created": "2025-12-08T17:45:37.022Z",
+    "updated": "2025-12-08T17:45:37.022Z"
+  },
+  "property_1765216062490_6mfcx5ea1": {
+    "id": "property_1765216062490_6mfcx5ea1",
+    "userId": "user_1765214324081_fbn8gnu97",
+    "name": "Villa Alark",
+    "address": "Calle Alark, Samana",
+    "type": "Villa",
+    "hostContact": "Ms Alark: 1-888-333-444",
+    "maintenanceContact": "1-888-333-5555",
+    "emergencyContact": "1-888-333-5555",
+    "checkinTime": "2:55pm",
+    "checkoutTime": "10:55am",
+    "lateCheckout": "yes, $10 extra pr Hr",
+    "amenities": {
+      "wifi": "Alarkwifi, Alrk1234",
+      "parking": "",
+      "other": "AC\nPool\nIndoor Jacuzzy"
+    },
+    "houseRules": "Up to 2 Pets allowed\nParties until 12 am\nLeave Sheets and Towels in Laundry Bin",
+    "appliances": [],
+    "recommendations": [],
+    "lastUpdated": "2025-12-08T17:47:42.474Z",
+    "created": "2025-12-08T17:47:42.490Z",
+    "updated": "2025-12-08T17:47:42.490Z"
+  },
+  "property_1765216626173_flszq1f61": {
+    "id": "property_1765216626173_flszq1f61",
+    "userId": "user_1765214324081_fbn8gnu97",
+    "name": "Villa Alark",
+    "address": "Calle Alark, Samana",
+    "type": "Villa",
+    "hostContact": "Ms Alark: 1-888-333-444",
+    "maintenanceContact": "1-888-333-5555",
+    "emergencyContact": "1-888-333-5555",
+    "checkinTime": "2:55pm",
+    "checkoutTime": "10:55am",
+    "lateCheckout": "yes, $10 extra pr Hr",
+    "amenities": {
+      "wifi": "Alarkwifi, Alrk1234",
+      "parking": "",
+      "other": "AC\nPool\nIndoor Jacuzzy"
+    },
+    "houseRules": "Up to 2 Pets allowed\nParties until 12 am\nLeave Sheets and Towels in Laundry Bin",
+    "appliances": [],
+    "recommendations": [],
+    "lastUpdated": "2025-12-08T17:57:06.159Z",
+    "created": "2025-12-08T17:57:06.173Z",
+    "updated": "2025-12-08T17:57:06.173Z"
+  },
+  "property_1765216955599_n79dxcdzu": {
+    "id": "property_1765216955599_n79dxcdzu",
+    "userId": "user_1765214324081_fbn8gnu97",
+    "name": "Villa Alark",
+    "address": "Calle Alark, Samana",
+    "type": "Villa",
+    "hostContact": "Ms Alark: 1-888-333-444",
+    "maintenanceContact": "1-888-333-5555",
+    "emergencyContact": "1-888-333-5555",
+    "checkinTime": "2:55pm",
+    "checkoutTime": "10:55am",
+    "lateCheckout": "yes, $10 extra pr Hr",
+    "amenities": {
+      "wifi": "Alarkwifi, Alrk1234",
+      "parking": "",
+      "other": "AC\nPool\nIndoor Jacuzzy"
+    },
+    "houseRules": "Up to 2 Pets allowed\nParties until 12 am\nLeave Sheets and Towels in Laundry Bin",
+    "appliances": [],
+    "recommendations": [],
+    "lastUpdated": "2025-12-08T18:02:35.590Z",
+    "created": "2025-12-08T18:02:35.600Z",
+    "updated": "2025-12-08T18:02:35.600Z"
+  },
+  "property_1765217746500_daeve60xn": {
+    "id": "property_1765217746500_daeve60xn",
+    "userId": "user_1765214324081_fbn8gnu97",
+    "name": "Villa Alark",
+    "address": "Calle Alark, Samana",
+    "type": "Villa",
+    "hostContact": "Ms Alark: 1-888-333-444",
+    "maintenanceContact": "1-888-333-5555",
+    "emergencyContact": "1-888-333-5555",
+    "checkinTime": "2:55pm",
+    "checkoutTime": "10:55am",
+    "lateCheckout": "yes, $10 extra pr Hr",
+    "amenities": {
+      "wifi": "Alarkwifi, Alrk1234",
+      "parking": "",
+      "other": "AC\nPool\nIndoor Jacuzzy"
+    },
+    "houseRules": "Up to 2 Pets allowed\nParties until 12 am\nLeave Sheets and Towels in Laundry Bin",
+    "appliances": [],
+    "recommendations": [],
+    "lastUpdated": "2025-12-08T18:15:46.488Z",
+    "created": "2025-12-08T18:15:46.500Z",
+    "updated": "2025-12-08T18:15:46.500Z"
+  }
+}

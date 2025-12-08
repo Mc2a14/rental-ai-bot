@@ -100,41 +100,71 @@ addPreviewStyles() {
 initializeEventListeners() {
     console.log("🔄 Setting up event listeners...");
     
-    // Navigation buttons - SIMPLE WORKING VERSION
-    const nextBtn = document.getElementById('nextBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    const submitBtn = document.getElementById('submitBtn');
+    // Use a function to ensure 'this' context is correct
+    const self = this;
     
-    console.log("📝 Buttons found:", { nextBtn: !!nextBtn, prevBtn: !!prevBtn, submitBtn: !!submitBtn });
-    
-    if (nextBtn) {
-        // SIMPLE click handler - THIS WORKS
-        nextBtn.onclick = (e) => {
-            console.log("👉 Next button CLICKED!");
-            e.preventDefault();
-            this.nextStep();
-        };
-        console.log("✅ Next button listener added (simple)");
-    }
-    
-    if (prevBtn) {
-        prevBtn.onclick = (e) => {
-            e.preventDefault();
-            this.prevStep();
-        };
-        console.log("✅ Previous button listener added");
-    }
-    
-    if (submitBtn) {
-        submitBtn.onclick = (e) => {
-            console.log("💾 Save Configuration button clicked!");
-            e.preventDefault();
-            this.saveConfiguration(e);
-        };
-        console.log("✅ Submit button listener added");
-    }
-    
-    console.log("✅ All event listeners initialized");
+    // Wait a bit to ensure DOM is fully ready
+    setTimeout(() => {
+        // Navigation buttons - SIMPLE WORKING VERSION
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        console.log("📝 Buttons found:", { nextBtn: !!nextBtn, prevBtn: !!prevBtn, submitBtn: !!submitBtn });
+        
+        if (nextBtn) {
+            // Remove any existing listeners
+            const newNextBtn = nextBtn.cloneNode(true);
+            nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+            
+            // Add event listener with multiple methods for compatibility
+            newNextBtn.addEventListener('click', function(e) {
+                console.log("👉 Next button CLICKED!");
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                self.nextStep();
+                return false;
+            });
+            
+            // Also add onclick as backup
+            newNextBtn.onclick = function(e) {
+                console.log("👉 Next button CLICKED (onclick)!");
+                e.preventDefault();
+                e.stopPropagation();
+                self.nextStep();
+                return false;
+            };
+            
+            // Ensure button is not disabled and visible
+            newNextBtn.disabled = false;
+            newNextBtn.style.pointerEvents = 'auto';
+            newNextBtn.style.cursor = 'pointer';
+            
+            console.log("✅ Next button listener added (multiple methods)");
+        } else {
+            console.error("❌ Next button NOT FOUND!");
+        }
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.prevStep();
+            });
+            console.log("✅ Previous button listener added");
+        }
+        
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function(e) {
+                console.log("💾 Save Configuration button clicked!");
+                e.preventDefault();
+                self.saveConfiguration(e);
+            });
+            console.log("✅ Submit button listener added");
+        }
+        
+        console.log("✅ All event listeners initialized");
+    }, 200);
 }
 
 setupRealTimeValidation() {
@@ -142,6 +172,15 @@ setupRealTimeValidation() {
     
     const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
     console.log(`📝 Found ${requiredFields.length} required fields`);
+    
+    // Debounce validation to prevent excessive calls
+    let validationTimeout;
+    const debouncedValidate = () => {
+        clearTimeout(validationTimeout);
+        validationTimeout = setTimeout(() => {
+            this.validateCurrentStep();
+        }, 300); // Wait 300ms after last input
+    };
     
     requiredFields.forEach(field => {
         // Add validation message element
@@ -152,21 +191,22 @@ setupRealTimeValidation() {
             field.parentNode.appendChild(validationMsg);
         }
         
-        // Event listeners
+        // Event listeners with debouncing
         field.addEventListener('input', () => {
             this.validateField(field);
-            this.validateCurrentStep();
+            debouncedValidate(); // Debounced validation
         });
         
         field.addEventListener('change', () => {
             this.validateField(field);
-            this.validateCurrentStep();
+            this.validateCurrentStep(); // Immediate validation on change
         });
         
         // Initial validation
         this.validateField(field);
     });
     
+    // Initial validation (only once)
     this.validateCurrentStep();
     console.log("✅ Real-time validation setup complete");
 }
@@ -208,7 +248,11 @@ validateField(field) {
 }
 
 validateCurrentStep() {
-    console.log(`🔄 Validating step ${this.currentStep}...`);
+    // Only log validation in debug mode to reduce console spam
+    if (window.DEBUG_MODE) {
+        console.log(`🔄 Validating step ${this.currentStep}...`);
+    }
+    
     const currentSection = document.getElementById(`section${this.currentStep}`);
     if (!currentSection) return false;
     
@@ -221,11 +265,9 @@ validateCurrentStep() {
         }
     });
     
-    // Update Next button
-    const nextBtn = document.getElementById('nextBtn');
-    if (nextBtn) {
-        nextBtn.disabled = !allValid;
-        console.log(`🔘 Next button ${allValid ? 'ENABLED' : 'DISABLED'}`);
+    // Only log result occasionally to reduce spam
+    if (window.DEBUG_MODE || Math.random() < 0.01) {
+        console.log(`🔘 Validation: ${allValid ? 'PASSED' : 'FAILED'}`);
     }
     
     return allValid;
@@ -275,17 +317,32 @@ autoLoadExistingConfig() {
 
 nextStep() {
     console.log("🔄 Moving to next step...");
+    console.log("Current step:", this.currentStep, "Total steps:", this.totalSteps);
     
-    if (this.currentStep < this.totalSteps && this.validateCurrentStep()) {
-        this.currentStep++;
-        this.updateStepDisplay();
-        console.log(`✅ Moved to step ${this.currentStep}`);
-        
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Always allow moving forward, but validate first
+    const isValid = this.validateCurrentStep();
+    console.log("Validation result:", isValid);
+    
+    if (this.currentStep < this.totalSteps) {
+        if (isValid) {
+            this.currentStep++;
+            this.updateStepDisplay();
+            console.log(`✅ Moved to step ${this.currentStep}`);
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            console.log("❌ Cannot move to next step - validation failed");
+            this.showTempMessage('Please fill in all required fields before continuing', 'warning');
+            // Scroll to first invalid field
+            const firstInvalid = document.querySelector('.field-invalid');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+            }
+        }
     } else {
-        console.log("❌ Cannot move to next step - validation failed");
-        this.showTempMessage('Please fill in all required fields before continuing', 'warning');
+        console.log("Already on last step");
     }
 }
 
@@ -332,9 +389,14 @@ updateStepDisplay() {
         this.updatePreview();
     }
 
-    // Validate new step
+    // Validate new step (but don't disable button)
     setTimeout(() => {
         this.validateCurrentStep();
+        // Ensure Next button is always enabled
+        const nextBtn = document.getElementById('nextBtn');
+        if (nextBtn) {
+            nextBtn.disabled = false;
+        }
     }, 100);
 
     console.log("✅ Step display updated");
@@ -503,7 +565,23 @@ async saveConfiguration(e) {
         
     } catch (error) {
         console.error('❌ Error saving configuration:', error);
-        this.showTempMessage('Error saving configuration: ' + error.message, 'error');
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        
+        let errorMessage = 'Error saving configuration. ';
+        if (error.message) {
+            errorMessage += error.message;
+        } else if (error.response) {
+            errorMessage += 'Server error. Please try again.';
+        } else {
+            errorMessage += 'Please check your connection and try again.';
+        }
+        
+        this.showTempMessage(errorMessage, 'error');
+        alert('Save failed: ' + errorMessage + '\n\nCheck the browser console for details.');
     }
 }
 
@@ -543,6 +621,12 @@ showSuccessMessage(guestLink, propertyName) {
     if (successMessage) {
         successMessage.style.display = 'block';
         
+        // Clear any existing preview content
+        const existingPreview = successMessage.querySelector('.saved-preview');
+        if (existingPreview) {
+            existingPreview.remove();
+        }
+        
         const previewHtml = `
             <div style="text-align: left; background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #2ecc71;">
                 <h4 style="color: #2c3e50; margin-bottom: 15px;">✅ Configuration Saved!</h4>
@@ -550,9 +634,9 @@ showSuccessMessage(guestLink, propertyName) {
                 <div style="background: #e8f4fd; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
                     <h5 style="margin-top: 0; color: #3498db;">📋 Guest Link:</h5>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <input type="text" readonly value="${guestLink}" 
+                        <input type="text" id="guestLinkInput" readonly value="${guestLink}" 
                                style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace;">
-                        <button onclick="copyToClipboard('${guestLink}')" 
+                        <button id="copyLinkBtn" 
                                 style="padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
                             <i class="fas fa-copy"></i> Copy
                         </button>
@@ -574,7 +658,55 @@ showSuccessMessage(guestLink, propertyName) {
         const previewDiv = document.createElement('div');
         previewDiv.className = 'saved-preview';
         previewDiv.innerHTML = previewHtml;
-        successMessage.insertBefore(previewDiv, successMessage.querySelector('button'));
+        
+        // Find the button to insert before, or just append
+        const button = successMessage.querySelector('button:not(#copyLinkBtn)');
+        if (button && button.parentNode === successMessage) {
+            successMessage.insertBefore(previewDiv, button);
+        } else {
+            // Just append if button doesn't exist or isn't a direct child
+            successMessage.insertBefore(previewDiv, successMessage.firstChild);
+        }
+        
+        // Attach copy button handler (after DOM is updated)
+        setTimeout(() => {
+            const copyBtn = document.getElementById('copyLinkBtn');
+            const linkInput = document.getElementById('guestLinkInput');
+            if (copyBtn && linkInput) {
+                copyBtn.addEventListener('click', function() {
+                    linkInput.select();
+                    linkInput.setSelectionRange(0, 99999); // For mobile devices
+                    try {
+                        document.execCommand('copy');
+                        // Try modern clipboard API
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(guestLink).then(() => {
+                                const originalText = copyBtn.innerHTML;
+                                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                                copyBtn.style.background = '#2ecc71';
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = originalText;
+                                    copyBtn.style.background = '#3498db';
+                                }, 2000);
+                            });
+                        } else {
+                            // Fallback for older browsers
+                            const originalText = copyBtn.innerHTML;
+                            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                            copyBtn.style.background = '#2ecc71';
+                            setTimeout(() => {
+                                copyBtn.innerHTML = originalText;
+                                copyBtn.style.background = '#3498db';
+                            }, 2000);
+                        }
+                    } catch (err) {
+                        console.error('Failed to copy:', err);
+                        alert('Failed to copy. Please select and copy manually.');
+                    }
+                });
+                console.log('✅ Copy button handler attached');
+            }
+        }, 100);
     }
 }
 
@@ -882,20 +1014,42 @@ function copyToClipboard(text) {
     }
 }
 
-// SIMPLE initialization
+// SIMPLE initialization - This may not fire if script loads dynamically
+// So we also initialize in admin.html after script loads
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("🚀 DOM loaded - Initializing PropertySetup");
+    console.log("🚀 DOM loaded - Checking if PropertySetup should initialize");
     
-    // Check if user is authenticated first
-    if (typeof isAuthenticated === 'function' && isAuthenticated()) {
+    // Only initialize if not already initialized and user is authenticated
+    if (!window.propertySetup && typeof isAuthenticated === 'function' && isAuthenticated()) {
         try {
+            console.log("🔄 Initializing PropertySetup from DOMContentLoaded...");
             window.propertySetup = new PropertySetup();
-            console.log("✅ PropertySetup initialized successfully!");
+            console.log("✅ PropertySetup initialized successfully from DOMContentLoaded!");
         } catch (error) {
             console.error("❌ Error initializing PropertySetup:", error);
-            alert("Error loading setup. Please refresh.");
         }
     } else {
-        console.log("🔒 User not authenticated - PropertySetup not initialized");
+        if (window.propertySetup) {
+            console.log("✅ PropertySetup already initialized");
+        } else {
+            console.log("🔒 User not authenticated or waiting for dynamic load");
+        }
     }
 });
+
+// Also try to initialize immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for DOMContentLoaded
+    console.log("📄 DOM still loading, will initialize on DOMContentLoaded");
+} else {
+    // DOM is already loaded (script loaded dynamically)
+    console.log("📄 DOM already loaded, initializing immediately");
+    if (!window.propertySetup && typeof isAuthenticated === 'function' && isAuthenticated()) {
+        try {
+            window.propertySetup = new PropertySetup();
+            console.log("✅ PropertySetup initialized immediately!");
+        } catch (error) {
+            console.error("❌ Error initializing PropertySetup immediately:", error);
+        }
+    }
+}
