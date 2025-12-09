@@ -40,12 +40,9 @@ class PropertySetup {
     this.addPreviewStyles();
     
     // Load existing config (async - don't await, let it load in background)
-    // Wait a bit to ensure DOM is fully ready
-    setTimeout(() => {
-        this.autoLoadExistingConfig().catch(err => {
-            console.error('Error loading existing config:', err);
-        });
-    }, 500);
+    this.autoLoadExistingConfig().catch(err => {
+        console.error('Error loading existing config:', err);
+    });
     
     // Setup validation
     setTimeout(() => {
@@ -437,19 +434,11 @@ async autoLoadExistingConfig() {
                         });
                     }
                     
-                    // Also save to localStorage for backward compatibility
-                    localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
-                    
-                    // Populate form fields from server data immediately
-                    // The form should be ready since we're in the constructor
-                    console.log('🔄 About to populate form with property:', property.name);
+                    // Populate form fields from server data
                     this.populateFormFromConfig(property);
                     
-                    // Also try after a short delay in case DOM wasn't ready
-                    setTimeout(() => {
-                        console.log('🔄 Retry populating form...');
-                        this.populateFormFromConfig(property);
-                    }, 300);
+                    // Also save to localStorage for backward compatibility
+                    localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
                     
                     // Load recommendations and appliances
                     if (property.recommendations && Array.isArray(property.recommendations)) {
@@ -511,15 +500,8 @@ async autoLoadExistingConfig() {
                 console.log(`📌 Stored property ID from localStorage: ${this.currentPropertyId}`);
             }
             
-            // Populate form fields immediately
-            console.log('🔄 About to populate form from localStorage config');
+            // Populate form fields
             this.populateFormFromConfig(config);
-            
-            // Also try after a short delay in case DOM wasn't ready
-            setTimeout(() => {
-                console.log('🔄 Retry populating form from localStorage...');
-                this.populateFormFromConfig(config);
-            }, 300);
             
             // Load recommendations and appliances from config if available
             if (config.recommendations && Array.isArray(config.recommendations)) {
@@ -579,26 +561,9 @@ async autoLoadExistingConfig() {
 }
 
 populateFormFromConfig(config) {
-    if (!config) {
-        console.error('❌ populateFormFromConfig called with no config');
-        return;
-    }
-    
-    console.log('🔄 Populating form from config');
-    console.log('📋 Config data:', {
-        name: config.name,
-        address: config.address,
-        type: config.type,
-        hostContact: config.hostContact
-    });
-    
     // Populate form fields from config object
-    const propertyNameField = document.getElementById('propertyName');
-    if (propertyNameField) {
-        propertyNameField.value = config.name || '';
-        console.log(`✅ Set propertyName: "${config.name || ''}"`);
-    } else {
-        console.error('❌ propertyName field not found in DOM');
+    if (document.getElementById('propertyName')) {
+        document.getElementById('propertyName').value = config.name || '';
     }
     
     const propertyAddressField = document.getElementById('propertyAddress');
