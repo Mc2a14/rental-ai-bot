@@ -102,6 +102,55 @@ class Database {
         CREATE INDEX IF NOT EXISTS idx_properties_property_id ON properties(property_id)
       `);
 
+      // Create questions table for analytics
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS questions (
+          id SERIAL PRIMARY KEY,
+          property_id VARCHAR(255) NOT NULL,
+          question_text TEXT NOT NULL,
+          question_language VARCHAR(10) DEFAULT 'en',
+          response_text TEXT,
+          response_helpful BOOLEAN,
+          category VARCHAR(100),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (property_id) REFERENCES properties(property_id) ON DELETE CASCADE
+        )
+      `);
+
+      // Create indexes for questions
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_questions_property_id ON questions(property_id)
+      `);
+      
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_questions_created_at ON questions(created_at)
+      `);
+      
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_questions_category ON questions(category)
+      `);
+
+      // Create FAQs table (auto-generated from frequent questions)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS faqs (
+          id SERIAL PRIMARY KEY,
+          property_id VARCHAR(255) NOT NULL,
+          question TEXT NOT NULL,
+          answer TEXT NOT NULL,
+          frequency INTEGER DEFAULT 0,
+          helpful_count INTEGER DEFAULT 0,
+          language VARCHAR(10) DEFAULT 'en',
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (property_id) REFERENCES properties(property_id) ON DELETE CASCADE
+        )
+      `);
+
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_faqs_property_id ON faqs(property_id)
+      `);
+
       client.release();
       logger.info('✅ Database schema initialized');
     } catch (error) {

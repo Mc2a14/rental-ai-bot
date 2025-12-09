@@ -1079,6 +1079,11 @@ class RentalAIChat {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+            // Get propertyId for analytics tracking
+            const pathParts = window.location.pathname.split('/').filter(p => p);
+            const isPropertyPage = pathParts.length >= 2 && pathParts[0] === 'property';
+            const propertyId = isPropertyPage ? pathParts[1] : (this.hostConfig?.id || this.hostConfig?.propertyId || null);
+            
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
@@ -1088,7 +1093,8 @@ class RentalAIChat {
                     message: message,
                     language: currentLanguage,
                     hostConfig: hostConfig,
-                    systemMessage: systemMessage
+                    systemMessage: systemMessage,
+                    propertyId: propertyId
                 }),
                 signal: controller.signal
             });
@@ -1099,7 +1105,9 @@ class RentalAIChat {
             this.hideTypingIndicator();
 
             if (data.success) {
-                this.addMessage(data.response, 'bot');
+                // Store questionId for feedback tracking
+                const questionId = data.questionId || null;
+                this.addMessage(data.response, 'bot', false, questionId);
                 console.log('AI Response - Using config:', data.usingCustomConfig || false);
                 
                 FAQTracker.autoLearnFromAnswer(message, data.response);
@@ -1128,7 +1136,7 @@ class RentalAIChat {
         }
     }
 
-    addMessage(content, sender, isRestored = false) {
+    addMessage(content, sender, isRestored = false, questionId = null) {
         const chatMessages = document.getElementById('chatMessages');
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}-message`;
@@ -1145,6 +1153,32 @@ class RentalAIChat {
         if (sender === 'bot') {
             const formattedContent = this.formatBotResponse(content);
             messageContent.innerHTML = formattedContent;
+            
+            // Add feedback buttons if questionId is provided
+            if (questionId && !isRestored) {
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'feedback-buttons';
+                feedbackDiv.style.marginTop = '10px';
+                feedbackDiv.style.display = 'flex';
+                feedbackDiv.style.gap = '10px';
+                feedbackDiv.style.alignItems = 'center';
+                
+                const helpfulBtn = document.createElement('button');
+                helpfulBtn.textContent = '👍 Helpful';
+                helpfulBtn.className = 'feedback-btn helpful';
+                helpfulBtn.style.cssText = 'padding: 5px 12px; border: 1px solid #2ecc71; background: white; color: #2ecc71; border-radius: 4px; cursor: pointer; font-size: 12px;';
+                helpfulBtn.addEventListener('click', () => this.submitFeedback(questionId, true, helpfulBtn, notHelpfulBtn));
+                
+                const notHelpfulBtn = document.createElement('button');
+                notHelpfulBtn.textContent = '👎 Not helpful';
+                notHelpfulBtn.className = 'feedback-btn not-helpful';
+                notHelpfulBtn.style.cssText = 'padding: 5px 12px; border: 1px solid #e74c3c; background: white; color: #e74c3c; border-radius: 4px; cursor: pointer; font-size: 12px;';
+                notHelpfulBtn.addEventListener('click', () => this.submitFeedback(questionId, false, helpfulBtn, notHelpfulBtn));
+                
+                feedbackDiv.appendChild(helpfulBtn);
+                feedbackDiv.appendChild(notHelpfulBtn);
+                messageContent.appendChild(feedbackDiv);
+            }
         } else {
             messageContent.textContent = content;
         }
@@ -1193,6 +1227,39 @@ class RentalAIChat {
         const typingIndicator = document.getElementById('typingIndicator');
         if (typingIndicator) {
             typingIndicator.style.display = 'none';
+        }
+    }
+
+    async submitFeedback(questionId, helpful, helpfulBtn, notHelpfulBtn) {
+        try {
+            const response = await fetch('/api/analytics/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questionId, helpful })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Disable both buttons
+                helpfulBtn.disabled = true;
+                notHelpfulBtn.disabled = true;
+                
+                // Highlight the selected button
+                if (helpful) {
+                    helpfulBtn.style.background = '#2ecc71';
+                    helpfulBtn.style.color = 'white';
+                    helpfulBtn.textContent = '✓ Helpful';
+                } else {
+                    notHelpfulBtn.style.background = '#e74c3c';
+                    notHelpfulBtn.style.color = 'white';
+                    notHelpfulBtn.textContent = '✓ Not helpful';
+                }
+                
+                this.showTempMessage(helpful ? 'Thank you for your feedback!' : 'Thanks, we\'ll improve!', 'success');
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
         }
     }
 }

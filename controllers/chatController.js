@@ -1,11 +1,12 @@
 // Chat Controller
 const aiService = require('../services/aiService');
+const analyticsService = require('../services/analyticsService');
 const logger = require('../utils/logger');
 
 class ChatController {
   async handleChat(req, res) {
     try {
-      const { message, language = 'en', hostConfig = null, systemMessage = '' } = req.body;
+      const { message, language = 'en', hostConfig = null, systemMessage = '', propertyId = null } = req.body;
       
       // Validation
       if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -31,6 +32,18 @@ class ChatController {
         systemMessage,
         language
       );
+      
+      // Track question for analytics (async, don't wait)
+      if (result.success && propertyId) {
+        const category = analyticsService.categorizeQuestion(message);
+        analyticsService.trackQuestion(
+          propertyId,
+          message.trim(),
+          result.response,
+          language,
+          category
+        ).catch(err => logger.error('Error tracking question:', err));
+      }
       
       if (result.success) {
         return res.json({

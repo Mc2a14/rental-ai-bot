@@ -19,6 +19,7 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const chatRoutes = require('./routes/chatRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
 const userRoutes = require('./routes/userRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // Create Express App
 const app = express();
@@ -123,6 +124,9 @@ app.get('/api/property-config/:propertyId', async (req, res) => {
 
 // User API
 app.use('/api/user', userRoutes);
+
+// Analytics API
+app.use('/api/analytics', analyticsRoutes);
 
 // User Properties API
 app.get('/api/user/:userId/properties', async (req, res) => {
