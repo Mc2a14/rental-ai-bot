@@ -1079,9 +1079,7 @@ class RentalAIChat {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-            // Get propertyId for analytics tracking
-            const pathParts = window.location.pathname.split('/').filter(p => p);
-            const isPropertyPage = pathParts.length >= 2 && pathParts[0] === 'property';
+            // Get propertyId for analytics tracking (reuse pathParts from above)
             const propertyId = isPropertyPage ? pathParts[1] : (this.hostConfig?.id || this.hostConfig?.propertyId || null);
             
             const response = await fetch(this.apiUrl, {
