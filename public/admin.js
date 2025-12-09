@@ -1081,10 +1081,6 @@ addAppliance() {
     if (this.currentStep === 3) {
         this.updatePreview();
     }
-        // Update preview if on step 3
-        if (this.currentStep === 3) {
-            this.updatePreview();
-        }
 
     nameInput.value = '';
     instructionsInput.value = '';
