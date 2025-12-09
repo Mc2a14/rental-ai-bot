@@ -382,9 +382,7 @@ async autoLoadExistingConfig() {
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('📥 Server response:', data);
                 if (data.success && data.properties && data.properties.length > 0) {
-                    console.log(`✅ Found ${data.properties.length} properties for user`);
                     // If we have a propertyId from URL, try to find that specific property
                     let property = null;
                     if (this.currentPropertyId) {
