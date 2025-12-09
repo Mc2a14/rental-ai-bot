@@ -298,28 +298,26 @@ class PropertyService {
   }
 
   async updatePropertyInFile(propertyId, updates) {
-      
-      const properties = await this.propertiesFile.read();
-      if (!properties[propertyId]) {
-        throw new Error('Property not found');
-      }
-
-      properties[propertyId] = {
-        ...properties[propertyId],
-        ...updates,
-        updated: new Date().toISOString()
-      };
-
-      await this.propertiesFile.write(properties);
-
-      return {
-        success: true,
-        property: properties[propertyId]
-      };
-    } catch (error) {
-      logger.error('Error updating property:', error);
-      throw error;
+    const properties = await this.propertiesFile.read();
+    if (!properties[propertyId]) {
+      throw new Error('Property not found');
     }
+
+    properties[propertyId] = {
+      ...properties[propertyId],
+      ...updates,
+      updated: new Date().toISOString()
+    };
+
+    await this.propertiesFile.write(properties);
+    
+    logger.info(`Property updated in file: ${propertyId}`);
+
+    return {
+      success: true,
+      propertyId: propertyId,
+      property: properties[propertyId]
+    };
   }
 }
 
