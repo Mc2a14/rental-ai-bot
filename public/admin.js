@@ -183,6 +183,26 @@ initializeEventListeners() {
             console.log("✅ Submit button listener added");
         }
         
+        // FAQ button
+        const addFAQBtn = document.getElementById('addFAQBtn');
+        if (addFAQBtn) {
+            addFAQBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("❓ Add FAQ button clicked");
+                if (self) {
+                    self.addFAQ();
+                } else if (window.propertySetup) {
+                    window.propertySetup.addFAQ();
+                } else {
+                    alert('System not ready. Please wait for page to load.');
+                }
+            });
+            console.log("✅ Add FAQ button listener added");
+        } else {
+            console.log("⚠️ Add FAQ button not found");
+        }
+        
         console.log("✅ All event listeners initialized");
     }, 200);
 }
