@@ -1069,8 +1069,9 @@ class RentalAIChat {
                 systemMessage += `APPLIANCE INSTRUCTIONS:\n\n${this.getAppliancesText()}`;
             }
             
-            // If asking about WiFi, include it specifically
-            if (message.toLowerCase().includes('wifi') && hostConfig?.amenities?.wifi) {
+            // If asking about WiFi, include it specifically (multi-language)
+            const wifiKeywords = ['wifi', 'wi-fi', 'internet', 'red', 'conexión', 'connexion', 'réseau'];
+            if (anyKeywordInMessage(message, wifiKeywords) && hostConfig?.amenities?.wifi) {
                 if (systemMessage) systemMessage += "\n\n";
                 systemMessage += `WIFI INFORMATION:\nNetwork: ${hostConfig.amenities.wifi}`;
             }
