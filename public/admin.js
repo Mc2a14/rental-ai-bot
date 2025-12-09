@@ -40,9 +40,12 @@ class PropertySetup {
     this.addPreviewStyles();
     
     // Load existing config (async - don't await, let it load in background)
-    this.autoLoadExistingConfig().catch(err => {
-        console.error('Error loading existing config:', err);
-    });
+    // Wait a bit to ensure DOM is fully ready
+    setTimeout(() => {
+        this.autoLoadExistingConfig().catch(err => {
+            console.error('Error loading existing config:', err);
+        });
+    }, 500);
     
     // Setup validation
     setTimeout(() => {
