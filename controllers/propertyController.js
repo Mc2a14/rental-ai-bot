@@ -26,11 +26,18 @@ class PropertyController {
       }
       
       // If propertyId is provided, update existing property; otherwise create new
-      const result = propertyId 
-        ? await propertyService.updateProperty(propertyId, propertyData)
-        : await propertyService.saveProperty(userId, propertyData);
+      let result;
+      if (propertyId) {
+        logger.info(`🔄 Attempting to UPDATE property: ${propertyId}`);
+        result = await propertyService.updateProperty(propertyId, propertyData);
+        logger.info(`✅ Property UPDATED: ${result.propertyId}`);
+      } else {
+        logger.info(`🆕 Creating NEW property for user: ${userId}`);
+        result = await propertyService.saveProperty(userId, propertyData);
+        logger.info(`✅ Property CREATED: ${result.propertyId}`);
+      }
       
-      logger.info(`Property saved successfully: ${result.propertyId}`);
+      logger.info(`Property operation completed: ${result.propertyId}`);
       
       // Verify the property was actually saved/updated
       const verifyProperty = await propertyService.getProperty(result.propertyId);

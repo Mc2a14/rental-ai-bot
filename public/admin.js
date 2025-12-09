@@ -330,10 +330,22 @@ async autoLoadExistingConfig() {
                     // Use the most recent property
                     const property = data.properties[0]; // Properties are sorted by created_at DESC
                     console.log(`✅ Found property from server: ${property.name}`);
+                    console.log(`📋 Property object keys:`, Object.keys(property));
+                    console.log(`📋 Property.id: ${property.id}`);
+                    console.log(`📋 Property.propertyId: ${property.propertyId}`);
                     
-                    // Store the property ID for updates
-                    this.currentPropertyId = property.id || property.propertyId;
+                    // Store the property ID for updates - try multiple possible fields
+                    this.currentPropertyId = property.propertyId || property.id || property.property_id;
                     console.log(`📌 Stored property ID for updates: ${this.currentPropertyId}`);
+                    console.log(`📌 Total properties for user: ${data.properties.length}`);
+                    
+                    // If there are multiple properties, log them
+                    if (data.properties.length > 1) {
+                        console.warn(`⚠️ User has ${data.properties.length} properties. Using most recent.`);
+                        data.properties.forEach((p, idx) => {
+                            console.log(`  Property ${idx + 1}: ${p.name} (ID: ${p.propertyId || p.id})`);
+                        });
+                    }
                     
                     // Populate form fields from server data
                     this.populateFormFromConfig(property);
@@ -370,6 +382,12 @@ async autoLoadExistingConfig() {
         if (savedConfig) {
             console.log('📁 Found saved configuration in localStorage, loading...');
             const config = JSON.parse(savedConfig);
+            
+            // Store property ID from localStorage if available
+            if (config.propertyId || config.id) {
+                this.currentPropertyId = config.propertyId || config.id;
+                console.log(`📌 Stored property ID from localStorage: ${this.currentPropertyId}`);
+            }
             
             // Populate form fields
             this.populateFormFromConfig(config);
@@ -666,8 +684,12 @@ async saveConfiguration(e) {
         if (this.currentPropertyId) {
             requestBody.propertyId = this.currentPropertyId;
             console.log(`🔄 Updating existing property: ${this.currentPropertyId}`);
+            console.log(`📊 Recommendations count: ${propertyData.recommendations?.length || 0}`);
+            console.log(`📊 Appliances count: ${propertyData.appliances?.length || 0}`);
         } else {
-            console.log('🆕 Creating new property');
+            console.log('🆕 Creating new property (no currentPropertyId found)');
+            console.log(`📊 Recommendations count: ${propertyData.recommendations?.length || 0}`);
+            console.log(`📊 Appliances count: ${propertyData.appliances?.length || 0}`);
         }
         
         const response = await fetch('/api/property/save', {
@@ -683,9 +705,12 @@ async saveConfiguration(e) {
         }
         
         console.log('✅ Saved to server, property ID:', result.propertyId);
+        console.log('📊 Updated recommendations count:', this.recommendations.length);
+        console.log('📊 Updated appliances count:', this.appliances.length);
         
         // Store the property ID for future updates
         this.currentPropertyId = result.propertyId;
+        console.log(`📌 Updated currentPropertyId to: ${this.currentPropertyId}`);
         
         // ALSO save to localStorage (for backward compatibility)
         localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(propertyData));

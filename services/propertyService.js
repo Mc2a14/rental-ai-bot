@@ -218,6 +218,9 @@ class PropertyService {
   }
 
   async updatePropertyInDatabase(propertyId, updates) {
+    logger.info(`🔄 Updating property in database: ${propertyId}`);
+    logger.info(`📊 Updates include: recommendations=${updates.recommendations?.length || 0}, appliances=${updates.appliances?.length || 0}`);
+    
     const setClause = [];
     const values = [];
     let paramCount = 1;
@@ -288,7 +291,8 @@ class PropertyService {
     }
 
     const property = this.mapDatabaseRowToProperty(result.rows[0]);
-    logger.info(`Property updated in database: ${propertyId}`);
+    logger.info(`✅ Property updated in database: ${propertyId}`);
+    logger.info(`📊 Updated property has: recommendations=${property.recommendations?.length || 0}, appliances=${property.appliances?.length || 0}`);
     
     return {
       success: true,
