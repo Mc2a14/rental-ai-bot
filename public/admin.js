@@ -421,11 +421,21 @@ async autoLoadExistingConfig() {
                         });
                     }
                     
-                    // Populate form fields from server data
-                    this.populateFormFromConfig(property);
-                    
                     // Also save to localStorage for backward compatibility
                     localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
+                    
+                    // Populate form fields from server data
+                    // Use setTimeout to ensure DOM is ready
+                    setTimeout(() => {
+                        this.populateFormFromConfig(property);
+                        // Trigger input events to update validation
+                        const fields = document.querySelectorAll('#propertyName, #propertyAddress, #propertyType, #hostContact, #maintenanceContact, #checkInTime, #checkOutTime, #lateCheckout, #wifiDetails, #amenities, #houseRules');
+                        fields.forEach(field => {
+                            if (field) {
+                                field.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        });
+                    }, 200);
                     
                     // Load recommendations and appliances
                     if (property.recommendations && Array.isArray(property.recommendations)) {
