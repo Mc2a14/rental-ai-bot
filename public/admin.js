@@ -382,7 +382,9 @@ async autoLoadExistingConfig() {
             
             if (response.ok) {
                 const data = await response.json();
+                console.log('📥 Server response:', data);
                 if (data.success && data.properties && data.properties.length > 0) {
+                    console.log(`✅ Found ${data.properties.length} properties for user`);
                     // If we have a propertyId from URL, try to find that specific property
                     let property = null;
                     if (this.currentPropertyId) {
@@ -425,8 +427,15 @@ async autoLoadExistingConfig() {
                     localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
                     
                     // Populate form fields from server data
-                    // Use setTimeout to ensure DOM is ready
-                    setTimeout(() => {
+                    // Use multiple attempts to ensure DOM is ready
+                    const populateForm = () => {
+                        const propertyNameField = document.getElementById('propertyName');
+                        if (!propertyNameField) {
+                            console.warn('⚠️ Form fields not ready yet, retrying...');
+                            setTimeout(populateForm, 100);
+                            return;
+                        }
+                        console.log('✅ Form fields ready, populating...');
                         this.populateFormFromConfig(property);
                         // Trigger input events to update validation
                         const fields = document.querySelectorAll('#propertyName, #propertyAddress, #propertyType, #hostContact, #maintenanceContact, #checkInTime, #checkOutTime, #lateCheckout, #wifiDetails, #amenities, #houseRules');
@@ -435,7 +444,12 @@ async autoLoadExistingConfig() {
                                 field.dispatchEvent(new Event('input', { bubbles: true }));
                             }
                         });
-                    }, 200);
+                    };
+                    
+                    // Try immediately, then retry if needed
+                    setTimeout(populateForm, 100);
+                    setTimeout(populateForm, 500);
+                    setTimeout(populateForm, 1000);
                     
                     // Load recommendations and appliances
                     if (property.recommendations && Array.isArray(property.recommendations)) {
