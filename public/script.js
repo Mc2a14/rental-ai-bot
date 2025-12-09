@@ -1040,8 +1040,25 @@ class RentalAIChat {
             
             let systemMessage = '';
             
-            const localKeywords = ['restaurant', 'food', 'eat', 'cafe', 'bar', 'beach', 'park', 'attraction', 'nearby', 'local', 'recommend'];
-            const applianceKeywords = ['appliance', 'oven', 'microwave', 'stove', 'washer', 'dryer', 'laundry', 'fridge', 'thermostat'];
+            // Multi-language keywords for local recommendations
+            const localKeywords = [
+                // English
+                'restaurant', 'food', 'eat', 'cafe', 'bar', 'beach', 'park', 'attraction', 'nearby', 'local', 'recommend', 'place', 'places',
+                // Spanish
+                'restaurante', 'comida', 'comer', 'café', 'bar', 'playa', 'parque', 'atracción', 'cerca', 'local', 'recomendar', 'lugar', 'lugares',
+                // French
+                'restaurant', 'nourriture', 'manger', 'café', 'bar', 'plage', 'parc', 'attraction', 'près', 'local', 'recommand', 'lieu', 'lieux'
+            ];
+            
+            // Multi-language keywords for appliances
+            const applianceKeywords = [
+                // English
+                'appliance', 'oven', 'microwave', 'stove', 'washer', 'dryer', 'laundry', 'fridge', 'thermostat', 'refrigerator', 'dishwasher',
+                // Spanish
+                'electrodoméstico', 'electrodomésticos', 'horno', 'microondas', 'estufa', 'lavadora', 'secadora', 'lavandería', 'refrigerador', 'nevera', 'termostato', 'lavavajillas',
+                // French
+                'appareil', 'appareils', 'four', 'micro-ondes', 'cuisinière', 'lave-linge', 'sèche-linge', 'buanderie', 'réfrigérateur', 'frigo', 'thermostat', 'lave-vaisselle'
+            ];
             
             if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
                 systemMessage += `IMPORTANT: Use these specific recommendations for ${hostConfig?.name || 'this property'}:\n\n${this.getRecommendationsText()}`;
