@@ -7,6 +7,21 @@ class PropertySetup {
     this.totalSteps = 3;
     this.recommendations = [];
     this.appliances = [];
+    this.currentPropertyId = null; // Store the current property ID for updates
+    
+    // Try to restore propertyId from localStorage on initialization
+    try {
+        const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
+        if (savedConfig) {
+            const config = JSON.parse(savedConfig);
+            if (config.propertyId || config.id) {
+                this.currentPropertyId = config.propertyId || config.id;
+                console.log(`📌 Restored propertyId from localStorage: ${this.currentPropertyId}`);
+            }
+        }
+    } catch (e) {
+        console.warn('Could not restore propertyId from localStorage:', e);
+    }
     
     // Load data AFTER checking user is authenticated
     if (this.isUserAuthenticated()) {
