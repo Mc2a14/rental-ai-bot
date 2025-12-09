@@ -319,17 +319,43 @@ async autoLoadExistingConfig() {
         // PRIORITY 1: Try to load from server (database)
         try {
             console.log(`🔄 Loading properties from server for user: ${userId}`);
+            
+            // Check if there's a propertyId in the URL (e.g., from guest link)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlPropertyId = urlParams.get('propertyId');
+            if (urlPropertyId) {
+                console.log(`📌 Found propertyId in URL: ${urlPropertyId}`);
+                this.currentPropertyId = urlPropertyId;
+            }
+            
             const response = await fetch(`/api/user/${userId}/properties`, {
                 method: 'GET',
-                credentials: 'include'
+                credentials: 'include',
+                cache: 'no-cache' // Ensure fresh data
             });
             
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.properties && data.properties.length > 0) {
-                    // Use the most recent property
-                    const property = data.properties[0]; // Properties are sorted by created_at DESC
-                    console.log(`✅ Found property from server: ${property.name}`);
+                    // If we have a propertyId from URL, try to find that specific property
+                    let property = null;
+                    if (this.currentPropertyId) {
+                        property = data.properties.find(p => 
+                            (p.propertyId || p.id) === this.currentPropertyId
+                        );
+                        if (property) {
+                            console.log(`✅ Found property matching URL propertyId: ${property.name}`);
+                        } else {
+                            console.warn(`⚠️ Property ${this.currentPropertyId} not found in user's properties, using most recent`);
+                        }
+                    }
+                    
+                    // If no match or no URL propertyId, use the most recent property
+                    if (!property) {
+                        property = data.properties[0]; // Properties are sorted by created_at DESC
+                        console.log(`✅ Using most recent property: ${property.name}`);
+                    }
+                    
                     console.log(`📋 Property object keys:`, Object.keys(property));
                     console.log(`📋 Property.id: ${property.id}`);
                     console.log(`📋 Property.propertyId: ${property.propertyId}`);
@@ -341,9 +367,11 @@ async autoLoadExistingConfig() {
                     
                     // If there are multiple properties, log them
                     if (data.properties.length > 1) {
-                        console.warn(`⚠️ User has ${data.properties.length} properties. Using most recent.`);
+                        console.warn(`⚠️ User has ${data.properties.length} properties. Using: ${this.currentPropertyId}`);
                         data.properties.forEach((p, idx) => {
-                            console.log(`  Property ${idx + 1}: ${p.name} (ID: ${p.propertyId || p.id})`);
+                            const pId = p.propertyId || p.id;
+                            const isCurrent = pId === this.currentPropertyId ? ' ← CURRENT' : '';
+                            console.log(`  Property ${idx + 1}: ${p.name} (ID: ${pId})${isCurrent}`);
                         });
                     }
                     
