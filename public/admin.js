@@ -437,30 +437,16 @@ async autoLoadExistingConfig() {
                     // Also save to localStorage for backward compatibility
                     localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
                     
-                    // Populate form fields from server data
-                    // Use multiple attempts to ensure DOM is ready
-                    const populateForm = () => {
-                        const propertyNameField = document.getElementById('propertyName');
-                        if (!propertyNameField) {
-                            console.warn('⚠️ Form fields not ready yet, retrying...');
-                            setTimeout(populateForm, 100);
-                            return;
-                        }
-                        console.log('✅ Form fields ready, populating...');
-                        this.populateFormFromConfig(property);
-                        // Trigger input events to update validation
-                        const fields = document.querySelectorAll('#propertyName, #propertyAddress, #propertyType, #hostContact, #maintenanceContact, #checkInTime, #checkOutTime, #lateCheckout, #wifiDetails, #amenities, #houseRules');
-                        fields.forEach(field => {
-                            if (field) {
-                                field.dispatchEvent(new Event('input', { bubbles: true }));
-                            }
-                        });
-                    };
+                    // Populate form fields from server data immediately
+                    // The form should be ready since we're in the constructor
+                    console.log('🔄 About to populate form with property:', property.name);
+                    this.populateFormFromConfig(property);
                     
-                    // Try immediately, then retry if needed
-                    setTimeout(populateForm, 100);
-                    setTimeout(populateForm, 500);
-                    setTimeout(populateForm, 1000);
+                    // Also try after a short delay in case DOM wasn't ready
+                    setTimeout(() => {
+                        console.log('🔄 Retry populating form...');
+                        this.populateFormFromConfig(property);
+                    }, 300);
                     
                     // Load recommendations and appliances
                     if (property.recommendations && Array.isArray(property.recommendations)) {
@@ -522,11 +508,15 @@ async autoLoadExistingConfig() {
                 console.log(`📌 Stored property ID from localStorage: ${this.currentPropertyId}`);
             }
             
-            // Populate form fields
-            // Use setTimeout to ensure DOM is ready
+            // Populate form fields immediately
+            console.log('🔄 About to populate form from localStorage config');
+            this.populateFormFromConfig(config);
+            
+            // Also try after a short delay in case DOM wasn't ready
             setTimeout(() => {
+                console.log('🔄 Retry populating form from localStorage...');
                 this.populateFormFromConfig(config);
-            }, 100);
+            }, 300);
             
             // Load recommendations and appliances from config if available
             if (config.recommendations && Array.isArray(config.recommendations)) {
@@ -586,15 +576,26 @@ async autoLoadExistingConfig() {
 }
 
 populateFormFromConfig(config) {
-    console.log('🔄 Populating form from config:', config);
+    if (!config) {
+        console.error('❌ populateFormFromConfig called with no config');
+        return;
+    }
+    
+    console.log('🔄 Populating form from config');
+    console.log('📋 Config data:', {
+        name: config.name,
+        address: config.address,
+        type: config.type,
+        hostContact: config.hostContact
+    });
     
     // Populate form fields from config object
     const propertyNameField = document.getElementById('propertyName');
     if (propertyNameField) {
         propertyNameField.value = config.name || '';
-        console.log(`✅ Set propertyName: ${config.name || ''}`);
+        console.log(`✅ Set propertyName: "${config.name || ''}"`);
     } else {
-        console.warn('⚠️ propertyName field not found');
+        console.error('❌ propertyName field not found in DOM');
     }
     
     const propertyAddressField = document.getElementById('propertyAddress');
