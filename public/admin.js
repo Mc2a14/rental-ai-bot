@@ -421,11 +421,14 @@ async autoLoadExistingConfig() {
                         });
                     }
                     
-                    // Populate form fields from server data
-                    this.populateFormFromConfig(property);
-                    
                     // Also save to localStorage for backward compatibility
                     localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
+                    
+                    // Populate form fields from server data
+                    // Use a small delay to ensure DOM is ready
+                    setTimeout(() => {
+                        this.populateFormFromConfig(property);
+                    }, 100);
                     
                     // Load recommendations and appliances
                     if (property.recommendations && Array.isArray(property.recommendations)) {
@@ -488,7 +491,10 @@ async autoLoadExistingConfig() {
             }
             
             // Populate form fields
-            this.populateFormFromConfig(config);
+            // Use a small delay to ensure DOM is ready
+            setTimeout(() => {
+                this.populateFormFromConfig(config);
+            }, 100);
             
             // Load recommendations and appliances from config if available
             if (config.recommendations && Array.isArray(config.recommendations)) {
@@ -548,40 +554,103 @@ async autoLoadExistingConfig() {
 }
 
 populateFormFromConfig(config) {
+    console.log('🔄 populateFormFromConfig called with:', config);
+    
+    if (!config) {
+        console.error('❌ No config provided!');
+        return;
+    }
+    
     // Populate form fields from config object
-    if (document.getElementById('propertyName')) {
-        document.getElementById('propertyName').value = config.name || '';
+    const propertyNameField = document.getElementById('propertyName');
+    if (propertyNameField) {
+        propertyNameField.value = config.name || '';
+        console.log(`✅ Set propertyName to: "${config.name || ''}"`);
+    } else {
+        console.error('❌ propertyName field not found in DOM!');
     }
-    if (document.getElementById('propertyAddress')) {
-        document.getElementById('propertyAddress').value = config.address || '';
+    
+    const propertyAddressField = document.getElementById('propertyAddress');
+    if (propertyAddressField) {
+        propertyAddressField.value = config.address || '';
+        console.log(`✅ Set propertyAddress to: "${config.address || ''}"`);
+    } else {
+        console.error('❌ propertyAddress field not found in DOM!');
     }
-    if (document.getElementById('propertyType')) {
-        document.getElementById('propertyType').value = config.type || 'Vacation Home';
+    
+    const propertyTypeField = document.getElementById('propertyType');
+    if (propertyTypeField) {
+        propertyTypeField.value = config.type || 'Vacation Home';
+        console.log(`✅ Set propertyType to: "${config.type || 'Vacation Home'}"`);
+    } else {
+        console.error('❌ propertyType field not found in DOM!');
     }
-    if (document.getElementById('hostContact')) {
-        document.getElementById('hostContact').value = config.hostContact || '';
+    
+    const hostContactField = document.getElementById('hostContact');
+    if (hostContactField) {
+        hostContactField.value = config.hostContact || '';
+        console.log(`✅ Set hostContact to: "${config.hostContact || ''}"`);
+    } else {
+        console.error('❌ hostContact field not found in DOM!');
     }
-    if (document.getElementById('maintenanceContact')) {
-        document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
+    
+    const maintenanceContactField = document.getElementById('maintenanceContact');
+    if (maintenanceContactField) {
+        maintenanceContactField.value = config.maintenanceContact || '';
+        console.log(`✅ Set maintenanceContact to: "${config.maintenanceContact || ''}"`);
+    } else {
+        console.error('❌ maintenanceContact field not found in DOM!');
     }
-    if (document.getElementById('checkInTime')) {
-        document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
+    
+    const checkInTimeField = document.getElementById('checkInTime');
+    if (checkInTimeField) {
+        checkInTimeField.value = config.checkinTime || config.checkInTime || '3:00 PM';
+        console.log(`✅ Set checkInTime to: "${config.checkinTime || config.checkInTime || '3:00 PM'}"`);
+    } else {
+        console.error('❌ checkInTime field not found in DOM!');
     }
-    if (document.getElementById('checkOutTime')) {
-        document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
+    
+    const checkOutTimeField = document.getElementById('checkOutTime');
+    if (checkOutTimeField) {
+        checkOutTimeField.value = config.checkoutTime || config.checkOutTime || '11:00 AM';
+        console.log(`✅ Set checkOutTime to: "${config.checkoutTime || config.checkOutTime || '11:00 AM'}"`);
+    } else {
+        console.error('❌ checkOutTime field not found in DOM!');
     }
-    if (document.getElementById('lateCheckout')) {
-        document.getElementById('lateCheckout').value = config.lateCheckout || '';
+    
+    const lateCheckoutField = document.getElementById('lateCheckout');
+    if (lateCheckoutField) {
+        lateCheckoutField.value = config.lateCheckout || '';
+        console.log(`✅ Set lateCheckout to: "${config.lateCheckout || ''}"`);
+    } else {
+        console.error('❌ lateCheckout field not found in DOM!');
     }
-    if (document.getElementById('wifiDetails')) {
-        document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
+    
+    const wifiDetailsField = document.getElementById('wifiDetails');
+    if (wifiDetailsField) {
+        wifiDetailsField.value = config.amenities?.wifi || config.wifiDetails || '';
+        console.log(`✅ Set wifiDetails to: "${config.amenities?.wifi || config.wifiDetails || ''}"`);
+    } else {
+        console.error('❌ wifiDetails field not found in DOM!');
     }
-    if (document.getElementById('amenities')) {
-        document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
+    
+    const amenitiesField = document.getElementById('amenities');
+    if (amenitiesField) {
+        amenitiesField.value = config.amenities?.other || config.amenities || '';
+        console.log(`✅ Set amenities to: "${config.amenities?.other || config.amenities || ''}"`);
+    } else {
+        console.error('❌ amenities field not found in DOM!');
     }
-    if (document.getElementById('houseRules')) {
-        document.getElementById('houseRules').value = config.houseRules || '';
+    
+    const houseRulesField = document.getElementById('houseRules');
+    if (houseRulesField) {
+        houseRulesField.value = config.houseRules || '';
+        console.log(`✅ Set houseRules to: "${config.houseRules || ''}"`);
+    } else {
+        console.error('❌ houseRules field not found in DOM!');
     }
+    
+    console.log('✅ Form population complete');
 }
 
 nextStep() {
