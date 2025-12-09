@@ -7,10 +7,46 @@
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Match app's body styling */
+        body {
+            padding: 20px !important;
+            margin: 0 !important;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            overflow-x: hidden;
+        }
+        
         .analytics-container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .analytics-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .analytics-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px !important;
+            }
+            
+            .analytics-container {
+                padding: 15px;
+                max-height: 95vh;
+                border-radius: 15px;
+            }
         }
         
         .analytics-header {
@@ -18,6 +54,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
             flex-wrap: wrap;
             gap: 15px;
         }
@@ -25,12 +63,23 @@
         .analytics-header h1 {
             margin: 0;
             color: #2c3e50;
+            font-size: 24px;
         }
         
         .property-selector {
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .property-selector label {
+            font-weight: bold;
+            color: #2c3e50;
         }
         
         .property-selector select {
@@ -39,13 +88,48 @@
             border-radius: 5px;
             font-size: 14px;
             min-width: 200px;
+            flex: 1;
+            max-width: 300px;
+        }
+        
+        @media (max-width: 768px) {
+            .analytics-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .analytics-header h1 {
+                font-size: 20px;
+            }
+            
+            .property-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .property-selector select {
+                max-width: 100%;
+            }
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         .stat-card {
@@ -76,11 +160,17 @@
         }
         
         .chart-container {
-            background: white;
+            background: #f8f9fa;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 10px;
             margin-bottom: 20px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container {
+                padding: 15px;
+            }
         }
         
         .chart-container h2 {
@@ -101,6 +191,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .question-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .question-text {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            .question-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
         
         .question-item:last-child {
@@ -142,11 +251,17 @@
         }
         
         .faq-section {
-            background: white;
+            background: #f8f9fa;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 10px;
             margin-bottom: 20px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        @media (max-width: 768px) {
+            .faq-section {
+                padding: 15px;
+            }
         }
         
         .faq-item {
@@ -230,7 +345,8 @@
         .time-filter {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-left: auto;
+            flex-wrap: wrap;
         }
         
         .time-filter button {
@@ -239,12 +355,26 @@
             background: white;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
         }
         
         .time-filter button.active {
             background: #3498db;
             color: white;
             border-color: #3498db;
+        }
+        
+        @media (max-width: 768px) {
+            .time-filter {
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .time-filter button {
+                flex: 1;
+            }
         }
     </style>
 </head>
