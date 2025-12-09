@@ -849,15 +849,31 @@
         document.addEventListener('DOMContentLoaded', async function() {
             console.log("🔐 Checking authentication...");
             
-            // Initialize auth system
-            if (typeof initAuthSystem === 'function') {
-                initAuthSystem();
-            }
-            
-            // Use your existing auth.js functions (now async)
-            if (typeof isAuthenticated === 'function') {
-                const authCheck = await isAuthenticated();
-                if (authCheck) {
+            try {
+                // Wait a bit for auth.js to load
+                if (typeof isAuthenticated === 'undefined') {
+                    console.log("⏳ Waiting for auth.js to load...");
+                    await new Promise(resolve => {
+                        let attempts = 0;
+                        const checkAuth = setInterval(() => {
+                            attempts++;
+                            if (typeof isAuthenticated !== 'undefined' || attempts > 20) {
+                                clearInterval(checkAuth);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                }
+                
+                // Initialize auth system
+                if (typeof initAuthSystem === 'function') {
+                    initAuthSystem();
+                }
+                
+                // Use your existing auth.js functions (now async)
+                if (typeof isAuthenticated === 'function') {
+                    const authCheck = await isAuthenticated();
+                    if (authCheck) {
                 // User is authenticated - show admin interface
                 console.log("✅ User authenticated, showing admin interface");
                 document.getElementById('loadingIndicator').style.display = 'none';
@@ -918,24 +934,28 @@
                 if (typeof showLoginModal === 'function') {
                     showLoginModal();
                     
-                    // Override authenticate function to reload on success
-                    const originalAuthenticate = authenticate;
-                    window.authenticate = function(username, password) {
-                        const result = originalAuthenticate(username, password);
-                        if (result) {
-                            // Login successful - show message and reload
-                            console.log("✅ Login successful, reloading...");
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        }
-                        return result;
-                    };
+                    // Use handleLogin from auth.js (it's already async)
+                    // No need to override - handleLogin already handles reload
                 } else {
                     // Fallback: redirect to main page
                     alert('Authentication system not available. Redirecting to main page.');
                     window.location.href = '/';
                 }
+                } else {
+                    console.error("❌ isAuthenticated function not found");
+                    alert('Authentication system error. Please refresh the page.');
+                }
+            } catch (error) {
+                console.error("❌ Error in admin page initialization:", error);
+                document.getElementById('loadingIndicator').innerHTML = `
+                    <div style="color: #e74c3c;">
+                        <h3>Error loading admin page</h3>
+                        <p>${error.message}</p>
+                        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Reload Page
+                        </button>
+                    </div>
+                `;
             }
         });
     </script>
