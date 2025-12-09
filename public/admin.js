@@ -405,14 +405,27 @@ async autoLoadExistingConfig() {
                     localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
                     
                     // Load recommendations and appliances
-                    if (property.recommendations) {
+                    if (property.recommendations && Array.isArray(property.recommendations)) {
                         this.recommendations = property.recommendations;
                         localStorage.setItem('rental_ai_recommendations', JSON.stringify(property.recommendations));
+                        console.log(`📍 Loaded ${this.recommendations.length} recommendations from server`);
+                    } else {
+                        console.log('⚠️ No recommendations found in property data');
+                        this.recommendations = [];
                     }
-                    if (property.appliances) {
+                    
+                    if (property.appliances && Array.isArray(property.appliances)) {
                         this.appliances = property.appliances;
                         localStorage.setItem('rental_ai_appliances', JSON.stringify(property.appliances));
+                        console.log(`🛠️ Loaded ${this.appliances.length} appliances from server`);
+                    } else {
+                        console.log('⚠️ No appliances found in property data');
+                        this.appliances = [];
                     }
+                    
+                    // Update the UI to show loaded recommendations and appliances
+                    this.updateRecommendationsList();
+                    this.updateAppliancesList();
                     
                     console.log('✅ Configuration loaded from server');
                     
@@ -442,6 +455,35 @@ async autoLoadExistingConfig() {
             
             // Populate form fields
             this.populateFormFromConfig(config);
+            
+            // Load recommendations and appliances from config if available
+            if (config.recommendations && Array.isArray(config.recommendations)) {
+                this.recommendations = config.recommendations;
+                console.log(`📍 Loaded ${this.recommendations.length} recommendations from localStorage config`);
+            } else {
+                // Also try loading from separate localStorage key
+                const savedRecs = localStorage.getItem('rental_ai_recommendations');
+                if (savedRecs) {
+                    this.recommendations = JSON.parse(savedRecs);
+                    console.log(`📍 Loaded ${this.recommendations.length} recommendations from localStorage key`);
+                }
+            }
+            
+            if (config.appliances && Array.isArray(config.appliances)) {
+                this.appliances = config.appliances;
+                console.log(`🛠️ Loaded ${this.appliances.length} appliances from localStorage config`);
+            } else {
+                // Also try loading from separate localStorage key
+                const savedApps = localStorage.getItem('rental_ai_appliances');
+                if (savedApps) {
+                    this.appliances = JSON.parse(savedApps);
+                    console.log(`🛠️ Loaded ${this.appliances.length} appliances from localStorage key`);
+                }
+            }
+            
+            // Update the UI to show loaded recommendations and appliances
+            this.updateRecommendationsList();
+            this.updateAppliancesList();
             
             console.log('✅ Configuration loaded from localStorage');
             
