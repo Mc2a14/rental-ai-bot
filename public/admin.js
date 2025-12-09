@@ -7,6 +7,7 @@ class PropertySetup {
     this.totalSteps = 3;
     this.recommendations = [];
     this.appliances = [];
+    this.faqs = []; // Store FAQs
     this.currentPropertyId = null; // Store the current property ID for updates
     
     // Try to restore propertyId from localStorage on initialization
@@ -27,6 +28,7 @@ class PropertySetup {
     if (this.isUserAuthenticated()) {
         this.loadRecommendations();
         this.loadAppliances();
+        this.loadFAQs();
     }
     
     console.log("🔄 Initializing event listeners...");
@@ -34,6 +36,7 @@ class PropertySetup {
     this.updateStepDisplay();
     this.updateRecommendationsList();
     this.updateAppliancesList();
+    this.updateFAQsList();
     this.addPreviewStyles();
     
     // Load existing config (async - don't await, let it load in background)
@@ -481,9 +484,23 @@ async autoLoadExistingConfig() {
                 }
             }
             
+            // Load FAQs from config if available
+            if (config.faqs && Array.isArray(config.faqs)) {
+                this.faqs = config.faqs;
+                console.log(`❓ Loaded ${this.faqs.length} FAQs from localStorage config`);
+            } else {
+                // Also try loading from separate localStorage key
+                const savedFAQs = localStorage.getItem('rental_ai_faqs');
+                if (savedFAQs) {
+                    this.faqs = JSON.parse(savedFAQs);
+                    console.log(`❓ Loaded ${this.faqs.length} FAQs from localStorage key`);
+                }
+            }
+            
             // Update the UI to show loaded recommendations and appliances
             this.updateRecommendationsList();
             this.updateAppliancesList();
+            this.updateFAQsList();
             
             console.log('✅ Configuration loaded from localStorage');
             
@@ -755,9 +772,10 @@ async saveConfiguration(e) {
         // Rules
         houseRules: formData.houseRules || '',
         
-        // Appliances & Recommendations
+        // Appliances, Recommendations & FAQs
         appliances: this.appliances,
         recommendations: this.recommendations,
+        faqs: this.faqs,
         
         // Metadata
         lastUpdated: new Date().toISOString()
@@ -963,6 +981,186 @@ showSuccessMessage(guestLink, propertyName) {
             }
         }, 100);
     }
+}
+
+// FAQ Management
+loadFAQs() {
+    try {
+        const saved = localStorage.getItem('rental_ai_faqs');
+        this.faqs = saved ? JSON.parse(saved) : [];
+        console.log(`❓ Loaded ${this.faqs.length} FAQs`);
+    } catch (error) {
+        console.error('Error loading FAQs:', error);
+        this.faqs = [];
+    }
+}
+
+async loadFAQsFromServer(propertyId) {
+    try {
+        const response = await fetch(`/api/analytics/property/${propertyId}/faqs`, {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.faqs && data.faqs.length > 0) {
+                this.faqs = data.faqs.map(faq => ({
+                    question: faq.question,
+                    answer: faq.answer,
+                    language: faq.language || 'en'
+                }));
+                localStorage.setItem('rental_ai_faqs', JSON.stringify(this.faqs));
+                console.log(`❓ Loaded ${this.faqs.length} FAQs from server`);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading FAQs from server:', error);
+    }
+}
+
+updateFAQsList() {
+    const container = document.getElementById('faqs-list');
+    if (!container) return;
+    
+    if (this.faqs.length === 0) {
+        container.innerHTML = `
+            <div class="no-faqs">
+                <i class="fas fa-question-circle"></i>
+                <p>No FAQs yet. Add some to help guests find answers quickly!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = this.faqs.map((faq, index) => `
+        <div class="faq-item">
+            <div class="faq-item-header">
+                <div class="faq-question-text">${escapeHtml(faq.question)}</div>
+                <div class="faq-actions">
+                    <button class="btn-small btn-edit" onclick="editFAQ(${index})" title="Edit FAQ">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-delete" onclick="removeFAQ(${index})" title="Delete FAQ">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="faq-answer-text">${escapeHtml(faq.answer)}</div>
+            <div class="faq-meta-info">
+                <span class="faq-language-badge">${faq.language === 'es' ? '🇪🇸 Español' : faq.language === 'fr' ? '🇫🇷 Français' : '🇺🇸 English'}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+addFAQ() {
+    const questionInput = document.getElementById('faq-question');
+    const answerInput = document.getElementById('faq-answer');
+    const languageInput = document.getElementById('faq-language');
+    
+    if (!questionInput || !answerInput) return;
+    
+    const question = questionInput.value.trim();
+    const answer = answerInput.value.trim();
+    const language = languageInput ? languageInput.value : 'en';
+    
+    if (!question || !answer) {
+        this.showTempMessage('Please enter both question and answer', 'warning');
+        return;
+    }
+    
+    const newFAQ = { question, answer, language };
+    this.faqs.push(newFAQ);
+    this.saveFAQs();
+    this.updateFAQsList();
+    
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
+    
+    // Clear form
+    questionInput.value = '';
+    answerInput.value = '';
+    if (languageInput) languageInput.value = 'en';
+    
+    this.showTempMessage('FAQ added successfully!', 'success');
+}
+
+editFAQ(index) {
+    const faq = this.faqs[index];
+    if (!faq) return;
+    
+    const questionInput = document.getElementById('faq-question');
+    const answerInput = document.getElementById('faq-answer');
+    const languageInput = document.getElementById('faq-language');
+    
+    if (questionInput) questionInput.value = faq.question;
+    if (answerInput) answerInput.value = faq.answer;
+    if (languageInput) languageInput.value = faq.language || 'en';
+    
+    // Remove the old FAQ
+    this.faqs.splice(index, 1);
+    this.updateFAQsList();
+    
+    // Scroll to form
+    if (questionInput) {
+        questionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        questionInput.focus();
+    }
+    
+    this.showTempMessage('FAQ loaded for editing. Update and click "Add FAQ" to save.', 'info');
+}
+
+removeFAQ(index) {
+    if (!confirm('Are you sure you want to delete this FAQ?')) {
+        return;
+    }
+    
+    this.faqs.splice(index, 1);
+    this.saveFAQs();
+    this.updateFAQsList();
+    
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
+    
+    this.showTempMessage('FAQ removed', 'success');
+}
+
+saveFAQs() {
+    try {
+        localStorage.setItem('rental_ai_faqs', JSON.stringify(this.faqs));
+        console.log(`❓ Saved ${this.faqs.length} FAQs`);
+    } catch (error) {
+        console.error('Error saving FAQs:', error);
+    }
+}
+
+// Make functions globally available
+window.addFAQ = function() {
+    if (window.propertySetup) {
+        window.propertySetup.addFAQ();
+    }
+};
+
+window.editFAQ = function(index) {
+    if (window.propertySetup) {
+        window.propertySetup.editFAQ(index);
+    }
+};
+
+window.removeFAQ = function(index) {
+    if (window.propertySetup) {
+        window.propertySetup.removeFAQ(index);
+    }
+};
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Recommendations management
@@ -1233,6 +1431,7 @@ setupBackupButton() {
             property: JSON.parse(localStorage.getItem('rentalAIPropertyConfig') || '{}'),
             appliances: JSON.parse(localStorage.getItem('rental_ai_appliances') || '[]'),
             recommendations: JSON.parse(localStorage.getItem('rental_ai_recommendations') || '[]'),
+            faqs: JSON.parse(localStorage.getItem('rental_ai_faqs') || '[]'),
             exportDate: new Date().toISOString(),
             version: '1.0'
         };

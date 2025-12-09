@@ -44,8 +44,8 @@ class PropertyService {
         property_id, user_id, name, address, type,
         host_contact, maintenance_contact, emergency_contact,
         checkin_time, checkout_time, late_checkout,
-        amenities, house_rules, recommendations, appliances
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        amenities, house_rules, recommendations, appliances, faqs
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *
     `, [
       propertyId,
@@ -62,7 +62,8 @@ class PropertyService {
       JSON.stringify(propertyData.amenities || {}),
       propertyData.houseRules || null,
       JSON.stringify(propertyData.recommendations || []),
-      JSON.stringify(propertyData.appliances || [])
+      JSON.stringify(propertyData.appliances || []),
+      JSON.stringify(propertyData.faqs || [])
     ]);
 
     const row = result.rows[0];
@@ -164,6 +165,7 @@ class PropertyService {
       houseRules: row.house_rules,
       recommendations: typeof row.recommendations === 'string' ? JSON.parse(row.recommendations) : (row.recommendations || []),
       appliances: typeof row.appliances === 'string' ? JSON.parse(row.appliances) : (row.appliances || []),
+      faqs: typeof row.faqs === 'string' ? JSON.parse(row.faqs) : (row.faqs || []),
       created: row.created_at?.toISOString(),
       updated: row.updated_at?.toISOString()
     };
@@ -276,6 +278,10 @@ class PropertyService {
     if (updates.appliances !== undefined) {
       setClause.push(`appliances = $${paramCount++}`);
       values.push(JSON.stringify(updates.appliances));
+    }
+    if (updates.faqs !== undefined) {
+      setClause.push(`faqs = $${paramCount++}`);
+      values.push(JSON.stringify(updates.faqs));
     }
     
     setClause.push(`updated_at = CURRENT_TIMESTAMP`);

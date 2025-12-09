@@ -311,6 +311,97 @@
         }
         /* END VALIDATION STYLES */
 
+        /* FAQ Styles */
+        .faq-management {
+            margin-top: 20px;
+        }
+        
+        .add-faq-form {
+            margin-bottom: 20px;
+        }
+        
+        .faqs-list {
+            margin-top: 15px;
+        }
+        
+        .faq-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .faq-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .faq-question-text {
+            font-weight: bold;
+            color: #2c3e50;
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .faq-answer-text {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .faq-meta-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 12px;
+            color: #95a5a6;
+        }
+        
+        .faq-language-badge {
+            padding: 3px 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .faq-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        
+        .btn-edit {
+            background: #3498db;
+            color: white;
+            border: none;
+        }
+        
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+        }
+        
+        .no-faqs {
+            text-align: center;
+            padding: 30px;
+            color: #95a5a6;
+        }
+        
+        .no-faqs i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #bdc3c7;
+        }
+        
         /* Recommendations Styles */
         .recommendations-management {
             display: grid;
@@ -754,6 +845,48 @@
                         <h4>Your Current Recommendations</h4>
                         <div id="recommendations-list" class="recommendations-list">
                             <!-- Recommendations will be listed here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FAQ Management Section -->
+                <h3 style="margin-top: 30px;"><i class="fas fa-question-circle"></i> Frequently Asked Questions (FAQs)</h3>
+                <p class="section-description">Add common questions and answers to help guests quickly find information. These will be available in the chat and can improve your AI responses.</p>
+                
+                <div class="faq-management" style="margin-bottom: 30px;">
+                    <!-- Add New FAQ Form -->
+                    <div class="add-faq-form" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9; margin-bottom: 20px;">
+                        <h4>Add New FAQ</h4>
+                        
+                        <div class="form-group">
+                            <label for="faq-question">Question *</label>
+                            <input type="text" id="faq-question" placeholder="e.g., What time is check-in?" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="faq-answer">Answer *</label>
+                            <textarea id="faq-answer" placeholder="e.g., Check-in is at 3:00 PM. You can check in anytime after 3 PM. If you need early check-in, please contact us in advance." class="form-textarea" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="faq-language">Language</label>
+                            <select id="faq-language" class="form-select">
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                                <option value="fr">Français</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="addFAQ()">
+                            <i class="fas fa-plus"></i> Add FAQ
+                        </button>
+                    </div>
+                    
+                    <!-- Current FAQs List -->
+                    <div class="current-faqs" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9;">
+                        <h4>Your Current FAQs</h4>
+                        <div id="faqs-list" class="faqs-list">
+                            <!-- FAQs will be listed here -->
                         </div>
                     </div>
                 </div>

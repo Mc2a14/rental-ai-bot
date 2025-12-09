@@ -87,6 +87,7 @@ class Database {
           house_rules TEXT,
           recommendations JSONB DEFAULT '[]',
           appliances JSONB DEFAULT '[]',
+          faqs JSONB DEFAULT '[]',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
