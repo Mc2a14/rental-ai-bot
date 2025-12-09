@@ -848,6 +848,7 @@
         // Wait for auth system to initialize
         document.addEventListener('DOMContentLoaded', async function() {
             console.log("🔐 Checking authentication...");
+            console.log("📅 Admin page loaded at:", new Date().toISOString());
             
             try {
                 // Wait a bit for auth.js to load

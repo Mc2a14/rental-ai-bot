@@ -90,8 +90,20 @@ if (config.nodeEnv === 'development') {
 
 // Static Files
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: config.nodeEnv === 'production' ? '1d' : '0'
+  maxAge: config.nodeEnv === 'production' ? '1d' : '0',
+  etag: false, // Disable ETag to prevent caching issues
+  lastModified: false
 }));
+
+// Add cache control headers for HTML files
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
 
 // ================================================
 // API ROUTES
