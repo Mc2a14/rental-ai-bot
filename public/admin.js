@@ -21,8 +21,10 @@ class PropertySetup {
     this.updateAppliancesList();
     this.addPreviewStyles();
     
-    // Load existing config
-    this.autoLoadExistingConfig();
+    // Load existing config (async - don't await, let it load in background)
+    this.autoLoadExistingConfig().catch(err => {
+        console.error('Error loading existing config:', err);
+    });
     
     // Setup validation
     setTimeout(() => {
@@ -273,7 +275,7 @@ validateCurrentStep() {
     return allValid;
 }
 
-autoLoadExistingConfig() {
+async autoLoadExistingConfig() {
     console.log("🔄 Auto-loading existing config...");
     
     // First check if user is logged in
@@ -283,7 +285,82 @@ autoLoadExistingConfig() {
     }
     
     try {
-        // Try to load from localStorage first (for backward compatibility)
+        // Get current user - check both sync and async methods
+        let user = null;
+        if (typeof getCurrentUser === 'function') {
+            user = getCurrentUser();
+        }
+        
+        // If no user from sync method, try to get from session
+        if (!user || !user.userId) {
+            try {
+                const response = await fetch('/api/user/me', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.user) {
+                        user = data.user;
+                    }
+                }
+            } catch (error) {
+                console.warn('Could not get user from session:', error);
+            }
+        }
+        
+        if (!user || (!user.userId && !user.id)) {
+            console.log("⚠️ No user ID available, skipping auto-load");
+            return;
+        }
+        
+        const userId = user.userId || user.id;
+        
+        // PRIORITY 1: Try to load from server (database)
+        try {
+            console.log(`🔄 Loading properties from server for user: ${userId}`);
+            const response = await fetch(`/api/user/${userId}/properties`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.properties && data.properties.length > 0) {
+                    // Use the most recent property
+                    const property = data.properties[0]; // Properties are sorted by created_at DESC
+                    console.log(`✅ Found property from server: ${property.name}`);
+                    
+                    // Populate form fields from server data
+                    this.populateFormFromConfig(property);
+                    
+                    // Also save to localStorage for backward compatibility
+                    localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(property));
+                    
+                    // Load recommendations and appliances
+                    if (property.recommendations) {
+                        this.recommendations = property.recommendations;
+                        localStorage.setItem('rental_ai_recommendations', JSON.stringify(property.recommendations));
+                    }
+                    if (property.appliances) {
+                        this.appliances = property.appliances;
+                        localStorage.setItem('rental_ai_appliances', JSON.stringify(property.appliances));
+                    }
+                    
+                    console.log('✅ Configuration loaded from server');
+                    
+                    // Validate fields
+                    setTimeout(() => {
+                        this.validateCurrentStep();
+                    }, 200);
+                    return; // Successfully loaded from server
+                }
+            }
+        } catch (serverError) {
+            console.warn('⚠️ Failed to load from server, trying localStorage:', serverError);
+        }
+        
+        // PRIORITY 2: Fall back to localStorage (for backward compatibility)
         const savedConfig = localStorage.getItem('rentalAIPropertyConfig');
         
         if (savedConfig) {
@@ -291,17 +368,7 @@ autoLoadExistingConfig() {
             const config = JSON.parse(savedConfig);
             
             // Populate form fields
-            document.getElementById('propertyName').value = config.name || '';
-            document.getElementById('propertyAddress').value = config.address || '';
-            document.getElementById('propertyType').value = config.type || 'Vacation Home';
-            document.getElementById('hostContact').value = config.hostContact || '';
-            document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
-            document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
-            document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
-            document.getElementById('lateCheckout').value = config.lateCheckout || '';
-            document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
-            document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
-            document.getElementById('houseRules').value = config.houseRules || '';
+            this.populateFormFromConfig(config);
             
             console.log('✅ Configuration loaded from localStorage');
             
@@ -309,9 +376,48 @@ autoLoadExistingConfig() {
             setTimeout(() => {
                 this.validateCurrentStep();
             }, 200);
+        } else {
+            console.log('ℹ️ No existing configuration found');
         }
     } catch (error) {
         console.error('❌ Error auto-loading configuration:', error);
+    }
+}
+
+populateFormFromConfig(config) {
+    // Populate form fields from config object
+    if (document.getElementById('propertyName')) {
+        document.getElementById('propertyName').value = config.name || '';
+    }
+    if (document.getElementById('propertyAddress')) {
+        document.getElementById('propertyAddress').value = config.address || '';
+    }
+    if (document.getElementById('propertyType')) {
+        document.getElementById('propertyType').value = config.type || 'Vacation Home';
+    }
+    if (document.getElementById('hostContact')) {
+        document.getElementById('hostContact').value = config.hostContact || '';
+    }
+    if (document.getElementById('maintenanceContact')) {
+        document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
+    }
+    if (document.getElementById('checkInTime')) {
+        document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
+    }
+    if (document.getElementById('checkOutTime')) {
+        document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
+    }
+    if (document.getElementById('lateCheckout')) {
+        document.getElementById('lateCheckout').value = config.lateCheckout || '';
+    }
+    if (document.getElementById('wifiDetails')) {
+        document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
+    }
+    if (document.getElementById('amenities')) {
+        document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
+    }
+    if (document.getElementById('houseRules')) {
+        document.getElementById('houseRules').value = config.houseRules || '';
     }
 }
 
@@ -358,49 +464,62 @@ prevStep() {
     }
 }
 
-updateStepDisplay() {
-    console.log("🔄 Updating step display...");
-    
-    // Update step indicators
-    document.querySelectorAll('.step').forEach((step, index) => {
-        if (index + 1 === this.currentStep) {
-            step.classList.add('active');
-        } else {
-            step.classList.remove('active');
-        }
-    });
+    updateStepDisplay() {
+        console.log("🔄 Updating step display...");
+        
+        // Update step indicators
+        document.querySelectorAll('.step').forEach((step, index) => {
+            if (index + 1 === this.currentStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
 
-    // Show/hide sections
-    document.querySelectorAll('.form-section').forEach((section, index) => {
-        section.style.display = (index + 1 === this.currentStep) ? 'block' : 'none';
-    });
+        // Show/hide sections
+        document.querySelectorAll('.form-section').forEach((section, index) => {
+            section.style.display = (index + 1 === this.currentStep) ? 'block' : 'none';
+        });
 
-    // Update navigation buttons
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    if (prevBtn) prevBtn.style.display = this.currentStep > 1 ? 'flex' : 'none';
-    if (nextBtn) nextBtn.style.display = this.currentStep < this.totalSteps ? 'flex' : 'none';
-    if (submitBtn) submitBtn.style.display = this.currentStep === this.totalSteps ? 'flex' : 'none';
-
-    // Update preview on step 3
-    if (this.currentStep === 3) {
-        this.updatePreview();
-    }
-
-    // Validate new step (but don't disable button)
-    setTimeout(() => {
-        this.validateCurrentStep();
-        // Ensure Next button is always enabled
+        // Update navigation buttons
+        const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-        if (nextBtn) {
-            nextBtn.disabled = false;
-        }
-    }, 100);
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (prevBtn) prevBtn.style.display = this.currentStep > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = this.currentStep < this.totalSteps ? 'flex' : 'none';
+        if (submitBtn) submitBtn.style.display = this.currentStep === this.totalSteps ? 'flex' : 'none';
 
-    console.log("✅ Step display updated");
-}
+        // Update preview on step 3
+        if (this.currentStep === 3) {
+            this.updatePreview();
+        }
+
+        // Scroll to top of page - multiple methods for compatibility
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            
+            // Also scroll admin container if it exists
+            const adminContainer = document.querySelector('.admin-container');
+            if (adminContainer) {
+                adminContainer.scrollTop = 0;
+            }
+        }, 100);
+
+        // Validate new step (but don't disable button)
+        setTimeout(() => {
+            this.validateCurrentStep();
+            // Ensure Next button is always enabled
+            const nextBtn = document.getElementById('nextBtn');
+            if (nextBtn) {
+                nextBtn.disabled = false;
+            }
+        }, 100);
+
+        console.log("✅ Step display updated");
+    }
 
 updatePreview() {
     console.log("🔄 Updating preview...");
