@@ -323,21 +323,10 @@ validateCurrentStep() {
 
 async autoLoadExistingConfig() {
     console.log("🔄 Auto-loading existing config...");
-    console.log("🔐 Checking authentication...");
     
     // First check if user is logged in
-    const isAuth = this.isUserAuthenticated();
-    console.log(`🔐 Authentication status: ${isAuth}`);
-    
-    if (!isAuth) {
+    if (!this.isUserAuthenticated()) {
         console.log("⚠️ User not authenticated, skipping auto-load");
-        // Try again after a delay in case auth is still loading
-        setTimeout(() => {
-            if (this.isUserAuthenticated()) {
-                console.log("✅ User authenticated on retry, loading config...");
-                this.autoLoadExistingConfig();
-            }
-        }, 1000);
         return;
     }
     
