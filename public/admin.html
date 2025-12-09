@@ -874,73 +874,74 @@
                 if (typeof isAuthenticated === 'function') {
                     const authCheck = await isAuthenticated();
                     if (authCheck) {
-                // User is authenticated - show admin interface
-                console.log("✅ User authenticated, showing admin interface");
-                document.getElementById('loadingIndicator').style.display = 'none';
-                document.getElementById('adminContainer').style.display = 'block';
-                
-                // Load admin.js dynamically but WAIT for DOM to be ready
-                const loadAdminJS = function() {
-                    console.log("🔄 Loading admin.js...");
-                    const adminScript = document.createElement('script');
-                    adminScript.src = './admin.js';
-                    adminScript.onload = function() {
-                        console.log("✅ admin.js loaded successfully");
+                        // User is authenticated - show admin interface
+                        console.log("✅ User authenticated, showing admin interface");
+                        document.getElementById('loadingIndicator').style.display = 'none';
+                        document.getElementById('adminContainer').style.display = 'block';
                         
-                        // CRITICAL: Initialize PropertySetup immediately after script loads
-                        // The DOMContentLoaded in admin.js won't fire because script loads dynamically
-                        setTimeout(function() {
-                            if (typeof PropertySetup !== 'undefined') {
-                                try {
-                                    console.log("🔄 Initializing PropertySetup after script load...");
-                                    window.propertySetup = new PropertySetup();
-                                    console.log("✅ PropertySetup initialized successfully!");
-                                    console.log("PropertySetup object:", window.propertySetup);
-                                    
-                                    // Re-attach button handlers now that PropertySetup exists
-                                    attachNextButtonHandler();
-                                } catch (error) {
-                                    console.error("❌ Error initializing PropertySetup:", error);
-                                }
-                            } else {
-                                console.error("❌ PropertySetup class not found in admin.js");
-                            }
-                        }, 100);
+                        // Load admin.js dynamically but WAIT for DOM to be ready
+                        const loadAdminJS = function() {
+                            console.log("🔄 Loading admin.js...");
+                            const adminScript = document.createElement('script');
+                            adminScript.src = './admin.js';
+                            adminScript.onload = function() {
+                                console.log("✅ admin.js loaded successfully");
+                                
+                                // CRITICAL: Initialize PropertySetup immediately after script loads
+                                // The DOMContentLoaded in admin.js won't fire because script loads dynamically
+                                setTimeout(function() {
+                                    if (typeof PropertySetup !== 'undefined') {
+                                        try {
+                                            console.log("🔄 Initializing PropertySetup after script load...");
+                                            window.propertySetup = new PropertySetup();
+                                            console.log("✅ PropertySetup initialized successfully!");
+                                            console.log("PropertySetup object:", window.propertySetup);
+                                            
+                                            // Re-attach button handlers now that PropertySetup exists
+                                            attachNextButtonHandler();
+                                        } catch (error) {
+                                            console.error("❌ Error initializing PropertySetup:", error);
+                                        }
+                                    } else {
+                                        console.error("❌ PropertySetup class not found in admin.js");
+                                    }
+                                }, 100);
+                                
+                                // Force validation to run after everything is loaded
+                                setTimeout(() => {
+                                    if (window.propertySetup && typeof window.propertySetup.validateCurrentStep === 'function') {
+                                        window.propertySetup.validateCurrentStep();
+                                    }
+                                }, 500);
+                            };
+                            adminScript.onerror = function() {
+                                console.error("❌ Failed to load admin.js");
+                                alert("Failed to load admin interface. Please refresh the page.");
+                            };
+                            document.body.appendChild(adminScript);
+                        };
                         
-                        // Force validation to run after everything is loaded
-                        setTimeout(() => {
-                            if (window.propertySetup && typeof window.propertySetup.validateCurrentStep === 'function') {
-                                window.propertySetup.validateCurrentStep();
-                            }
-                        }, 500);
-                    };
-                    adminScript.onerror = function() {
-                        console.error("❌ Failed to load admin.js");
-                        alert("Failed to load admin interface. Please refresh the page.");
-                    };
-                    document.body.appendChild(adminScript);
-                };
-                
-                // Wait a bit to ensure DOM is fully ready
-                setTimeout(loadAdminJS, 100);
-                } else {
-                // Not authenticated - show login modal using existing auth.js function
-                console.log("🔒 User not authenticated, showing login modal");
-                
-                // Hide loading indicator
-                document.getElementById('loadingIndicator').style.display = 'none';
-                
-                // Use the showLoginModal function from auth.js
-                if (typeof showLoginModal === 'function') {
-                    showLoginModal();
-                    
-                    // Use handleLogin from auth.js (it's already async)
-                    // No need to override - handleLogin already handles reload
-                } else {
-                    // Fallback: redirect to main page
-                    alert('Authentication system not available. Redirecting to main page.');
-                    window.location.href = '/';
-                }
+                        // Wait a bit to ensure DOM is fully ready
+                        setTimeout(loadAdminJS, 100);
+                    } else {
+                        // Not authenticated - show login modal using existing auth.js function
+                        console.log("🔒 User not authenticated, showing login modal");
+                        
+                        // Hide loading indicator
+                        document.getElementById('loadingIndicator').style.display = 'none';
+                        
+                        // Use the showLoginModal function from auth.js
+                        if (typeof showLoginModal === 'function') {
+                            showLoginModal();
+                            
+                            // Use handleLogin from auth.js (it's already async)
+                            // No need to override - handleLogin already handles reload
+                        } else {
+                            // Fallback: redirect to main page
+                            alert('Authentication system not available. Redirecting to main page.');
+                            window.location.href = '/';
+                        }
+                    }
                 } else {
                     console.error("❌ isAuthenticated function not found");
                     alert('Authentication system error. Please refresh the page.');
