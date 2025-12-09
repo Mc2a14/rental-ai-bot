@@ -246,6 +246,20 @@ class RentalAIChat {
         if (welcomePropertyName && this.hostConfig.name) {
             welcomePropertyName.textContent = this.hostConfig.name;
             console.log('✅ Updated welcome message');
+            
+            // Also update the intro text to include the property name
+            const welcomeIntro = document.getElementById('welcomeMessageIntro');
+            if (welcomeIntro) {
+                // Get current language to use correct intro text
+                const currentLang = this.loadLanguagePreference();
+                const welcomeMessages = {
+                    en: { intro: "Hello! I'm your Rental AI Assistant for" },
+                    es: { intro: "¡Hola! Soy tu Asistente de IA para Alquileres de" },
+                    fr: { intro: "Bonjour! Je suis votre Assistant IA de Location pour" }
+                };
+                const welcome = welcomeMessages[currentLang] || welcomeMessages.en;
+                welcomeIntro.innerHTML = `${welcome.intro} <strong id="welcomePropertyName">${this.hostConfig.name}</strong>. I can help you with:`;
+            }
         }
         
         // Update page title
@@ -658,6 +672,70 @@ class RentalAIChat {
         if (messageInput) {
             messageInput.placeholder = placeholders[langCode] || placeholders.en;
         }
+        
+        // Update welcome message
+        const welcomeMessages = {
+            en: {
+                intro: "Hello! I'm your Rental AI Assistant for",
+                item1: "🏠 Property information & amenities",
+                item2: "🕒 Check-in/check-out details",
+                item3: "🍽️ Local restaurant recommendations",
+                item4: "🚗 Transportation & directions",
+                item5: "🚨 Emergency contacts & procedures",
+                item6: "📋 House rules & guidelines",
+                item7: "🛠️ Appliance instructions & troubleshooting",
+                closing: "How can I assist you with your stay today?"
+            },
+            es: {
+                intro: "¡Hola! Soy tu Asistente de IA para Alquileres de",
+                item1: "🏠 Información de la propiedad y comodidades",
+                item2: "🕒 Detalles de check-in/check-out",
+                item3: "🍽️ Recomendaciones de restaurantes locales",
+                item4: "🚗 Transporte y direcciones",
+                item5: "🚨 Contactos de emergencia y procedimientos",
+                item6: "📋 Reglas de la casa y pautas",
+                item7: "🛠️ Instrucciones de electrodomésticos y solución de problemas",
+                closing: "¿Cómo puedo ayudarte con tu estadía hoy?"
+            },
+            fr: {
+                intro: "Bonjour! Je suis votre Assistant IA de Location pour",
+                item1: "🏠 Informations sur la propriété et équipements",
+                item2: "🕒 Détails d'enregistrement/départ",
+                item3: "🍽️ Recommandations de restaurants locaux",
+                item4: "🚗 Transport et directions",
+                item5: "🚨 Contacts d'urgence et procédures",
+                item6: "📋 Règles de la maison et directives",
+                item7: "🛠️ Instructions d'appareils et dépannage",
+                closing: "Comment puis-je vous aider avec votre séjour aujourd'hui?"
+            }
+        };
+        
+        const welcome = welcomeMessages[langCode] || welcomeMessages.en;
+        const propertyName = document.getElementById('welcomePropertyName');
+        const propertyNameText = propertyName ? propertyName.textContent : '';
+        
+        const welcomeIntro = document.getElementById('welcomeMessageIntro');
+        if (welcomeIntro) {
+            welcomeIntro.innerHTML = `${welcome.intro} <strong id="welcomePropertyName">${propertyNameText}</strong>. I can help you with:`;
+        }
+        
+        const welcomeItem1 = document.getElementById('welcomeItem1');
+        if (welcomeItem1) welcomeItem1.textContent = welcome.item1;
+        const welcomeItem2 = document.getElementById('welcomeItem2');
+        if (welcomeItem2) welcomeItem2.textContent = welcome.item2;
+        const welcomeItem3 = document.getElementById('welcomeItem3');
+        if (welcomeItem3) welcomeItem3.textContent = welcome.item3;
+        const welcomeItem4 = document.getElementById('welcomeItem4');
+        if (welcomeItem4) welcomeItem4.textContent = welcome.item4;
+        const welcomeItem5 = document.getElementById('welcomeItem5');
+        if (welcomeItem5) welcomeItem5.textContent = welcome.item5;
+        const welcomeItem6 = document.getElementById('welcomeItem6');
+        if (welcomeItem6) welcomeItem6.textContent = welcome.item6;
+        const welcomeItem7 = document.getElementById('welcomeItem7');
+        if (welcomeItem7) welcomeItem7.textContent = welcome.item7;
+        
+        const welcomeClosing = document.getElementById('welcomeMessageClosing');
+        if (welcomeClosing) welcomeClosing.textContent = welcome.closing;
         
         // Update quick question buttons with both text AND data-question
         const quickQuestions = {
