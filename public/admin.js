@@ -596,87 +596,36 @@ populateFormFromConfig(config) {
         document.getElementById('houseRules').value = config.houseRules || '';
     }
     
-    const propertyAddressField = document.getElementById('propertyAddress');
-    if (propertyAddressField) {
-        propertyAddressField.value = config.address || '';
-        console.log(`✅ Set propertyAddress: ${config.address || ''}`);
-    } else {
-        console.warn('⚠️ propertyAddress field not found');
+    if (document.getElementById('propertyAddress')) {
+        document.getElementById('propertyAddress').value = config.address || '';
     }
-    
-    const propertyTypeField = document.getElementById('propertyType');
-    if (propertyTypeField) {
-        propertyTypeField.value = config.type || 'Vacation Home';
-        console.log(`✅ Set propertyType: ${config.type || 'Vacation Home'}`);
-    } else {
-        console.warn('⚠️ propertyType field not found');
+    if (document.getElementById('propertyType')) {
+        document.getElementById('propertyType').value = config.type || 'Vacation Home';
     }
-    
-    const hostContactField = document.getElementById('hostContact');
-    if (hostContactField) {
-        hostContactField.value = config.hostContact || '';
-        console.log(`✅ Set hostContact: ${config.hostContact || ''}`);
-    } else {
-        console.warn('⚠️ hostContact field not found');
+    if (document.getElementById('hostContact')) {
+        document.getElementById('hostContact').value = config.hostContact || '';
     }
-    
-    const maintenanceContactField = document.getElementById('maintenanceContact');
-    if (maintenanceContactField) {
-        maintenanceContactField.value = config.maintenanceContact || '';
-        console.log(`✅ Set maintenanceContact: ${config.maintenanceContact || ''}`);
-    } else {
-        console.warn('⚠️ maintenanceContact field not found');
+    if (document.getElementById('maintenanceContact')) {
+        document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
     }
-    
-    const checkInTimeField = document.getElementById('checkInTime');
-    if (checkInTimeField) {
-        checkInTimeField.value = config.checkinTime || config.checkInTime || '3:00 PM';
-        console.log(`✅ Set checkInTime: ${config.checkinTime || config.checkInTime || '3:00 PM'}`);
-    } else {
-        console.warn('⚠️ checkInTime field not found');
+    if (document.getElementById('checkInTime')) {
+        document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
     }
-    
-    const checkOutTimeField = document.getElementById('checkOutTime');
-    if (checkOutTimeField) {
-        checkOutTimeField.value = config.checkoutTime || config.checkOutTime || '11:00 AM';
-        console.log(`✅ Set checkOutTime: ${config.checkoutTime || config.checkOutTime || '11:00 AM'}`);
-    } else {
-        console.warn('⚠️ checkOutTime field not found');
+    if (document.getElementById('checkOutTime')) {
+        document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
     }
-    
-    const lateCheckoutField = document.getElementById('lateCheckout');
-    if (lateCheckoutField) {
-        lateCheckoutField.value = config.lateCheckout || '';
-        console.log(`✅ Set lateCheckout: ${config.lateCheckout || ''}`);
-    } else {
-        console.warn('⚠️ lateCheckout field not found');
+    if (document.getElementById('lateCheckout')) {
+        document.getElementById('lateCheckout').value = config.lateCheckout || '';
     }
-    
-    const wifiDetailsField = document.getElementById('wifiDetails');
-    if (wifiDetailsField) {
-        wifiDetailsField.value = config.amenities?.wifi || config.wifiDetails || '';
-        console.log(`✅ Set wifiDetails: ${config.amenities?.wifi || config.wifiDetails || ''}`);
-    } else {
-        console.warn('⚠️ wifiDetails field not found');
+    if (document.getElementById('wifiDetails')) {
+        document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
     }
-    
-    const amenitiesField = document.getElementById('amenities');
-    if (amenitiesField) {
-        amenitiesField.value = config.amenities?.other || config.amenities || '';
-        console.log(`✅ Set amenities: ${config.amenities?.other || config.amenities || ''}`);
-    } else {
-        console.warn('⚠️ amenities field not found');
+    if (document.getElementById('amenities')) {
+        document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
     }
-    
-    const houseRulesField = document.getElementById('houseRules');
-    if (houseRulesField) {
-        houseRulesField.value = config.houseRules || '';
-        console.log(`✅ Set houseRules: ${config.houseRules || ''}`);
-    } else {
-        console.warn('⚠️ houseRules field not found');
+    if (document.getElementById('houseRules')) {
+        document.getElementById('houseRules').value = config.houseRules || '';
     }
-    
-    console.log('✅ Form population complete');
 }
 
 nextStep() {
