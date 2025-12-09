@@ -129,10 +129,12 @@ class RentalAIChat {
                 this.hostConfig = data.property;
                 this.hostRecommendations = data.property.recommendations || [];
                 this.hostAppliances = data.property.appliances || [];
+                this.hostFAQs = data.property.faqs || [];
                 
                 console.log(`✅ Loaded property "${data.property.name}" from server`);
                 console.log(`📍 Recommendations: ${this.hostRecommendations.length}`);
                 console.log(`🛠️ Appliances: ${this.hostAppliances.length}`);
+                console.log(`❓ FAQs: ${this.hostFAQs.length}`);
                 
                 // Update UI immediately with server data
                 this.updateUIWithPropertyInfo();
@@ -267,6 +269,50 @@ class RentalAIChat {
             document.title = `Rental AI Assistant - ${this.hostConfig.name}`;
             console.log('✅ Updated page title');
         }
+        
+        // Display FAQs if available
+        this.displayFAQs();
+    }
+    
+    displayFAQs() {
+        const faqsSection = document.getElementById('faqsSection');
+        const faqsList = document.getElementById('faqsList');
+        
+        if (!faqsSection || !faqsList) return;
+        
+        if (!this.hostFAQs || this.hostFAQs.length === 0) {
+            faqsSection.style.display = 'none';
+            return;
+        }
+        
+        // Filter FAQs by current language
+        const currentLanguage = this.getCurrentLanguage();
+        const relevantFAQs = this.hostFAQs.filter(faq => 
+            !faq.language || faq.language === currentLanguage || faq.language === 'en'
+        ).slice(0, 5); // Show max 5 FAQs
+        
+        if (relevantFAQs.length === 0) {
+            faqsSection.style.display = 'none';
+            return;
+        }
+        
+        faqsList.innerHTML = relevantFAQs.map(faq => `
+            <div style="padding: 10px; background: white; border-radius: 5px; cursor: pointer; transition: background 0.2s;" 
+                 onmouseover="this.style.background='#e8f4fd'" 
+                 onmouseout="this.style.background='white'"
+                 onclick="askQuestion('${faq.question.replace(/'/g, "\\'")}')">
+                <strong style="color: #2c3e50; display: block; margin-bottom: 5px;">${escapeHtml(faq.question)}</strong>
+                <span style="color: #7f8c8d; font-size: 13px;">${escapeHtml(faq.answer.substring(0, 80))}${faq.answer.length > 80 ? '...' : ''}</span>
+            </div>
+        `).join('');
+        
+        faqsSection.style.display = 'block';
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // Update loadPropertyConfig to use updateUIWithPropertyInfo
@@ -309,6 +355,29 @@ class RentalAIChat {
         } catch (error) {
             console.error('Error loading recommendations:', error);
             this.hostRecommendations = [];
+        }
+    }
+
+    // Load FAQs
+    loadFAQs() {
+        try {
+            this.hostFAQs = [];
+            
+            // Check if FAQs are in the config
+            if (this.hostConfig && this.hostConfig.faqs) {
+                this.hostFAQs = this.hostConfig.faqs;
+                console.log(`❓ Loaded ${this.hostFAQs.length} FAQs from config`);
+            } else {
+                // Try loading from localStorage
+                const saved = localStorage.getItem('rental_ai_faqs');
+                if (saved) {
+                    this.hostFAQs = JSON.parse(saved);
+                    console.log(`❓ Loaded ${this.hostFAQs.length} FAQs from localStorage`);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading FAQs:', error);
+            this.hostFAQs = [];
         }
     }
 
@@ -1006,7 +1075,15 @@ class RentalAIChat {
         try {
             const currentLanguage = this.getCurrentLanguage();
             
-            // Check FAQ first
+            // Check host FAQs first (more specific than FAQTracker)
+            const hostFAQAnswer = this.findFAQAnswer(message, currentLanguage);
+            if (hostFAQAnswer) {
+                this.hideTypingIndicator();
+                this.addMessage(hostFAQAnswer, 'bot');
+                return;
+            }
+            
+            // Check FAQTracker as fallback
             const faqAnswer = FAQTracker.findAnswer(message);
             if (faqAnswer) {
                 this.hideTypingIndicator();
@@ -1074,6 +1151,22 @@ class RentalAIChat {
             if (anyKeywordInMessage(message, wifiKeywords) && hostConfig?.amenities?.wifi) {
                 if (systemMessage) systemMessage += "\n\n";
                 systemMessage += `WIFI INFORMATION:\nNetwork: ${hostConfig.amenities.wifi}`;
+            }
+            
+            // Include FAQs in system message for better context
+            if (this.hostFAQs && this.hostFAQs.length > 0) {
+                // Filter FAQs by language if available
+                const relevantFAQs = this.hostFAQs.filter(faq => 
+                    !faq.language || faq.language === currentLanguage || faq.language === 'en'
+                );
+                
+                if (relevantFAQs.length > 0) {
+                    if (systemMessage) systemMessage += "\n\n";
+                    systemMessage += "HOST FAQS (Use these answers when guests ask similar questions):\n\n";
+                    relevantFAQs.forEach((faq, index) => {
+                        systemMessage += `${index + 1}. Q: ${faq.question}\n   A: ${faq.answer}\n\n`;
+                    });
+                }
             }
 
             const controller = new AbortController();
@@ -1226,6 +1319,37 @@ class RentalAIChat {
         if (typingIndicator) {
             typingIndicator.style.display = 'none';
         }
+    }
+
+    findFAQAnswer(message, language = 'en') {
+        if (!this.hostFAQs || this.hostFAQs.length === 0) {
+            return null;
+        }
+        
+        const lowerMessage = message.toLowerCase();
+        
+        // Find FAQs that match the question (by language and keyword matching)
+        const matchingFAQs = this.hostFAQs.filter(faq => {
+            // Check language match
+            if (faq.language && faq.language !== language && faq.language !== 'en') {
+                return false;
+            }
+            
+            // Check if question keywords match FAQ question
+            const faqQuestionLower = faq.question.toLowerCase();
+            const questionWords = lowerMessage.split(/\s+/).filter(w => w.length > 3);
+            
+            // If at least 2 significant words match, consider it a match
+            const matchingWords = questionWords.filter(word => faqQuestionLower.includes(word));
+            return matchingWords.length >= 2 || lowerMessage.includes(faqQuestionLower.substring(0, 10));
+        });
+        
+        if (matchingFAQs.length > 0) {
+            // Return the first matching FAQ answer
+            return matchingFAQs[0].answer;
+        }
+        
+        return null;
     }
 
     async submitFeedback(questionId, helpful, helpfulBtn, notHelpfulBtn) {
