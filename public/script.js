@@ -589,13 +589,32 @@ class RentalAIChat {
         setupBtn.addEventListener('click', () => window.location.href = '/admin');
         headerControls.appendChild(setupBtn);
         
-        // Clear button
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'clear-chat-btn';
-        clearBtn.innerHTML = '🗑️ Clear';
-        clearBtn.title = 'Clear conversation history';
-        clearBtn.addEventListener('click', () => this.clearChat());
-        headerControls.appendChild(clearBtn);
+        // Clear button - check if static one exists first
+        let clearBtn = document.getElementById('clearChatBtn');
+        if (clearBtn) {
+            // Remove old event listeners and reattach
+            const newClearBtn = clearBtn.cloneNode(true);
+            clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
+            clearBtn = newClearBtn;
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.clearChat();
+            });
+        } else {
+            // Create new clear button
+            clearBtn = document.createElement('button');
+            clearBtn.id = 'clearChatBtn';
+            clearBtn.className = 'clear-chat-btn';
+            clearBtn.innerHTML = '🗑️ Clear';
+            clearBtn.title = 'Clear conversation history';
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.clearChat();
+            });
+            headerControls.appendChild(clearBtn);
+        }
         
         // Theme toggle
         const themeToggle = document.createElement('button');
