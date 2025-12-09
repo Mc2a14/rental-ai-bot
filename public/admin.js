@@ -426,9 +426,20 @@ async autoLoadExistingConfig() {
                         this.appliances = [];
                     }
                     
-                    // Update the UI to show loaded recommendations and appliances
+                    // Load FAQs from server
+                    if (property.faqs && Array.isArray(property.faqs)) {
+                        this.faqs = property.faqs;
+                        localStorage.setItem('rental_ai_faqs', JSON.stringify(property.faqs));
+                        console.log(`❓ Loaded ${this.faqs.length} FAQs from server`);
+                    } else {
+                        console.log('⚠️ No FAQs found in property data');
+                        this.faqs = [];
+                    }
+                    
+                    // Update the UI to show loaded recommendations, appliances, and FAQs
                     this.updateRecommendationsList();
                     this.updateAppliancesList();
+                    this.updateFAQsList();
                     
                     console.log('✅ Configuration loaded from server');
                     
