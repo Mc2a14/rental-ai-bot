@@ -22,6 +22,7 @@ class RentalAIChat {
         this.hostConfig = null;
         this.hostRecommendations = [];
         this.hostAppliances = [];
+        this.hostFAQs = [];
         
         console.log('🔍 Step 1: Loading property data from rentalAIPropertyConfig...');
         // Load property data asynchronously - don't block initialization
@@ -296,20 +297,28 @@ class RentalAIChat {
             return;
         }
         
-        faqsList.innerHTML = relevantFAQs.map(faq => `
-            <div style="padding: 10px; background: white; border-radius: 5px; cursor: pointer; transition: background 0.2s;" 
-                 onmouseover="this.style.background='#e8f4fd'" 
-                 onmouseout="this.style.background='white'"
-                 onclick="askQuestion('${faq.question.replace(/'/g, "\\'")}')">
-                <strong style="color: #2c3e50; display: block; margin-bottom: 5px;">${escapeHtml(faq.question)}</strong>
-                <span style="color: #7f8c8d; font-size: 13px;">${escapeHtml(faq.answer.substring(0, 80))}${faq.answer.length > 80 ? '...' : ''}</span>
-            </div>
-        `).join('');
+        faqsList.innerHTML = relevantFAQs.map(faq => {
+            const questionEscaped = this.escapeHtml(faq.question);
+            const answerPreview = faq.answer.length > 80 ? faq.answer.substring(0, 80) + '...' : faq.answer;
+            const answerEscaped = this.escapeHtml(answerPreview);
+            const questionForClick = faq.question.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            
+            return `
+                <div style="padding: 10px; background: white; border-radius: 5px; cursor: pointer; transition: background 0.2s;" 
+                     onmouseover="this.style.background='#e8f4fd'" 
+                     onmouseout="this.style.background='white'"
+                     onclick="window.rentalAIChat && window.rentalAIChat.askQuestion('${questionForClick}')">
+                    <strong style="color: #2c3e50; display: block; margin-bottom: 5px;">${questionEscaped}</strong>
+                    <span style="color: #7f8c8d; font-size: 13px;">${answerEscaped}</span>
+                </div>
+            `;
+        }).join('');
         
         faqsSection.style.display = 'block';
     }
     
     escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
