@@ -632,6 +632,69 @@ class RentalAIChat {
         if (messageInput) {
             messageInput.placeholder = placeholders[langCode] || placeholders.en;
         }
+        
+        // Update quick question buttons with both text AND data-question
+        const quickQuestions = {
+            en: {
+                checkin: { text: "Check-in/out times", question: "What time is check-in and check-out?" },
+                wifi: { text: "WiFi Information", question: "What are the WiFi details?" },
+                restaurants: { text: "Nearby Restaurants", question: "What restaurants are nearby?" },
+                emergency: { text: "Emergency Contacts", question: "What are the emergency contacts?" },
+                applianceHelp: { text: "🛠️ Appliance Help", question: "How do I use the appliances?" },
+                ovenHelp: { text: "🍳 Oven/Microwave", question: "How do I use the oven or microwave?" },
+                washerHelp: { text: "🧺 Washer/Dryer", question: "How do I use the washer and dryer?" },
+                thermostatHelp: { text: "🌡️ Thermostat", question: "How do I adjust the thermostat?" }
+            },
+            es: {
+                checkin: { text: "Horarios de check-in/out", question: "¿A qué hora es el check-in y check-out?" },
+                wifi: { text: "Información del WiFi", question: "¿Cuáles son los detalles del WiFi?" },
+                restaurants: { text: "Restaurantes cercanos", question: "¿Qué restaurantes hay cerca?" },
+                emergency: { text: "Contactos de emergencia", question: "¿Cuáles son los contactos de emergencia?" },
+                applianceHelp: { text: "🛠️ Ayuda con Electrodomésticos", question: "¿Cómo uso los electrodomésticos?" },
+                ovenHelp: { text: "🍳 Horno/Microondas", question: "¿Cómo uso el horno o microondas?" },
+                washerHelp: { text: "🧺 Lavadora/Secadora", question: "¿Cómo uso la lavadora y secadora?" },
+                thermostatHelp: { text: "🌡️ Termostato", question: "¿Cómo ajusto el termostato?" }
+            },
+            fr: {
+                checkin: { text: "Horaires check-in/out", question: "Quelles sont les heures d'enregistrement et de départ?" },
+                wifi: { text: "Informations WiFi", question: "Quels sont les détails du WiFi?" },
+                restaurants: { text: "Restaurants à proximité", question: "Quels restaurants sont à proximité?" },
+                emergency: { text: "Contacts d'urgence", question: "Quels sont les contacts d'urgence?" },
+                applianceHelp: { text: "🛠️ Aide aux Appareils", question: "Comment utiliser les appareils?" },
+                ovenHelp: { text: "🍳 Four/Micro-ondes", question: "Comment utiliser le four ou le micro-ondes?" },
+                washerHelp: { text: "🧺 Lave-linge/Sèche-linge", question: "Comment utiliser la machine à laver et le sèche-linge?" },
+                thermostatHelp: { text: "🌡️ Thermostat", question: "Comment régler le thermostat?" }
+            }
+        };
+        
+        const questions = quickQuestions[langCode] || quickQuestions.en;
+        
+        // Update existing quick question buttons - both text AND data-question
+        const buttons = document.querySelectorAll('.quick-btn');
+        if (buttons.length >= 4) {
+            buttons[0].textContent = questions.checkin.text;
+            buttons[0].setAttribute('data-question', questions.checkin.question);
+            buttons[1].textContent = questions.wifi.text;
+            buttons[1].setAttribute('data-question', questions.wifi.question);
+            buttons[2].textContent = questions.restaurants.text;
+            buttons[2].setAttribute('data-question', questions.restaurants.question);
+            buttons[3].textContent = questions.emergency.text;
+            buttons[3].setAttribute('data-question', questions.emergency.question);
+        }
+        
+        // Update appliance quick question buttons - both text AND data-question
+        const applianceButtons = document.querySelectorAll('.appliance-quick-btn');
+        if (applianceButtons.length >= 4) {
+            applianceButtons[0].textContent = questions.applianceHelp.text;
+            applianceButtons[0].setAttribute('data-question', questions.applianceHelp.question);
+            applianceButtons[1].textContent = questions.ovenHelp.text;
+            applianceButtons[1].setAttribute('data-question', questions.ovenHelp.question);
+            applianceButtons[2].textContent = questions.washerHelp.text;
+            applianceButtons[2].setAttribute('data-question', questions.washerHelp.question);
+            applianceButtons[3].textContent = questions.thermostatHelp.text;
+            applianceButtons[3].setAttribute('data-question', questions.thermostatHelp.question);
+        }
+    }
     }
 
     getLanguageName(langCode) {
