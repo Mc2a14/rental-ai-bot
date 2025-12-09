@@ -33,23 +33,30 @@ class ChatController {
         language
       );
       
-      // Track question for analytics (async, don't wait)
+      // Track question for analytics
+      let questionId = null;
       if (result.success && propertyId) {
-        const category = analyticsService.categorizeQuestion(message);
-        analyticsService.trackQuestion(
-          propertyId,
-          message.trim(),
-          result.response,
-          language,
-          category
-        ).catch(err => logger.error('Error tracking question:', err));
+        try {
+          const category = analyticsService.categorizeQuestion(message);
+          questionId = await analyticsService.trackQuestion(
+            propertyId,
+            message.trim(),
+            result.response,
+            language,
+            category
+          );
+        } catch (err) {
+          logger.error('Error tracking question:', err);
+          // Continue even if tracking fails
+        }
       }
       
       if (result.success) {
         return res.json({
           success: true,
           response: result.response,
-          usingCustomConfig: result.usingCustomConfig
+          usingCustomConfig: result.usingCustomConfig,
+          questionId: questionId
         });
       } else {
         return res.status(500).json({
