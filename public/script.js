@@ -695,7 +695,6 @@ class RentalAIChat {
             applianceButtons[3].setAttribute('data-question', questions.thermostatHelp.question);
         }
     }
-    }
 
     getLanguageName(langCode) {
         const languages = {
