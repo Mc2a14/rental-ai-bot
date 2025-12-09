@@ -212,11 +212,19 @@ setupRealTimeValidation() {
         field.addEventListener('input', () => {
             this.validateField(field);
             debouncedValidate(); // Debounced validation
+            // Update preview in real-time when on step 3
+            if (this.currentStep === 3) {
+                this.updatePreview();
+            }
         });
         
         field.addEventListener('change', () => {
             this.validateField(field);
             this.validateCurrentStep(); // Immediate validation on change
+            // Update preview in real-time when on step 3
+            if (this.currentStep === 3) {
+                this.updatePreview();
+            }
         });
         
         // Initial validation
@@ -975,6 +983,10 @@ addRecommendation() {
     this.recommendations.push(newPlace);
     this.saveRecommendations();
     this.updateRecommendationsList();
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
 
     if (nameInput) nameInput.value = '';
     if (descriptionInput) descriptionInput.value = '';
@@ -988,6 +1000,10 @@ removeRecommendation(index) {
         this.recommendations.splice(index, 1);
         this.saveRecommendations();
         this.updateRecommendationsList();
+        // Update preview if on step 3
+        if (this.currentStep === 3) {
+            this.updatePreview();
+        }
         this.showTempMessage('Recommendation removed', 'success');
     }
 }
@@ -1061,6 +1077,14 @@ addAppliance() {
     this.appliances.push(newAppliance);
     this.saveAppliances();
     this.updateAppliancesList();
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
+        // Update preview if on step 3
+        if (this.currentStep === 3) {
+            this.updatePreview();
+        }
 
     nameInput.value = '';
     instructionsInput.value = '';

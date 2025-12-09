@@ -630,17 +630,7 @@ class RentalAIChat {
         });
         headerControls.appendChild(langSelect);
         
-        // RELOAD button
-        const reloadBtn = document.createElement('button');
-        reloadBtn.className = 'setup-btn';
-        reloadBtn.innerHTML = '🔄 Reload';
-        reloadBtn.title = 'Reload property data';
-        reloadBtn.addEventListener('click', () => {
-            console.log('🔄 Manually reloading property data...');
-            this.loadAllPropertyData();
-            alert('Property data reloaded!');
-        });
-        headerControls.appendChild(reloadBtn);
+        // Removed Reload button - no longer needed as property loading is working correctly
         
         const statusIndicator = header.querySelector('.status-indicator');
         if (statusIndicator) {
