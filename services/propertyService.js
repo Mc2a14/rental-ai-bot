@@ -207,37 +207,97 @@ class PropertyService {
   async updateProperty(propertyId, updates) {
     try {
       if (await this.ensureDatabase()) {
-        const setClause = [];
-        const values = [];
-        let paramCount = 1;
-
-        if (updates.name) {
-          setClause.push(`name = $${paramCount++}`);
-          values.push(updates.name);
-        }
-        if (updates.address !== undefined) {
-          setClause.push(`address = $${paramCount++}`);
-          values.push(updates.address);
-        }
-        // Add more fields as needed
-        
-        setClause.push(`updated_at = CURRENT_TIMESTAMP`);
-        values.push(propertyId);
-
-        const result = await database.query(
-          `UPDATE properties SET ${setClause.join(', ')} WHERE property_id = $${paramCount} RETURNING *`,
-          values
-        );
-
-        if (result.rows.length === 0) {
-          throw new Error('Property not found');
-        }
-
-        return {
-          success: true,
-          property: this.mapDatabaseRowToProperty(result.rows[0])
-        };
+        return await this.updatePropertyInDatabase(propertyId, updates);
       }
+      
+      return await this.updatePropertyInFile(propertyId, updates);
+    } catch (error) {
+      logger.error('Error updating property:', error);
+      throw error;
+    }
+  }
+
+  async updatePropertyInDatabase(propertyId, updates) {
+    const setClause = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (updates.name) {
+      setClause.push(`name = $${paramCount++}`);
+      values.push(updates.name);
+    }
+    if (updates.address !== undefined) {
+      setClause.push(`address = $${paramCount++}`);
+      values.push(updates.address);
+    }
+    if (updates.type !== undefined) {
+      setClause.push(`type = $${paramCount++}`);
+      values.push(updates.type);
+    }
+    if (updates.hostContact !== undefined) {
+      setClause.push(`host_contact = $${paramCount++}`);
+      values.push(updates.hostContact);
+    }
+    if (updates.maintenanceContact !== undefined) {
+      setClause.push(`maintenance_contact = $${paramCount++}`);
+      values.push(updates.maintenanceContact);
+    }
+    if (updates.emergencyContact !== undefined) {
+      setClause.push(`emergency_contact = $${paramCount++}`);
+      values.push(updates.emergencyContact);
+    }
+    if (updates.checkinTime !== undefined) {
+      setClause.push(`checkin_time = $${paramCount++}`);
+      values.push(updates.checkinTime);
+    }
+    if (updates.checkoutTime !== undefined) {
+      setClause.push(`checkout_time = $${paramCount++}`);
+      values.push(updates.checkoutTime);
+    }
+    if (updates.lateCheckout !== undefined) {
+      setClause.push(`late_checkout = $${paramCount++}`);
+      values.push(updates.lateCheckout);
+    }
+    if (updates.amenities !== undefined) {
+      setClause.push(`amenities = $${paramCount++}`);
+      values.push(JSON.stringify(updates.amenities));
+    }
+    if (updates.houseRules !== undefined) {
+      setClause.push(`house_rules = $${paramCount++}`);
+      values.push(updates.houseRules);
+    }
+    if (updates.recommendations !== undefined) {
+      setClause.push(`recommendations = $${paramCount++}`);
+      values.push(JSON.stringify(updates.recommendations));
+    }
+    if (updates.appliances !== undefined) {
+      setClause.push(`appliances = $${paramCount++}`);
+      values.push(JSON.stringify(updates.appliances));
+    }
+    
+    setClause.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(propertyId);
+
+    const result = await database.query(
+      `UPDATE properties SET ${setClause.join(', ')} WHERE property_id = $${paramCount} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Property not found');
+    }
+
+    const property = this.mapDatabaseRowToProperty(result.rows[0]);
+    logger.info(`Property updated in database: ${propertyId}`);
+    
+    return {
+      success: true,
+      propertyId: propertyId,
+      property: property
+    };
+  }
+
+  async updatePropertyInFile(propertyId, updates) {
       
       const properties = await this.propertiesFile.read();
       if (!properties[propertyId]) {

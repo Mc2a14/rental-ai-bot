@@ -5,10 +5,11 @@ const logger = require('../utils/logger');
 class PropertyController {
   async saveProperty(req, res) {
     try {
-      const { userId, propertyData } = req.body;
+      const { userId, propertyData, propertyId } = req.body;
       
       logger.info(`Saving property for user: ${userId}`);
       logger.info(`Property name: ${propertyData?.name}`);
+      logger.info(`Property ID (update): ${propertyId || 'new'}`);
       
       if (!userId) {
         return res.status(400).json({
@@ -24,11 +25,14 @@ class PropertyController {
         });
       }
       
-      const result = await propertyService.saveProperty(userId, propertyData);
+      // If propertyId is provided, update existing property; otherwise create new
+      const result = propertyId 
+        ? await propertyService.updateProperty(propertyId, propertyData)
+        : await propertyService.saveProperty(userId, propertyData);
       
       logger.info(`Property saved successfully: ${result.propertyId}`);
       
-      // Verify the property was actually saved
+      // Verify the property was actually saved/updated
       const verifyProperty = await propertyService.getProperty(result.propertyId);
       if (!verifyProperty) {
         logger.error(`WARNING: Property ${result.propertyId} was not found after saving!`);

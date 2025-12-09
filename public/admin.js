@@ -331,6 +331,10 @@ async autoLoadExistingConfig() {
                     const property = data.properties[0]; // Properties are sorted by created_at DESC
                     console.log(`✅ Found property from server: ${property.name}`);
                     
+                    // Store the property ID for updates
+                    this.currentPropertyId = property.id || property.propertyId;
+                    console.log(`📌 Stored property ID for updates: ${this.currentPropertyId}`);
+                    
                     // Populate form fields from server data
                     this.populateFormFromConfig(property);
                     
@@ -652,13 +656,24 @@ async saveConfiguration(e) {
         console.log('🔄 Saving to server...');
         
         // Save to SERVER (cross-device access)
+        // Include propertyId if we're updating an existing property
+        const requestBody = {
+            userId: user.userId,
+            propertyData: propertyData
+        };
+        
+        // If we have an existing property ID, include it for update
+        if (this.currentPropertyId) {
+            requestBody.propertyId = this.currentPropertyId;
+            console.log(`🔄 Updating existing property: ${this.currentPropertyId}`);
+        } else {
+            console.log('🆕 Creating new property');
+        }
+        
         const response = await fetch('/api/property/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: user.userId,
-                propertyData: propertyData
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const result = await response.json();
@@ -668,6 +683,9 @@ async saveConfiguration(e) {
         }
         
         console.log('✅ Saved to server, property ID:', result.propertyId);
+        
+        // Store the property ID for future updates
+        this.currentPropertyId = result.propertyId;
         
         // ALSO save to localStorage (for backward compatibility)
         localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(propertyData));
