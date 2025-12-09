@@ -1150,23 +1150,29 @@ saveFAQs() {
 }
 
 // Make functions globally available
-window.addFAQ = function() {
+function addFAQ() {
     if (window.propertySetup) {
         window.propertySetup.addFAQ();
+    } else {
+        alert('System not ready. Please wait for page to load.');
     }
-};
+}
 
-window.editFAQ = function(index) {
+function editFAQ(index) {
     if (window.propertySetup) {
         window.propertySetup.editFAQ(index);
+    } else {
+        alert('System not ready. Please wait for page to load.');
     }
-};
+}
 
-window.removeFAQ = function(index) {
+function removeFAQ(index) {
     if (window.propertySetup) {
         window.propertySetup.removeFAQ(index);
+    } else {
+        alert('System not ready. Please wait for page to load.');
     }
-};
+}
 
 function escapeHtml(text) {
     const div = document.createElement('div');
