@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Rental AI Assistant</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .analytics-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .analytics-header h1 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .property-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .property-selector select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #7f8c8d;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .stat-card .change {
+            font-size: 12px;
+            color: #27ae60;
+            margin-top: 5px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .chart-container h2 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+        
+        .question-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .question-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .question-item:last-child {
+            border-bottom: none;
+        }
+        
+        .question-text {
+            flex: 1;
+            margin-right: 15px;
+        }
+        
+        .question-stats {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .frequency-badge {
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .helpful-rate {
+            color: #27ae60;
+            font-size: 14px;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+        
+        .faq-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .faq-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        
+        .faq-question {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .faq-answer {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .faq-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #95a5a6;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .time-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .time-filter button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .time-filter button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="analytics-container">
+        <div class="analytics-header">
+            <h1><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
+            <div style="display: flex; gap: 10px;">
+                <a href="/admin" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Setup</a>
+                <button class="btn btn-primary" onclick="generateFAQs()"><i class="fas fa-magic"></i> Generate FAQs</button>
+            </div>
+        </div>
+        
+        <div class="property-selector">
+            <label for="propertySelect"><strong>Property:</strong></label>
+            <select id="propertySelect" onchange="loadAnalytics()">
+                <option value="">Loading properties...</option>
+            </select>
+            <div class="time-filter">
+                <button onclick="setTimeFilter(7)" class="time-btn" data-days="7">7 Days</button>
+                <button onclick="setTimeFilter(30)" class="time-btn active" data-days="30">30 Days</button>
+                <button onclick="setTimeFilter(90)" class="time-btn" data-days="90">90 Days</button>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Loading analytics...
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="analyticsContent" style="display: none;">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Questions</h3>
+                    <p class="value" id="totalQuestions">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Helpful Rate</h3>
+                    <p class="value" id="helpfulRate">0%</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Most Asked Category</h3>
+                    <p class="value" id="topCategory">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Languages</h3>
+                    <p class="value" id="languages">-</p>
+                </div>
+            </div>
+            
+            <!-- Most Frequent Questions -->
+            <div class="chart-container">
+                <h2><i class="fas fa-question-circle"></i> Most Frequent Questions</h2>
+                <ul class="question-list" id="frequentQuestions">
+                    <li class="empty-state">No questions yet</li>
+                </ul>
+            </div>
+            
+            <!-- Questions by Category -->
+            <div class="chart-container">
+                <h2><i class="fas fa-tags"></i> Questions by Category</h2>
+                <ul class="question-list" id="categoryBreakdown">
+                    <li class="empty-state">No categories yet</li>
+                </ul>
+            </div>
+            
+            <!-- Auto-Generated FAQs -->
+            <div class="faq-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2><i class="fas fa-lightbulb"></i> Auto-Generated FAQs</h2>
+                    <button class="btn btn-primary" onclick="generateFAQs()" style="font-size: 12px; padding: 8px 15px;">
+                        <i class="fas fa-sync"></i> Regenerate
+                    </button>
+                </div>
+                <div id="faqsList">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No FAQs generated yet. Click "Generate FAQs" to create them from frequent questions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/auth.js"></script>
+    <script src="/analytics.js"></script>
+</body>
+</html>
+
