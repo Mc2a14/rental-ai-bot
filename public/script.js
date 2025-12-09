@@ -253,12 +253,12 @@ class RentalAIChat {
                 // Get current language to use correct intro text
                 const currentLang = this.loadLanguagePreference();
                 const welcomeMessages = {
-                    en: { intro: "Hello! I'm your Rental AI Assistant for" },
-                    es: { intro: "¡Hola! Soy tu Asistente de IA para Alquileres de" },
-                    fr: { intro: "Bonjour! Je suis votre Assistant IA de Location pour" }
+                    en: { intro: "Hello! I'm your Rental AI Assistant for", introSuffix: "I can help you with:" },
+                    es: { intro: "¡Hola! Soy tu Asistente de IA para Alquileres de", introSuffix: "Puedo ayudarte con:" },
+                    fr: { intro: "Bonjour! Je suis votre Assistant IA de Location pour", introSuffix: "Je peux vous aider avec:" }
                 };
                 const welcome = welcomeMessages[currentLang] || welcomeMessages.en;
-                welcomeIntro.innerHTML = `${welcome.intro} <strong id="welcomePropertyName">${this.hostConfig.name}</strong>. I can help you with:`;
+                welcomeIntro.innerHTML = `${welcome.intro} <strong id="welcomePropertyName">${this.hostConfig.name}</strong>. ${welcome.introSuffix}`;
             }
         }
         
@@ -677,6 +677,7 @@ class RentalAIChat {
         const welcomeMessages = {
             en: {
                 intro: "Hello! I'm your Rental AI Assistant for",
+                introSuffix: "I can help you with:",
                 item1: "🏠 Property information & amenities",
                 item2: "🕒 Check-in/check-out details",
                 item3: "🍽️ Local restaurant recommendations",
@@ -688,6 +689,7 @@ class RentalAIChat {
             },
             es: {
                 intro: "¡Hola! Soy tu Asistente de IA para Alquileres de",
+                introSuffix: "Puedo ayudarte con:",
                 item1: "🏠 Información de la propiedad y comodidades",
                 item2: "🕒 Detalles de check-in/check-out",
                 item3: "🍽️ Recomendaciones de restaurantes locales",
@@ -699,6 +701,7 @@ class RentalAIChat {
             },
             fr: {
                 intro: "Bonjour! Je suis votre Assistant IA de Location pour",
+                introSuffix: "Je peux vous aider avec:",
                 item1: "🏠 Informations sur la propriété et équipements",
                 item2: "🕒 Détails d'enregistrement/départ",
                 item3: "🍽️ Recommandations de restaurants locaux",
@@ -716,7 +719,7 @@ class RentalAIChat {
         
         const welcomeIntro = document.getElementById('welcomeMessageIntro');
         if (welcomeIntro) {
-            welcomeIntro.innerHTML = `${welcome.intro} <strong id="welcomePropertyName">${propertyNameText}</strong>. I can help you with:`;
+            welcomeIntro.innerHTML = `${welcome.intro} <strong id="welcomePropertyName">${propertyNameText}</strong>. ${welcome.introSuffix}`;
         }
         
         const welcomeItem1 = document.getElementById('welcomeItem1');
