@@ -458,31 +458,39 @@ class RentalAIChat {
 
         // Attach event listeners to existing quick question buttons
         // Use data attribute to prevent duplicate listeners
+        // IMPORTANT: Read data-question from button at click time, not when listener is attached
         const quickButtons = quickQuestionsContainer.querySelectorAll('.quick-btn');
         quickButtons.forEach(btn => {
-            const question = btn.getAttribute('data-question');
-            if (question && !btn.hasAttribute('data-listener-attached')) {
+            if (!btn.hasAttribute('data-listener-attached')) {
                 btn.setAttribute('data-listener-attached', 'true');
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation(); // Prevent event bubbling
+                    // Read the current data-question value (in case language changed)
+                    const question = this.getAttribute('data-question');
                     console.log('Quick question clicked:', question);
-                    askQuestion(question);
+                    if (question) {
+                        askQuestion(question);
+                    }
                 });
             }
         });
 
         // Attach event listeners to appliance buttons
+        // IMPORTANT: Read data-question from button at click time, not when listener is attached
         const applianceButtons = quickQuestionsContainer.querySelectorAll('.appliance-quick-btn');
         applianceButtons.forEach(btn => {
-            const question = btn.getAttribute('data-question');
-            if (question && !btn.hasAttribute('data-listener-attached')) {
+            if (!btn.hasAttribute('data-listener-attached')) {
                 btn.setAttribute('data-listener-attached', 'true');
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation(); // Prevent event bubbling
+                    // Read the current data-question value (in case language changed)
+                    const question = this.getAttribute('data-question');
                     console.log('Appliance question clicked:', question);
-                    askQuestion(question);
+                    if (question) {
+                        askQuestion(question);
+                    }
                 });
             }
         });
@@ -513,8 +521,12 @@ class RentalAIChat {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation(); // Prevent event bubbling
-                    console.log('Appliance question clicked:', btn.question);
-                    askQuestion(btn.question);
+                    // Read the current data-question value (in case language changed)
+                    const question = this.getAttribute('data-question');
+                    console.log('Appliance question clicked:', question);
+                    if (question) {
+                        askQuestion(question);
+                    }
                 });
                 applianceGrid.appendChild(button);
             });
