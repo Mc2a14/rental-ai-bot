@@ -208,6 +208,20 @@ class RentalAIChat {
     updateUIWithPropertyInfo() {
         if (!this.hostConfig) {
             console.log('⚠️ No host config to update UI with');
+            // Clear default values if no property loaded
+            const headerText = document.querySelector('.header-text h2') || document.getElementById('headerTitle');
+            const headerSubtext = document.querySelector('.header-text p') || document.getElementById('propertySubtitle');
+            const welcomePropertyName = document.getElementById('welcomePropertyName');
+            
+            if (headerText) {
+                headerText.textContent = 'Rental AI Assistant';
+            }
+            if (headerSubtext) {
+                headerSubtext.textContent = '24/7 Support';
+            }
+            if (welcomePropertyName) {
+                welcomePropertyName.textContent = 'this property';
+            }
             return;
         }
         
