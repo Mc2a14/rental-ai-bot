@@ -565,6 +565,36 @@ populateFormFromConfig(config) {
     if (document.getElementById('propertyName')) {
         document.getElementById('propertyName').value = config.name || '';
     }
+    if (document.getElementById('propertyAddress')) {
+        document.getElementById('propertyAddress').value = config.address || '';
+    }
+    if (document.getElementById('propertyType')) {
+        document.getElementById('propertyType').value = config.type || 'Vacation Home';
+    }
+    if (document.getElementById('hostContact')) {
+        document.getElementById('hostContact').value = config.hostContact || '';
+    }
+    if (document.getElementById('maintenanceContact')) {
+        document.getElementById('maintenanceContact').value = config.maintenanceContact || '';
+    }
+    if (document.getElementById('checkInTime')) {
+        document.getElementById('checkInTime').value = config.checkinTime || config.checkInTime || '3:00 PM';
+    }
+    if (document.getElementById('checkOutTime')) {
+        document.getElementById('checkOutTime').value = config.checkoutTime || config.checkOutTime || '11:00 AM';
+    }
+    if (document.getElementById('lateCheckout')) {
+        document.getElementById('lateCheckout').value = config.lateCheckout || '';
+    }
+    if (document.getElementById('wifiDetails')) {
+        document.getElementById('wifiDetails').value = config.amenities?.wifi || config.wifiDetails || '';
+    }
+    if (document.getElementById('amenities')) {
+        document.getElementById('amenities').value = config.amenities?.other || config.amenities || '';
+    }
+    if (document.getElementById('houseRules')) {
+        document.getElementById('houseRules').value = config.houseRules || '';
+    }
     
     const propertyAddressField = document.getElementById('propertyAddress');
     if (propertyAddressField) {
