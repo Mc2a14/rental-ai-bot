@@ -689,12 +689,21 @@ body {
 @media (max-width: 480px) {
     body {
         padding: 0;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        height: 100vh;
+        height: -webkit-fill-available;
     }
     
     .chat-container {
         border-radius: 0;
-        height: 100vh;
-        max-height: 100vh;
+        height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        height: calc(-webkit-fill-available - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        width: 100%;
+        margin: 0;
     }
     
     .header-controls {
