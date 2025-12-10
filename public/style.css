@@ -720,7 +720,6 @@ body {
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        padding-top: max(10px, calc(10px + env(safe-area-inset-top)));
     }
     
     .chat-container {
