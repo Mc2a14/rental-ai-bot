@@ -897,6 +897,7 @@ async saveConfiguration(e) {
             console.log(`🔄 Updating existing property: ${this.currentPropertyId}`);
             console.log(`📊 Recommendations count: ${propertyData.recommendations?.length || 0}`);
             console.log(`📊 Appliances count: ${propertyData.appliances?.length || 0}`);
+            console.log(`📊 FAQs count: ${propertyData.faqs?.length || 0}`);
         } else {
             console.log('🆕 Creating new property (no currentPropertyId found)');
             console.log(`📊 Recommendations count: ${propertyData.recommendations?.length || 0}`);

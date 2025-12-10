@@ -221,7 +221,7 @@ class PropertyService {
 
   async updatePropertyInDatabase(propertyId, updates) {
     logger.info(`🔄 Updating property in database: ${propertyId}`);
-    logger.info(`📊 Updates include: recommendations=${updates.recommendations?.length || 0}, appliances=${updates.appliances?.length || 0}`);
+    logger.info(`📊 Updates include: recommendations=${updates.recommendations?.length || 0}, appliances=${updates.appliances?.length || 0}, faqs=${updates.faqs?.length || 0}`);
     
     const setClause = [];
     const values = [];
@@ -285,12 +285,21 @@ class PropertyService {
     }
     
     setClause.push(`updated_at = CURRENT_TIMESTAMP`);
+    
+    // Add propertyId to values for WHERE clause
     values.push(propertyId);
+    const whereParamIndex = paramCount;
 
-    const result = await database.query(
-      `UPDATE properties SET ${setClause.join(', ')} WHERE property_id = $${paramCount} RETURNING *`,
-      values
-    );
+    if (setClause.length === 1) {
+      // Only updated_at, which means no actual updates - this shouldn't happen but handle it
+      logger.warn('⚠️ No updates to apply, only updated_at');
+    }
+
+    const sql = `UPDATE properties SET ${setClause.join(', ')} WHERE property_id = $${whereParamIndex} RETURNING *`;
+    logger.info(`📝 SQL: ${sql.substring(0, 200)}...`);
+    logger.info(`📝 Values count: ${values.length}, WHERE param: $${whereParamIndex}`);
+
+    const result = await database.query(sql, values);
 
     if (result.rows.length === 0) {
       throw new Error('Property not found');
