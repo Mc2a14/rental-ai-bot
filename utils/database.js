@@ -96,14 +96,24 @@ class Database {
 
       // Add faqs column if it doesn't exist (for existing databases)
       try {
-        await client.query(`
-          ALTER TABLE properties 
-          ADD COLUMN IF NOT EXISTS faqs JSONB DEFAULT '[]'
+        const columnCheck = await client.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name='properties' AND column_name='faqs'
         `);
-        logger.info('✅ FAQs column added/verified in properties table');
+        
+        if (columnCheck.rows.length === 0) {
+          await client.query(`
+            ALTER TABLE properties 
+            ADD COLUMN faqs JSONB DEFAULT '[]'
+          `);
+          logger.info('✅ FAQs column added to existing properties table');
+        } else {
+          logger.info('✅ FAQs column already exists in properties table');
+        }
       } catch (error) {
-        // Column might already exist, that's okay
-        logger.info('ℹ️ FAQs column check:', error.message);
+        // If error, column might already exist or table doesn't exist yet
+        logger.warn('ℹ️ FAQs column check:', error.message);
       }
 
       // Create indexes
