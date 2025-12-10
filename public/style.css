@@ -45,7 +45,9 @@
 
 html {
     height: 100%;
+    height: -webkit-fill-available;
     -webkit-text-size-adjust: 100%;
+    overflow: hidden;
 }
 
 body {
@@ -55,28 +57,34 @@ body {
     background-attachment: fixed !important; /* Keep gradient visible on scroll */
     color: var(--text-primary);
     height: 100vh;
+    height: -webkit-fill-available;
     min-height: 100vh;
-    min-height: -webkit-fill-available; /* iOS Safari fix */
+    min-height: -webkit-fill-available;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 5px;
-    padding-top: max(5px, env(safe-area-inset-top));
-    padding-bottom: max(5px, env(safe-area-inset-bottom));
-    padding-left: max(5px, env(safe-area-inset-left));
-    padding-right: max(5px, env(safe-area-inset-right));
+    padding: 0;
     margin: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    position: relative;
+    overflow-y: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
     box-sizing: border-box;
 }
 
 .chat-container {
     width: 100%;
     max-width: 800px;
-    max-height: calc(100vh - 10px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    height: 100vh;
+    height: -webkit-fill-available;
+    max-height: 100vh;
+    max-height: -webkit-fill-available;
     min-height: 500px;
     background: var(--bg-chat) !important;
     border-radius: 20px;
@@ -687,23 +695,35 @@ body {
 }
 
 @media (max-width: 480px) {
+    html {
+        height: 100%;
+        height: -webkit-fill-available;
+        overflow: hidden;
+    }
+    
     body {
         padding: 0;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
+        margin: 0;
         height: 100vh;
         height: -webkit-fill-available;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        overflow: hidden;
     }
     
     .chat-container {
         border-radius: 0;
-        height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-        height: calc(-webkit-fill-available - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-        max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        height: 100vh;
+        height: -webkit-fill-available;
+        max-height: 100vh;
+        max-height: -webkit-fill-available;
         width: 100%;
         margin: 0;
+        position: relative;
     }
     
     .header-controls {
