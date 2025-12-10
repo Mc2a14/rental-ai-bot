@@ -75,7 +75,7 @@ body {
 .chat-container {
     width: 100%;
     max-width: 800px;
-    max-height: 90vh;
+    max-height: calc(100vh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     min-height: 500px;
     background: var(--bg-chat) !important;
     border-radius: 20px;
