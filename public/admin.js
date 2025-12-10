@@ -1083,7 +1083,7 @@ showSuccessMessage(guestLink, propertyName) {
     }
 }
 
-// FAQ Management
+// FAQ Management - These are class methods, they should be inside the class
 loadFAQs() {
     try {
         const saved = localStorage.getItem('rental_ai_faqs');
@@ -1523,6 +1523,37 @@ setupBackupButton() {
         this.showTempMessage('Backup downloaded!', 'success');
     });
 }
+}
+
+// Make functions globally available
+function addFAQ() {
+    if (window.propertySetup) {
+        window.propertySetup.addFAQ();
+    } else {
+        alert('System not ready. Please wait for page to load.');
+    }
+}
+
+function editFAQ(index) {
+    if (window.propertySetup) {
+        window.propertySetup.editFAQ(index);
+    } else {
+        alert('System not ready. Please wait for page to load.');
+    }
+}
+
+function removeFAQ(index) {
+    if (window.propertySetup) {
+        window.propertySetup.removeFAQ(index);
+    } else {
+        alert('System not ready. Please wait for page to load.');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Global functions
