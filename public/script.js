@@ -296,19 +296,26 @@ class RentalAIChat {
             } else {
                 viewFAQsBtn.style.display = 'inline-block';
                 console.log('✅ Showing FAQ button');
-                // Remove any existing listeners first
+                // Remove any existing listeners first by cloning
                 const newBtn = viewFAQsBtn.cloneNode(true);
                 viewFAQsBtn.parentNode.replaceChild(newBtn, viewFAQsBtn);
                 const freshBtn = document.getElementById('viewFAQsBtn');
                 
-                // Attach click handler
-                freshBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('🔘 FAQ button clicked!');
-                    this.showFAQs();
-                });
-                console.log('✅ FAQ button click handler attached');
+                // Make sure it's not treated as a quick question button
+                if (freshBtn) {
+                    // Remove data-question attribute if it exists (so quick question handler ignores it)
+                    freshBtn.removeAttribute('data-question');
+                    
+                    // Attach click handler with high priority
+                    freshBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation(); // Prevent other handlers
+                        console.log('🔘 FAQ button clicked!');
+                        this.showFAQs();
+                    }, true); // Use capture phase to run before other handlers
+                    console.log('✅ FAQ button click handler attached');
+                }
             }
         } else {
             console.warn('⚠️ viewFAQsBtn not found in DOM');
