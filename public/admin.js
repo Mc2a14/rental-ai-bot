@@ -1555,6 +1555,37 @@ function copyToClipboard(text) {
     }
 }
 
+// Make functions globally available
+function addFAQ() {
+    if (window.propertySetup) {
+        window.propertySetup.addFAQ();
+    } else {
+        alert('System not ready. Please wait for page to load.');
+    }
+}
+
+function editFAQ(index) {
+    if (window.propertySetup) {
+        window.propertySetup.editFAQ(index);
+    } else {
+        alert('System not ready. Please wait for page to load.');
+    }
+}
+
+function removeFAQ(index) {
+    if (window.propertySetup) {
+        window.propertySetup.removeFAQ(index);
+    } else {
+        alert('System not ready. Please wait for page to load.');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // SIMPLE initialization - This may not fire if script loads dynamically
 // So we also initialize in admin.html after script loads
 document.addEventListener('DOMContentLoaded', function() {
