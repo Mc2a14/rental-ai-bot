@@ -276,13 +276,33 @@ class RentalAIChat {
     }
     
     displayFAQs() {
+        const viewFAQsBtn = document.getElementById('viewFAQsBtn');
         const faqsSection = document.getElementById('faqsSection');
         const faqsList = document.getElementById('faqsList');
         
-        if (!faqsSection || !faqsList) return;
+        // Show/hide the FAQ button based on whether FAQs exist
+        if (viewFAQsBtn) {
+            if (!this.hostFAQs || this.hostFAQs.length === 0) {
+                viewFAQsBtn.style.display = 'none';
+            } else {
+                viewFAQsBtn.style.display = 'inline-block';
+                // Attach click handler if not already attached
+                if (!viewFAQsBtn.hasAttribute('data-listener-attached')) {
+                    viewFAQsBtn.setAttribute('data-listener-attached', 'true');
+                    viewFAQsBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.showFAQs();
+                    });
+                }
+            }
+        }
         
+        // Don't auto-display FAQs, just prepare them for when button is clicked
+        if (!faqsList) return;
+        
+        // Prepare FAQ list content (but don't show it yet)
         if (!this.hostFAQs || this.hostFAQs.length === 0) {
-            faqsSection.style.display = 'none';
             return;
         }
         
@@ -290,31 +310,73 @@ class RentalAIChat {
         const currentLanguage = this.getCurrentLanguage();
         const relevantFAQs = this.hostFAQs.filter(faq => 
             !faq.language || faq.language === currentLanguage || faq.language === 'en'
-        ).slice(0, 5); // Show max 5 FAQs
+        );
         
         if (relevantFAQs.length === 0) {
-            faqsSection.style.display = 'none';
             return;
         }
         
-        faqsList.innerHTML = relevantFAQs.map(faq => {
+        // Store FAQs for display when button is clicked
+        this.preparedFAQs = relevantFAQs;
+    }
+    
+    showFAQs() {
+        const faqsSection = document.getElementById('faqsSection');
+        const faqsList = document.getElementById('faqsList');
+        const closeFAQsBtn = document.getElementById('closeFAQsBtn');
+        
+        if (!faqsSection || !faqsList) return;
+        
+        if (!this.preparedFAQs || this.preparedFAQs.length === 0) {
+            // Prepare FAQs if not already prepared
+            if (!this.hostFAQs || this.hostFAQs.length === 0) {
+                return;
+            }
+            const currentLanguage = this.getCurrentLanguage();
+            this.preparedFAQs = this.hostFAQs.filter(faq => 
+                !faq.language || faq.language === currentLanguage || faq.language === 'en'
+            );
+        }
+        
+        // Display FAQs
+        faqsList.innerHTML = this.preparedFAQs.map(faq => {
             const questionEscaped = this.escapeHtml(faq.question);
-            const answerPreview = faq.answer.length > 80 ? faq.answer.substring(0, 80) + '...' : faq.answer;
+            const answerPreview = faq.answer.length > 100 ? faq.answer.substring(0, 100) + '...' : faq.answer;
             const answerEscaped = this.escapeHtml(answerPreview);
             const questionForClick = faq.question.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             
             return `
-                <div style="padding: 10px; background: white; border-radius: 5px; cursor: pointer; transition: background 0.2s;" 
-                     onmouseover="this.style.background='#e8f4fd'" 
-                     onmouseout="this.style.background='white'"
+                <div style="padding: 12px; background: white; border-radius: 5px; cursor: pointer; transition: background 0.2s; border: 1px solid #e1e5e9;" 
+                     onmouseover="this.style.background='#e8f4fd'; this.style.borderColor='#3498db'" 
+                     onmouseout="this.style.background='white'; this.style.borderColor='#e1e5e9'"
                      onclick="window.rentalAIChat && window.rentalAIChat.askQuestion('${questionForClick}')">
-                    <strong style="color: #2c3e50; display: block; margin-bottom: 5px;">${questionEscaped}</strong>
-                    <span style="color: #7f8c8d; font-size: 13px;">${answerEscaped}</span>
+                    <strong style="color: #2c3e50; display: block; margin-bottom: 5px; font-size: 14px;">${questionEscaped}</strong>
+                    <span style="color: #7f8c8d; font-size: 13px; line-height: 1.4;">${answerEscaped}</span>
                 </div>
             `;
         }).join('');
         
         faqsSection.style.display = 'block';
+        
+        // Scroll to FAQs section
+        faqsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Attach close button handler
+        if (closeFAQsBtn && !closeFAQsBtn.hasAttribute('data-listener-attached')) {
+            closeFAQsBtn.setAttribute('data-listener-attached', 'true');
+            closeFAQsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.hideFAQs();
+            });
+        }
+    }
+    
+    hideFAQs() {
+        const faqsSection = document.getElementById('faqsSection');
+        if (faqsSection) {
+            faqsSection.style.display = 'none';
+        }
     }
     
     escapeHtml(text) {
