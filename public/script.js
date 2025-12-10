@@ -654,7 +654,8 @@ class RentalAIChat {
         // Attach event listeners to existing quick question buttons
         // Use data attribute to prevent duplicate listeners
         // IMPORTANT: Read data-question from button at click time, not when listener is attached
-        const quickButtons = quickQuestionsContainer.querySelectorAll('.quick-btn');
+        // Exclude the FAQ button (viewFAQsBtn) from quick question handlers
+        const quickButtons = quickQuestionsContainer.querySelectorAll('.quick-btn:not(#viewFAQsBtn)');
         quickButtons.forEach(btn => {
             if (!btn.hasAttribute('data-listener-attached')) {
                 btn.setAttribute('data-listener-attached', 'true');
