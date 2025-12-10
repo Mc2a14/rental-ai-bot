@@ -256,9 +256,39 @@ class RentalAIChat {
                 // Get current language to use correct intro text
                 const currentLang = this.loadLanguagePreference();
                 const welcomeMessages = {
-                    en: { intro: "Hello! I'm your Rental AI Assistant for", introSuffix: "I can help you with:" },
-                    es: { intro: "¡Hola! Soy tu Asistente de IA para Alquileres de", introSuffix: "Puedo ayudarte con:" },
-                    fr: { intro: "Bonjour! Je suis votre Assistant IA de Location pour", introSuffix: "Je peux vous aider avec:" }
+                    en: { 
+                        intro: "Hello! I'm your Rental AI Assistant for", 
+                        introSuffix: "I can help you with:",
+                        items: [
+                            "🏠 Property information & amenities",
+                            "🕒 Check-in/check-out details",
+                            "🍽️ Local recommendations",
+                            "🚨 Emergency contacts",
+                            "🛠️ Appliance help"
+                        ]
+                    },
+                    es: { 
+                        intro: "¡Hola! Soy tu Asistente de IA para Alquileres de", 
+                        introSuffix: "Puedo ayudarte con:",
+                        items: [
+                            "🏠 Información de la propiedad y comodidades",
+                            "🕒 Detalles de check-in/check-out",
+                            "🍽️ Recomendaciones locales",
+                            "🚨 Contactos de emergencia",
+                            "🛠️ Ayuda con electrodomésticos"
+                        ]
+                    },
+                    fr: { 
+                        intro: "Bonjour! Je suis votre Assistant IA de Location pour", 
+                        introSuffix: "Je peux vous aider avec:",
+                        items: [
+                            "🏠 Informations sur la propriété et équipements",
+                            "🕒 Détails d'arrivée/départ",
+                            "🍽️ Recommandations locales",
+                            "🚨 Contacts d'urgence",
+                            "🛠️ Aide avec les appareils"
+                        ]
+                    }
                 };
                 const welcome = welcomeMessages[currentLang] || welcomeMessages.en;
                 welcomeIntro.innerHTML = `${welcome.intro} <strong id="welcomePropertyName">${this.hostConfig.name}</strong>. ${welcome.introSuffix}`;
@@ -923,10 +953,12 @@ class RentalAIChat {
         if (welcomeItem4) welcomeItem4.textContent = welcome.item4;
         const welcomeItem5 = document.getElementById('welcomeItem5');
         if (welcomeItem5) welcomeItem5.textContent = welcome.item5;
+        
+        // Hide items 6 and 7 since we only have 5 items now
         const welcomeItem6 = document.getElementById('welcomeItem6');
-        if (welcomeItem6) welcomeItem6.textContent = welcome.item6;
+        if (welcomeItem6) welcomeItem6.style.display = 'none';
         const welcomeItem7 = document.getElementById('welcomeItem7');
-        if (welcomeItem7) welcomeItem7.textContent = welcome.item7;
+        if (welcomeItem7) welcomeItem7.style.display = 'none';
         
         const welcomeClosing = document.getElementById('welcomeMessageClosing');
         if (welcomeClosing) welcomeClosing.textContent = welcome.closing;
