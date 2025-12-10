@@ -459,12 +459,21 @@ async autoLoadExistingConfig() {
                     }, 100);
                     
                     // Load recommendations and appliances
+                    console.log('🔍 Checking recommendations in property:', {
+                        hasRecommendations: !!property.recommendations,
+                        isArray: Array.isArray(property.recommendations),
+                        type: typeof property.recommendations,
+                        value: property.recommendations
+                    });
+                    
                     if (property.recommendations && Array.isArray(property.recommendations)) {
                         this.recommendations = property.recommendations;
                         localStorage.setItem('rental_ai_recommendations', JSON.stringify(property.recommendations));
                         console.log(`📍 Loaded ${this.recommendations.length} recommendations from server`);
+                        console.log(`📍 Recommendations data:`, JSON.stringify(this.recommendations, null, 2));
                     } else {
                         console.log('⚠️ No recommendations found in property data');
+                        console.log('⚠️ Property recommendations value:', property.recommendations);
                         this.recommendations = [];
                     }
                     
@@ -488,9 +497,15 @@ async autoLoadExistingConfig() {
                     }
                     
                     // Update the UI to show loaded recommendations, appliances, and FAQs
-                    this.updateRecommendationsList();
-                    this.updateAppliancesList();
-                    this.updateFAQsList();
+                    // Use a small delay to ensure DOM is ready
+                    setTimeout(() => {
+                        console.log('🔄 Updating UI lists...');
+                        console.log('🔄 Recommendations before update:', this.recommendations.length);
+                        this.updateRecommendationsList();
+                        this.updateAppliancesList();
+                        this.updateFAQsList();
+                        console.log('✅ UI lists updated');
+                    }, 200);
                     
                     console.log('✅ Configuration loaded from server');
                     
@@ -1281,19 +1296,30 @@ loadRecommendations() {
 
 updateRecommendationsList() {
     const container = document.getElementById('recommendations-list');
-    if (!container) return;
+    if (!container) {
+        console.warn('⚠️ recommendations-list container not found');
+        return;
+    }
+    
+    console.log('🔄 updateRecommendationsList called with:', {
+        count: this.recommendations.length,
+        recommendations: this.recommendations
+    });
     
     if (this.recommendations.length === 0) {
         container.innerHTML = `<div class="no-recommendations"><p>No recommendations yet. Add some to help your guests discover local gems!</p></div>`;
+        console.log('⚠️ No recommendations to display');
         return;
     }
 
-    container.innerHTML = this.recommendations.map((place, index) => `
+    container.innerHTML = this.recommendations.map((place, index) => {
+        console.log(`📍 Rendering recommendation ${index + 1}:`, place);
+        return `
         <div class="recommendation-item">
             <div class="place-info">
                 <div class="place-header">
-                    <strong>${place.name}</strong>
-                    <span class="category-badge">${place.category}</span>
+                    <strong>${place.name || 'Unnamed Place'}</strong>
+                    ${place.category ? `<span class="category-badge">${place.category}</span>` : ''}
                 </div>
                 ${place.description ? `<div class="place-description">${place.description}</div>` : ''}
                 ${place.notes ? `<div class="place-notes">💡 ${place.notes}</div>` : ''}
@@ -1302,7 +1328,10 @@ updateRecommendationsList() {
                 <i class="fas fa-trash"></i>
             </button>
         </div>
-    `).join('');
+    `;
+    }).join('');
+    
+    console.log(`✅ Updated recommendations list with ${this.recommendations.length} items`);
 }
 
 addRecommendation() {
