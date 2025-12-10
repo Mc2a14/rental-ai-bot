@@ -1237,6 +1237,85 @@ saveFAQs() {
         console.error('Error saving FAQs:', error);
     }
 }
+
+setupAdditionalButtons() {
+    this.setupResetButton();
+    this.setupBackupButton();
+}
+
+setupResetButton() {
+    if (document.getElementById('resetBtn')) return;
+    
+    const resetBtn = document.createElement('button');
+    resetBtn.id = 'resetBtn';
+    resetBtn.className = 'btn btn-danger';
+    resetBtn.innerHTML = '<i class="fas fa-trash"></i> Reset All Data';
+    resetBtn.style.marginLeft = '10px';
+    
+    const navButtons = document.querySelector('.nav-buttons');
+    if (navButtons) navButtons.appendChild(resetBtn);
+    
+    resetBtn.addEventListener('click', () => {
+        if (confirm('⚠️ WARNING: This will delete ALL your property data. Are you sure?')) {
+            localStorage.removeItem('rentalAIPropertyConfig');
+            localStorage.removeItem('rental_ai_appliances');
+            localStorage.removeItem('rental_ai_recommendations');
+            localStorage.removeItem('rental_ai_faqs');
+            
+            document.querySelectorAll('input, textarea, select').forEach(field => {
+                if (field.type !== 'button' && field.type !== 'submit') {
+                    field.value = '';
+                }
+            });
+            
+            this.currentStep = 1;
+            this.updateStepDisplay();
+            this.appliances = [];
+            this.recommendations = [];
+            this.faqs = [];
+            this.updateAppliancesList();
+            this.updateRecommendationsList();
+            this.updateFAQsList();
+            
+            this.showTempMessage('All data has been reset.', 'success');
+        }
+    });
+}
+
+setupBackupButton() {
+    if (document.getElementById('backupBtn')) return;
+    
+    const backupBtn = document.createElement('button');
+    backupBtn.id = 'backupBtn';
+    backupBtn.className = 'btn btn-info';
+    backupBtn.innerHTML = '<i class="fas fa-download"></i> Download Backup';
+    backupBtn.style.marginLeft = '10px';
+    
+    const navButtons = document.querySelector('.nav-buttons');
+    if (navButtons) navButtons.appendChild(backupBtn);
+    
+    backupBtn.addEventListener('click', () => {
+        const config = {
+            property: JSON.parse(localStorage.getItem('rentalAIPropertyConfig') || '{}'),
+            appliances: JSON.parse(localStorage.getItem('rental_ai_appliances') || '[]'),
+            recommendations: JSON.parse(localStorage.getItem('rental_ai_recommendations') || '[]'),
+            faqs: JSON.parse(localStorage.getItem('rental_ai_faqs') || '[]'),
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        const dataStr = JSON.stringify(config, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = `rental-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        
+        this.showTempMessage('Backup downloaded!', 'success');
+    });
+}
 }
 
 // Make functions globally available
