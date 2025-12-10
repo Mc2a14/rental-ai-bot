@@ -321,21 +321,36 @@ class RentalAIChat {
     }
     
     showFAQs() {
+        console.log('🔍 showFAQs() called');
         const faqsSection = document.getElementById('faqsSection');
         const faqsList = document.getElementById('faqsList');
         const closeFAQsBtn = document.getElementById('closeFAQsBtn');
         
-        if (!faqsSection || !faqsList) return;
+        console.log('🔍 FAQ elements:', { faqsSection: !!faqsSection, faqsList: !!faqsList, closeFAQsBtn: !!closeFAQsBtn });
+        console.log('🔍 hostFAQs:', this.hostFAQs);
+        console.log('🔍 preparedFAQs:', this.preparedFAQs);
+        
+        if (!faqsSection || !faqsList) {
+            console.error('❌ FAQ section or list not found');
+            return;
+        }
         
         if (!this.preparedFAQs || this.preparedFAQs.length === 0) {
             // Prepare FAQs if not already prepared
             if (!this.hostFAQs || this.hostFAQs.length === 0) {
+                console.warn('⚠️ No FAQs available');
                 return;
             }
             const currentLanguage = this.getCurrentLanguage();
             this.preparedFAQs = this.hostFAQs.filter(faq => 
                 !faq.language || faq.language === currentLanguage || faq.language === 'en'
             );
+            console.log('🔍 Prepared FAQs:', this.preparedFAQs);
+        }
+        
+        if (!this.preparedFAQs || this.preparedFAQs.length === 0) {
+            console.warn('⚠️ No prepared FAQs to display');
+            return;
         }
         
         // Display FAQs
@@ -357,9 +372,12 @@ class RentalAIChat {
         }).join('');
         
         faqsSection.style.display = 'block';
+        console.log('✅ FAQ section displayed');
         
         // Scroll to FAQs section
-        faqsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => {
+            faqsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
         
         // Attach close button handler
         if (closeFAQsBtn && !closeFAQsBtn.hasAttribute('data-listener-attached')) {
