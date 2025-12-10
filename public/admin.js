@@ -1369,11 +1369,19 @@ addRecommendation() {
     // Save to localStorage
     this.saveRecommendations();
     
-    // Update the UI immediately
-    this.updateRecommendationsList();
+    // Update the UI immediately - use setTimeout to ensure DOM is ready
+    setTimeout(() => {
+        this.updateRecommendationsList();
+        console.log('✅ Recommendation list UI updated');
+    }, 100);
     
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
+
     this.showTempMessage(`Added ${name} to recommendations`, 'success');
-    console.log('✅ Recommendation added and list updated');
+    console.log('✅ Recommendation added successfully');
     // Update preview if on step 3
     if (this.currentStep === 3) {
         this.updatePreview();
@@ -1401,9 +1409,12 @@ removeRecommendation(index) {
 
 saveRecommendations() {
     try {
+        console.log('💾 Saving recommendations to localStorage:', this.recommendations.length);
+        console.log('💾 Recommendations data:', JSON.stringify(this.recommendations, null, 2));
         localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
+        console.log('✅ Recommendations saved to localStorage');
     } catch (error) {
-        console.error('Error saving recommendations:', error);
+        console.error('❌ Error saving recommendations:', error);
     }
 }
 
