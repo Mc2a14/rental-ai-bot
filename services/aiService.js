@@ -157,13 +157,13 @@ class AIService {
       prompt += `\n\n${systemMessage}`;
     }
 
-    prompt += `\n\nCRITICAL RULES:\n`;
-    prompt += `- ONLY use information provided above. DO NOT make up or invent any information.\n`;
-    prompt += `- DO NOT create fake directions, addresses, or details about places that are not in the recommendations list.\n`;
-    prompt += `- If a guest asks about a place (beach, restaurant, etc.) that is NOT in the recommendations list, politely say you don't have that information and suggest they contact the host.\n`;
-    prompt += `- If directions are not provided in the recommendations, DO NOT make up directions. Instead, suggest the guest contact the host for directions.\n`;
-    prompt += `- Be friendly, helpful, and concise. Answer questions about the property, local recommendations, appliances, and any other guest inquiries using ONLY the information provided above.\n`;
-    prompt += `- If you don't know something, politely say so and suggest contacting the host.`;
+    prompt += `\n\nINSTRUCTIONS:\n`;
+    prompt += `- You are a helpful AI assistant with access to general knowledge about locations, directions, nearby places, restaurants, beaches, attractions, and more.\n`;
+    prompt += `- Use your knowledge to answer questions about directions, nearby places, local attractions, restaurants, beaches, and general area information.\n`;
+    prompt += `- When the host has provided specific recommendations (listed above), prioritize and mention those first, then you can add additional helpful information from your knowledge.\n`;
+    prompt += `- For property-specific information (check-in times, WiFi, house rules, appliances), use ONLY the information provided above.\n`;
+    prompt += `- Be friendly, helpful, and concise. Provide accurate directions, recommendations, and local knowledge to help guests have a great stay.\n`;
+    prompt += `- If asked about something you're uncertain about, provide your best answer based on your knowledge, and suggest contacting the host for the most current information.`;
 
     return prompt;
   }
