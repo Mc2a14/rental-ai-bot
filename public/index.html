@@ -414,10 +414,8 @@
                 setupBtn.addEventListener('click', () => window.location.href = '/admin');
             }
             
-            const clearChatBtn = document.getElementById('clearChatBtn');
-            if (clearChatBtn) {
-                clearChatBtn.addEventListener('click', clearChatHistory);
-            }
+            // Clear button is handled by RentalAIChat.createHeaderControls()
+            // No need to attach listener here to avoid duplicates
             
             // Theme toggle already handled in script.js
             const languageSelect = document.getElementById('languageSelect');
