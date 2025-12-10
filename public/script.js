@@ -620,15 +620,22 @@ class RentalAIChat {
             return "";
         }
         
-        let text = "HOST RECOMMENDATIONS FOR THIS PROPERTY:\n\n";
+        let text = "HOST-SPECIFIC RECOMMENDATIONS (You MUST list these exactly as shown):\n\n";
         this.hostRecommendations.forEach((place, index) => {
-            text += `${index + 1}. ${place.name} (${place.category})\n`;
-            if (place.description) text += `   ${place.description}\n`;
-            if (place.notes) text += `   Note: ${place.notes}\n`;
+            text += `${index + 1}. ${place.name}`;
+            if (place.category) text += ` (${place.category})`;
+            text += "\n";
+            if (place.description) {
+                text += `   Description: ${place.description}\n`;
+            }
+            if (place.notes) {
+                text += `   Additional Info: ${place.notes}\n`;
+            }
             text += "\n";
         });
         
         console.log('📤 Recommendations being sent to AI:', this.hostRecommendations.length);
+        console.log('📤 Recommendations data:', JSON.stringify(this.hostRecommendations, null, 2));
         return text;
     }
 
@@ -1281,9 +1288,13 @@ class RentalAIChat {
             if (this.hostRecommendations.length > 0) {
                 if (systemMessage) systemMessage += "\n\n";
                 systemMessage += `CRITICAL: HOST-SPECIFIC RECOMMENDATIONS FOR ${hostConfig?.name || 'THIS PROPERTY'}:\n`;
-                systemMessage += `You MUST mention these host recommendations FIRST and prominently when guests ask about restaurants, beaches, places to visit, or local recommendations.\n`;
-                systemMessage += `Only after mentioning these host recommendations can you add additional helpful information from your knowledge.\n\n`;
+                systemMessage += `When guests ask about restaurants, beaches, places to visit, or local recommendations:\n`;
+                systemMessage += `1. You MUST list ALL of the host's recommendations below EXACTLY as they appear, including names, descriptions, and notes.\n`;
+                systemMessage += `2. Present them in a clear, numbered list format.\n`;
+                systemMessage += `3. Only AFTER listing all host recommendations can you add additional helpful information from your knowledge.\n`;
+                systemMessage += `4. Do NOT use placeholders like "Insert host's restaurant recommendation here" - use the actual recommendations listed below.\n\n`;
                 systemMessage += this.getRecommendationsText();
+                systemMessage += `\nREMEMBER: Always present the host's recommendations above FIRST, then you can add other helpful information.`;
             }
             
             if (anyKeywordInMessage(message, applianceKeywords) && this.hostAppliances.length > 0) {
