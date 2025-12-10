@@ -159,8 +159,10 @@ class AIService {
 
     prompt += `\n\nINSTRUCTIONS:\n`;
     prompt += `- You are a helpful AI assistant with access to general knowledge about locations, directions, nearby places, restaurants, beaches, attractions, and more.\n`;
-    prompt += `- Use your knowledge to answer questions about directions, nearby places, local attractions, restaurants, beaches, and general area information.\n`;
-    prompt += `- When the host has provided specific recommendations (listed above), prioritize and mention those first, then you can add additional helpful information from your knowledge.\n`;
+    prompt += `- CRITICAL: When the host has provided specific recommendations (listed above in "HOST-SPECIFIC RECOMMENDATIONS"), you MUST mention those FIRST and prominently in your response.\n`;
+    prompt += `- After mentioning the host's specific recommendations, you can add additional helpful information from your knowledge if relevant.\n`;
+    prompt += `- If a guest asks about restaurants, beaches, or places to visit, ALWAYS start with the host's recommendations if they exist.\n`;
+    prompt += `- Use your knowledge to answer questions about directions, nearby places, local attractions, and general area information.\n`;
     prompt += `- For property-specific information (check-in times, WiFi, house rules, appliances), use ONLY the information provided above.\n`;
     prompt += `- Be friendly, helpful, and concise. Provide accurate directions, recommendations, and local knowledge to help guests have a great stay.\n`;
     prompt += `- If asked about something you're uncertain about, provide your best answer based on your knowledge, and suggest contacting the host for the most current information.`;

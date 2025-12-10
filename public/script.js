@@ -1276,8 +1276,14 @@ class RentalAIChat {
                 'appareil', 'appareils', 'four', 'micro-ondes', 'cuisinière', 'lave-linge', 'sèche-linge', 'buanderie', 'réfrigérateur', 'frigo', 'thermostat', 'lave-vaisselle'
             ];
             
-            if (anyKeywordInMessage(message, localKeywords) && this.hostRecommendations.length > 0) {
-                systemMessage += `IMPORTANT: Use these specific recommendations for ${hostConfig?.name || 'this property'}:\n\n${this.getRecommendationsText()}`;
+            // ALWAYS include host recommendations if they exist (not just when keywords detected)
+            // This ensures the AI prioritizes host recommendations over general knowledge
+            if (this.hostRecommendations.length > 0) {
+                if (systemMessage) systemMessage += "\n\n";
+                systemMessage += `CRITICAL: HOST-SPECIFIC RECOMMENDATIONS FOR ${hostConfig?.name || 'THIS PROPERTY'}:\n`;
+                systemMessage += `You MUST mention these host recommendations FIRST and prominently when guests ask about restaurants, beaches, places to visit, or local recommendations.\n`;
+                systemMessage += `Only after mentioning these host recommendations can you add additional helpful information from your knowledge.\n\n`;
+                systemMessage += this.getRecommendationsText();
             }
             
             if (anyKeywordInMessage(message, applianceKeywords) && this.hostAppliances.length > 0) {
