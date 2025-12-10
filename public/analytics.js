@@ -99,6 +99,7 @@ async function loadAnalytics() {
         if (data.success) {
             displayAnalytics(data.stats);
             await loadFAQs(propertyId);
+            await loadSuccessfulPatterns(propertyId);
         } else {
             throw new Error(data.message || 'Failed to load analytics');
         }
