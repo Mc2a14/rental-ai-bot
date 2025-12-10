@@ -9,6 +9,7 @@ class PropertySetup {
     this.appliances = [];
     this.faqs = []; // Store FAQs
     this.currentPropertyId = null; // Store the current property ID for updates
+    this.allProperties = []; // Store all user properties for selector
     
     // Try to restore propertyId from localStorage on initialization
     try {
@@ -201,6 +202,27 @@ initializeEventListeners() {
             console.log("✅ Add FAQ button listener added");
         } else {
             console.log("⚠️ Add FAQ button not found");
+        }
+        
+        // Property selector
+        const propertySelector = document.getElementById('propertySelector');
+        if (propertySelector) {
+            propertySelector.addEventListener('change', (e) => {
+                const selectedPropertyId = e.target.value;
+                if (selectedPropertyId && selectedPropertyId !== 'new') {
+                    self.switchProperty(selectedPropertyId);
+                }
+            });
+            console.log("✅ Property selector listener added");
+        }
+        
+        // New Property button
+        const newPropertyBtn = document.getElementById('newPropertyBtn');
+        if (newPropertyBtn) {
+            newPropertyBtn.addEventListener('click', () => {
+                self.createNewProperty();
+            });
+            console.log("✅ New Property button listener added");
         }
         
         console.log("✅ All event listeners initialized");
@@ -406,10 +428,16 @@ async autoLoadExistingConfig() {
                     console.log(`📋 Property.id: ${property.id}`);
                     console.log(`📋 Property.propertyId: ${property.propertyId}`);
                     
+                    // Store all properties for selector
+                    this.allProperties = data.properties;
+                    
                     // Store the property ID for updates - try multiple possible fields
                     this.currentPropertyId = property.propertyId || property.id || property.property_id;
                     console.log(`📌 Stored property ID for updates: ${this.currentPropertyId}`);
                     console.log(`📌 Total properties for user: ${data.properties.length}`);
+                    
+                    // Populate property selector
+                    this.populatePropertySelector();
                     
                     // If there are multiple properties, log them
                     if (data.properties.length > 1) {
@@ -1523,6 +1551,158 @@ setupBackupButton() {
         
         this.showTempMessage('Backup downloaded!', 'success');
     });
+}
+
+// Property management methods
+populatePropertySelector() {
+    const selector = document.getElementById('propertySelector');
+    const newPropertyBtn = document.getElementById('newPropertyBtn');
+    
+    if (!selector) return;
+    
+    // Clear existing options
+    selector.innerHTML = '';
+    
+    if (this.allProperties && this.allProperties.length > 0) {
+        // Add each property as an option
+        this.allProperties.forEach(property => {
+            const option = document.createElement('option');
+            const propertyId = property.propertyId || property.id;
+            option.value = propertyId;
+            option.textContent = property.name || 'Unnamed Property';
+            if (propertyId === this.currentPropertyId) {
+                option.selected = true;
+            }
+            selector.appendChild(option);
+        });
+        
+        // Show selector and new property button
+        selector.style.display = 'block';
+        if (newPropertyBtn) {
+            newPropertyBtn.style.display = 'block';
+        }
+    } else {
+        // No properties, hide selector
+        selector.style.display = 'none';
+        if (newPropertyBtn) {
+            newPropertyBtn.style.display = 'block'; // Still show new property button
+        }
+    }
+}
+
+async switchProperty(propertyId) {
+    if (!propertyId) return;
+    
+    console.log(`🔄 Switching to property: ${propertyId}`);
+    
+    // Find the property in allProperties
+    const property = this.allProperties.find(p => 
+        (p.propertyId || p.id) === propertyId
+    );
+    
+    if (!property) {
+        console.error(`❌ Property ${propertyId} not found`);
+        this.showTempMessage('Property not found', 'error');
+        return;
+    }
+    
+    // Update current property ID
+    this.currentPropertyId = propertyId;
+    
+    // Clear form
+    this.clearForm();
+    
+    // Load property data
+    this.populateFormFromConfig(property);
+    
+    // Load recommendations, appliances, and FAQs
+    if (property.recommendations && Array.isArray(property.recommendations)) {
+        this.recommendations = property.recommendations;
+        this.updateRecommendationsList();
+    } else {
+        this.recommendations = [];
+        this.updateRecommendationsList();
+    }
+    
+    if (property.appliances && Array.isArray(property.appliances)) {
+        this.appliances = property.appliances;
+        this.updateAppliancesList();
+    } else {
+        this.appliances = [];
+        this.updateAppliancesList();
+    }
+    
+    if (property.faqs && Array.isArray(property.faqs)) {
+        this.faqs = property.faqs;
+        this.updateFAQsList();
+    } else {
+        this.faqs = [];
+        this.updateFAQsList();
+    }
+    
+    // Update selector to show current property
+    const selector = document.getElementById('propertySelector');
+    if (selector) {
+        selector.value = propertyId;
+    }
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Go to step 1
+    this.currentStep = 1;
+    this.updateStepDisplay();
+    
+    this.showTempMessage(`Switched to ${property.name}`, 'success');
+    console.log(`✅ Switched to property: ${property.name}`);
+}
+
+createNewProperty() {
+    // Clear current property ID to create a new one
+    this.currentPropertyId = null;
+    
+    // Clear form
+    this.clearForm();
+    
+    // Reset arrays
+    this.recommendations = [];
+    this.appliances = [];
+    this.faqs = [];
+    
+    // Update UI
+    this.updateRecommendationsList();
+    this.updateAppliancesList();
+    this.updateFAQsList();
+    
+    // Update selector
+    const selector = document.getElementById('propertySelector');
+    if (selector) {
+        selector.value = '';
+    }
+    
+    // Scroll to top and go to step 1
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.currentStep = 1;
+    this.updateStepDisplay();
+    
+    this.showTempMessage('Creating new property - fill in the form and save', 'info');
+    console.log('✅ Ready to create new property');
+}
+
+clearForm() {
+    // Clear all form fields
+    const form = document.getElementById('propertyConfig');
+    if (form) {
+        const inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+            input.classList.remove('field-valid', 'field-invalid');
+        });
+    }
 }
 }
 
