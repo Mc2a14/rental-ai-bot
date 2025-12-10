@@ -901,11 +901,9 @@ class RentalAIChat {
                 introSuffix: "I can help you with:",
                 item1: "🏠 Property information & amenities",
                 item2: "🕒 Check-in/check-out details",
-                item3: "🍽️ Local restaurant recommendations",
-                item4: "🚗 Transportation & directions",
-                item5: "🚨 Emergency contacts & procedures",
-                item6: "📋 House rules & guidelines",
-                item7: "🛠️ Appliance instructions & troubleshooting",
+                item3: "🍽️ Local recommendations",
+                item4: "🚨 Emergency contacts",
+                item5: "🛠️ Appliance help",
                 closing: "How can I assist you with your stay today?"
             },
             es: {
@@ -913,23 +911,19 @@ class RentalAIChat {
                 introSuffix: "Puedo ayudarte con:",
                 item1: "🏠 Información de la propiedad y comodidades",
                 item2: "🕒 Detalles de check-in/check-out",
-                item3: "🍽️ Recomendaciones de restaurantes locales",
-                item4: "🚗 Transporte y direcciones",
-                item5: "🚨 Contactos de emergencia y procedimientos",
-                item6: "📋 Reglas de la casa y pautas",
-                item7: "🛠️ Instrucciones de electrodomésticos y solución de problemas",
+                item3: "🍽️ Recomendaciones locales",
+                item4: "🚨 Contactos de emergencia",
+                item5: "🛠️ Ayuda con electrodomésticos",
                 closing: "¿Cómo puedo ayudarte con tu estadía hoy?"
             },
             fr: {
                 intro: "Bonjour! Je suis votre Assistant IA de Location pour",
                 introSuffix: "Je peux vous aider avec:",
                 item1: "🏠 Informations sur la propriété et équipements",
-                item2: "🕒 Détails d'enregistrement/départ",
-                item3: "🍽️ Recommandations de restaurants locaux",
-                item4: "🚗 Transport et directions",
-                item5: "🚨 Contacts d'urgence et procédures",
-                item6: "📋 Règles de la maison et directives",
-                item7: "🛠️ Instructions d'appareils et dépannage",
+                item2: "🕒 Détails d'arrivée/départ",
+                item3: "🍽️ Recommandations locales",
+                item4: "🚨 Contacts d'urgence",
+                item5: "🛠️ Aide avec les appareils",
                 closing: "Comment puis-je vous aider avec votre séjour aujourd'hui?"
             }
         };
