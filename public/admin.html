@@ -146,6 +146,37 @@
             border-radius: 3px;
         }
         
+        /* Desktop/Chrome fixes - ensure top and bottom are visible */
+        @media (min-width: 481px) {
+            body {
+                padding: 20px;
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+            
+            .admin-container {
+                margin-top: 0;
+                margin-bottom: 20px;
+                min-height: calc(100vh - 40px);
+            }
+            
+            /* Ensure content doesn't get cut off at top */
+            .admin-header {
+                padding-top: 15px;
+                margin-top: 0;
+            }
+            
+            /* Ensure content doesn't get cut off at bottom */
+            .admin-container > *:last-child {
+                margin-bottom: 0;
+                padding-bottom: 20px;
+            }
+            
+            #propertyConfig {
+                padding-bottom: 30px;
+            }
+        }
+        
         .admin-header {
             text-align: center;
             margin-bottom: 30px;
