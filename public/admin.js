@@ -1081,6 +1081,7 @@ showSuccessMessage(guestLink, propertyName) {
             }
         }, 100);
     }
+}
 
 // FAQ Management
 loadFAQs() {
