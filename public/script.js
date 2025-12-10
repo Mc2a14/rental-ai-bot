@@ -1255,10 +1255,21 @@ class RentalAIChat {
             // Log what we're sending to AI for debugging
             if (hostConfig) {
                 console.log('📤 Sending to AI - Property:', hostConfig.name);
-                console.log('📤 Recommendations:', this.hostRecommendations.length);
+                console.log('📤 Recommendations count:', this.hostRecommendations.length);
+                console.log('📤 Recommendations data:', JSON.stringify(this.hostRecommendations, null, 2));
                 console.log('📤 Appliances:', this.hostAppliances.length);
             } else {
                 console.warn('⚠️ No host config available for AI request');
+            }
+            
+            // Double-check recommendations are loaded
+            if (this.hostRecommendations.length === 0) {
+                console.warn('⚠️ WARNING: No recommendations found! Checking if they need to be loaded...');
+                // Try to reload from hostConfig if available
+                if (hostConfig && hostConfig.recommendations && Array.isArray(hostConfig.recommendations)) {
+                    this.hostRecommendations = hostConfig.recommendations;
+                    console.log('✅ Loaded recommendations from hostConfig:', this.hostRecommendations.length);
+                }
             }
             
             let systemMessage = '';
