@@ -276,26 +276,42 @@ class RentalAIChat {
     }
     
     displayFAQs() {
+        console.log('🔍 displayFAQs() called');
         const viewFAQsBtn = document.getElementById('viewFAQsBtn');
         const faqsSection = document.getElementById('faqsSection');
         const faqsList = document.getElementById('faqsList');
+        
+        console.log('🔍 FAQ elements found:', { 
+            viewFAQsBtn: !!viewFAQsBtn, 
+            faqsSection: !!faqsSection, 
+            faqsList: !!faqsList,
+            hostFAQs: this.hostFAQs?.length || 0
+        });
         
         // Show/hide the FAQ button based on whether FAQs exist
         if (viewFAQsBtn) {
             if (!this.hostFAQs || this.hostFAQs.length === 0) {
                 viewFAQsBtn.style.display = 'none';
+                console.log('❌ Hiding FAQ button - no FAQs');
             } else {
                 viewFAQsBtn.style.display = 'inline-block';
-                // Attach click handler if not already attached
-                if (!viewFAQsBtn.hasAttribute('data-listener-attached')) {
-                    viewFAQsBtn.setAttribute('data-listener-attached', 'true');
-                    viewFAQsBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.showFAQs();
-                    });
-                }
+                console.log('✅ Showing FAQ button');
+                // Remove any existing listeners first
+                const newBtn = viewFAQsBtn.cloneNode(true);
+                viewFAQsBtn.parentNode.replaceChild(newBtn, viewFAQsBtn);
+                const freshBtn = document.getElementById('viewFAQsBtn');
+                
+                // Attach click handler
+                freshBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔘 FAQ button clicked!');
+                    this.showFAQs();
+                });
+                console.log('✅ FAQ button click handler attached');
             }
+        } else {
+            console.warn('⚠️ viewFAQsBtn not found in DOM');
         }
         
         // Don't auto-display FAQs, just prepare them for when button is clicked
