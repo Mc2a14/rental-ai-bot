@@ -191,6 +191,21 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- FAQs Section (hidden by default, shown when button clicked) -->
+                    <div id="faqsSection" style="display: none; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #3498db;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0; color: #2c3e50; font-size: 16px;">
+                                <i class="fas fa-question-circle"></i> Frequently Asked Questions
+                            </h4>
+                            <button id="closeFAQsBtn" style="background: none; border: none; color: #7f8c8d; cursor: pointer; font-size: 18px; padding: 0 10px;" title="Close FAQs">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="faqsList" style="display: flex; flex-direction: column; gap: 10px;">
+                            <!-- FAQs will be populated here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
