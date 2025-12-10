@@ -614,14 +614,102 @@ class RentalAIChat {
         }
     }
 
-    getRecommendationsText() {
+    getRecommendationsText(filterByQuestion = null) {
         if (!this.hostRecommendations || this.hostRecommendations.length === 0) {
             console.log('⚠️ No recommendations to send to AI');
             return "";
         }
         
+        // Filter recommendations based on the question if provided
+        let relevantRecommendations = this.hostRecommendations;
+        
+        if (filterByQuestion) {
+            const questionLower = filterByQuestion.toLowerCase();
+            
+            // Define category keywords
+            const beachKeywords = ['beach', 'playa', 'plage', 'shore', 'coast', 'ocean', 'sea', 'swim', 'nadar', 'nager'];
+            const restaurantKeywords = ['restaurant', 'restaurante', 'food', 'comida', 'nourriture', 'eat', 'comer', 'manger', 'dining', 'cafe', 'café', 'bar'];
+            const parkKeywords = ['park', 'parque', 'garden', 'jardín', 'jardin'];
+            const attractionKeywords = ['attraction', 'atracción', 'attraction', 'tour', 'visit', 'visitar', 'visiter', 'sightseeing', 'monument', 'monumento'];
+            
+            // Check what the question is about
+            const isAboutBeaches = beachKeywords.some(keyword => questionLower.includes(keyword));
+            const isAboutRestaurants = restaurantKeywords.some(keyword => questionLower.includes(keyword));
+            const isAboutParks = parkKeywords.some(keyword => questionLower.includes(keyword));
+            const isAboutAttractions = attractionKeywords.some(keyword => questionLower.includes(keyword));
+            
+            // Filter recommendations by category or name/description matching
+            relevantRecommendations = this.hostRecommendations.filter(place => {
+                const placeName = (place.name || '').toLowerCase();
+                const placeDesc = (place.description || '').toLowerCase();
+                const placeCategory = (place.category || '').toLowerCase();
+                const placeNotes = (place.notes || '').toLowerCase();
+                const allText = `${placeName} ${placeDesc} ${placeCategory} ${placeNotes}`;
+                
+                // If question is about beaches, only show beach-related recommendations
+                if (isAboutBeaches) {
+                    return placeCategory.includes('beach') || 
+                           placeCategory.includes('playa') || 
+                           placeCategory.includes('plage') ||
+                           allText.includes('beach') || 
+                           allText.includes('playa') || 
+                           allText.includes('plage') ||
+                           allText.includes('ocean') || 
+                           allText.includes('oceano') ||
+                           allText.includes('océan') ||
+                           allText.includes('coast') ||
+                           allText.includes('costa');
+                }
+                
+                // If question is about restaurants, only show restaurant-related recommendations
+                if (isAboutRestaurants) {
+                    return placeCategory.includes('restaurant') || 
+                           placeCategory.includes('restaurante') ||
+                           allText.includes('restaurant') || 
+                           allText.includes('restaurante') ||
+                           allText.includes('food') || 
+                           allText.includes('comida') ||
+                           allText.includes('cafe') || 
+                           allText.includes('café') ||
+                           allText.includes('dining') ||
+                           allText.includes('bar');
+                }
+                
+                // If question is about parks, only show park-related recommendations
+                if (isAboutParks) {
+                    return placeCategory.includes('park') || 
+                           placeCategory.includes('parque') ||
+                           allText.includes('park') || 
+                           allText.includes('parque') ||
+                           allText.includes('garden') || 
+                           allText.includes('jardín') ||
+                           allText.includes('jardin');
+                }
+                
+                // If question is about attractions, only show attraction-related recommendations
+                if (isAboutAttractions) {
+                    return placeCategory.includes('attraction') || 
+                           placeCategory.includes('atracción') ||
+                           allText.includes('attraction') || 
+                           allText.includes('atracción') ||
+                           allText.includes('tour') ||
+                           allText.includes('monument');
+                }
+                
+                // If no specific category detected, include all recommendations
+                return true;
+            });
+            
+            console.log(`🔍 Filtered recommendations: ${relevantRecommendations.length} of ${this.hostRecommendations.length} match the question`);
+        }
+        
+        if (relevantRecommendations.length === 0) {
+            console.log('⚠️ No relevant recommendations found for this question');
+            return "";
+        }
+        
         let text = "HOST-SPECIFIC RECOMMENDATIONS (You MUST list these exactly as shown):\n\n";
-        this.hostRecommendations.forEach((place, index) => {
+        relevantRecommendations.forEach((place, index) => {
             text += `${index + 1}. ${place.name}`;
             if (place.category) text += ` (${place.category})`;
             text += "\n";
@@ -634,8 +722,7 @@ class RentalAIChat {
             text += "\n";
         });
         
-        console.log('📤 Recommendations being sent to AI:', this.hostRecommendations.length);
-        console.log('📤 Recommendations data:', JSON.stringify(this.hostRecommendations, null, 2));
+        console.log('📤 Relevant recommendations being sent to AI:', relevantRecommendations.length);
         return text;
     }
 
@@ -1294,17 +1381,18 @@ class RentalAIChat {
                 'appareil', 'appareils', 'four', 'micro-ondes', 'cuisinière', 'lave-linge', 'sèche-linge', 'buanderie', 'réfrigérateur', 'frigo', 'thermostat', 'lave-vaisselle'
             ];
             
-            // ALWAYS include host recommendations if they exist (not just when keywords detected)
-            // This ensures the AI prioritizes host recommendations over general knowledge
-            if (this.hostRecommendations.length > 0) {
+            // Include host recommendations ONLY if they're relevant to the question
+            // Filter recommendations based on what the guest is asking about
+            const recommendationsText = this.getRecommendationsText(message);
+            if (recommendationsText) {
                 if (systemMessage) systemMessage += "\n\n";
                 systemMessage += `CRITICAL: HOST-SPECIFIC RECOMMENDATIONS FOR ${hostConfig?.name || 'THIS PROPERTY'}:\n`;
                 systemMessage += `When guests ask about restaurants, beaches, places to visit, or local recommendations:\n`;
-                systemMessage += `1. You MUST list ALL of the host's recommendations below EXACTLY as they appear, including names, descriptions, and notes.\n`;
+                systemMessage += `1. You MUST list ALL of the host's relevant recommendations below EXACTLY as they appear, including names, descriptions, and notes.\n`;
                 systemMessage += `2. Present them in a clear, numbered list format.\n`;
                 systemMessage += `3. Only AFTER listing all host recommendations can you add additional helpful information from your knowledge.\n`;
                 systemMessage += `4. Do NOT use placeholders like "Insert host's restaurant recommendation here" - use the actual recommendations listed below.\n\n`;
-                systemMessage += this.getRecommendationsText();
+                systemMessage += recommendationsText;
                 systemMessage += `\nREMEMBER: Always present the host's recommendations above FIRST, then you can add other helpful information.`;
             }
             
