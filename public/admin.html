@@ -88,6 +88,7 @@
                 width: calc(100% - 40px);
                 padding: 15px;
                 padding-top: 15px;
+                padding-bottom: 15px;
                 height: calc(100vh - 50px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                 max-height: calc(100vh - 50px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -96,6 +97,18 @@
                 -webkit-overflow-scrolling: touch;
                 position: relative;
                 margin-top: 0;
+                box-sizing: border-box;
+            }
+            
+            /* Ensure content doesn't get cut off at bottom when scrolling */
+            .admin-container > *:last-child {
+                margin-bottom: 0;
+                padding-bottom: 10px;
+            }
+            
+            /* Add padding to form to ensure bottom edge is visible */
+            #propertyConfig {
+                padding-bottom: 20px;
             }
             
             .admin-container::before {
