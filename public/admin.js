@@ -1645,13 +1645,26 @@ async switchProperty(propertyId) {
     this.populateFormFromConfig(property);
     
     // Load recommendations, appliances, and FAQs
+    console.log('🔍 switchProperty - Checking recommendations:', {
+        hasRecommendations: !!property.recommendations,
+        isArray: Array.isArray(property.recommendations),
+        value: property.recommendations
+    });
+    
     if (property.recommendations && Array.isArray(property.recommendations)) {
         this.recommendations = property.recommendations;
-        this.updateRecommendationsList();
+        localStorage.setItem('rental_ai_recommendations', JSON.stringify(property.recommendations));
+        console.log(`📍 Loaded ${this.recommendations.length} recommendations when switching property`);
+        console.log(`📍 Recommendations data:`, JSON.stringify(this.recommendations, null, 2));
     } else {
+        console.log('⚠️ No recommendations found when switching property');
         this.recommendations = [];
-        this.updateRecommendationsList();
     }
+    
+    // Update UI with a small delay to ensure DOM is ready
+    setTimeout(() => {
+        this.updateRecommendationsList();
+    }, 100);
     
     if (property.appliances && Array.isArray(property.appliances)) {
         this.appliances = property.appliances;
