@@ -9,6 +9,9 @@ router.get('/property/:propertyId/stats', analyticsController.getStats.bind(anal
 // Record feedback on a response
 router.post('/feedback', analyticsController.recordFeedback.bind(analyticsController));
 
+// Get successful patterns for a property
+router.get('/property/:propertyId/patterns', analyticsController.getSuccessfulPatterns.bind(analyticsController));
+
 // Get FAQs for a property
 router.get('/property/:propertyId/faqs', analyticsController.getFAQs.bind(analyticsController));
 

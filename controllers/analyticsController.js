@@ -56,6 +56,33 @@ class AnalyticsController {
     }
   }
 
+  async getSuccessfulPatterns(req, res) {
+    try {
+      const { propertyId } = req.params;
+      const limit = parseInt(req.query.limit) || 10;
+
+      if (!propertyId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Property ID is required'
+        });
+      }
+
+      const patterns = await analyticsService.getSuccessfulPatterns(propertyId, limit);
+
+      return res.json({
+        success: true,
+        patterns: patterns
+      });
+    } catch (error) {
+      logger.error('Error getting successful patterns:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error retrieving successful patterns'
+      });
+    }
+  }
+
   async getFAQs(req, res) {
     try {
       const { propertyId } = req.params;

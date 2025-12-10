@@ -25,11 +25,42 @@ class ChatController {
       
       logger.info(`Chat request: ${message.substring(0, 50)}...`);
       
+      // Get successful patterns to improve AI responses
+      let enhancedSystemMessage = systemMessage;
+      if (propertyId) {
+        try {
+          // Get best answers for similar questions
+          const bestAnswers = await analyticsService.getBestAnswersForQuestion(
+            propertyId,
+            message.trim(),
+            language,
+            3
+          );
+          
+          if (bestAnswers.length > 0) {
+            enhancedSystemMessage += '\n\nLEARNED FROM SUCCESSFUL INTERACTIONS:\n';
+            enhancedSystemMessage += 'The following question-answer pairs received positive feedback from guests. Use these as examples of effective responses:\n\n';
+            
+            bestAnswers.forEach((pattern, index) => {
+              enhancedSystemMessage += `${index + 1}. Question: "${pattern.question}"\n`;
+              enhancedSystemMessage += `   Successful Answer: "${pattern.answer}"\n`;
+              enhancedSystemMessage += `   (Rated helpful ${pattern.helpfulCount} times, ${Math.round(pattern.helpfulRate * 100)}% helpful rate)\n\n`;
+            });
+            
+            enhancedSystemMessage += 'When answering similar questions, try to match the style and approach of these successful responses.\n';
+            logger.info(`Enhanced system message with ${bestAnswers.length} successful patterns`);
+          }
+        } catch (error) {
+          logger.warn('Error getting successful patterns, continuing without them:', error);
+          // Continue without enhanced message if there's an error
+        }
+      }
+      
       // Process chat
       const result = await aiService.chat(
         message.trim(),
         hostConfig,
-        systemMessage,
+        enhancedSystemMessage,
         language
       );
       

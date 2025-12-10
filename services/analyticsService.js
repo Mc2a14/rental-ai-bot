@@ -273,6 +273,98 @@ class AnalyticsService {
     }
   }
 
+  async getSuccessfulPatterns(propertyId, limit = 10) {
+    try {
+      if (!await this.ensureDatabase()) {
+        return [];
+      }
+
+      // Get question-answer pairs that received positive feedback
+      // Prioritize by helpful rate and frequency
+      const result = await database.query(
+        `SELECT 
+           question_text,
+           response_text,
+           question_language,
+           category,
+           COUNT(*) as frequency,
+           SUM(CASE WHEN response_helpful = true THEN 1 ELSE 0 END) as helpful_count,
+           AVG(CASE WHEN response_helpful = true THEN 1.0 ELSE 0.0 END) as helpful_rate
+         FROM questions 
+         WHERE property_id = $1 
+           AND response_helpful IS NOT NULL
+           AND response_text IS NOT NULL
+           AND response_text != ''
+         GROUP BY question_text, response_text, question_language, category
+         HAVING SUM(CASE WHEN response_helpful = true THEN 1 ELSE 0 END) > 0
+         ORDER BY helpful_rate DESC, helpful_count DESC, frequency DESC
+         LIMIT $2`,
+        [propertyId, limit]
+      );
+
+      return result.rows.map(r => ({
+        question: r.question_text,
+        answer: r.response_text,
+        language: r.question_language,
+        category: r.category,
+        frequency: parseInt(r.frequency),
+        helpfulCount: parseInt(r.helpful_count),
+        helpfulRate: parseFloat(r.helpful_rate)
+      }));
+    } catch (error) {
+      logger.error('Error getting successful patterns:', error);
+      return [];
+    }
+  }
+
+  async getBestAnswersForQuestion(propertyId, questionText, language = 'en', limit = 3) {
+    try {
+      if (!await this.ensureDatabase()) {
+        return [];
+      }
+
+      // Find similar questions (using text similarity) that got helpful responses
+      // This helps the AI learn from successful answers to similar questions
+      const result = await database.query(
+        `SELECT 
+           question_text,
+           response_text,
+           question_language,
+           category,
+           COUNT(*) as frequency,
+           SUM(CASE WHEN response_helpful = true THEN 1 ELSE 0 END) as helpful_count,
+           AVG(CASE WHEN response_helpful = true THEN 1.0 ELSE 0.0 END) as helpful_rate
+         FROM questions 
+         WHERE property_id = $1 
+           AND response_helpful = true
+           AND response_text IS NOT NULL
+           AND response_text != ''
+           AND (
+             question_text ILIKE $2 
+             OR question_text ILIKE $3
+             OR category = (SELECT category FROM questions WHERE question_text ILIKE $2 LIMIT 1)
+           )
+         GROUP BY question_text, response_text, question_language, category
+         ORDER BY helpful_rate DESC, helpful_count DESC, frequency DESC
+         LIMIT $4`,
+        [propertyId, `%${questionText.substring(0, 20)}%`, `%${questionText.substring(questionText.length - 20)}%`, limit]
+      );
+
+      return result.rows.map(r => ({
+        question: r.question_text,
+        answer: r.response_text,
+        language: r.question_language,
+        category: r.category,
+        frequency: parseInt(r.frequency),
+        helpfulCount: parseInt(r.helpful_count),
+        helpfulRate: parseFloat(r.helpful_rate)
+      }));
+    } catch (error) {
+      logger.error('Error getting best answers for question:', error);
+      return [];
+    }
+  }
+
   getEmptyStats() {
     return {
       total: 0,
