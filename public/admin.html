@@ -87,19 +87,19 @@
                 -webkit-overflow-scrolling: touch;
                 position: relative;
                 margin-top: 20px;
-                margin-bottom: 30px;
+                margin-bottom: 50px;
                 box-sizing: border-box;
             }
             
             /* Ensure content doesn't get cut off at bottom when scrolling */
             .admin-container > *:last-child {
                 margin-bottom: 0;
-                padding-bottom: 20px;
+                padding-bottom: 30px;
             }
             
             /* Add padding to form to ensure bottom edge is visible */
             #propertyConfig {
-                padding-bottom: 30px;
+                padding-bottom: 50px;
             }
             
             .admin-container::before {
@@ -367,10 +367,12 @@
         
         .nav-buttons {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
             margin-top: 30px;
             gap: 10px;
             flex-wrap: wrap;
+            width: 100%;
         }
 
         /* VALIDATION STYLES - ADDED */
@@ -668,12 +670,17 @@
             .nav-buttons {
                 flex-direction: column;
                 gap: 10px;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
             }
             
             .nav-buttons button {
                 width: 100%;
+                max-width: 100%;
                 justify-content: center;
                 min-width: unset;
+                margin: 0 auto;
             }
 
             /* Mobile-specific WiFi fixes */
