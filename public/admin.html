@@ -71,12 +71,15 @@
         
         @media (max-width: 480px) {
             body {
-                padding: 20px;
-                padding-top: max(20px, calc(20px + env(safe-area-inset-top)));
-                padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
+                padding: 25px 20px;
+                padding-top: max(25px, calc(25px + env(safe-area-inset-top)));
+                padding-bottom: max(25px, calc(25px + env(safe-area-inset-bottom)));
                 padding-left: max(20px, calc(20px + env(safe-area-inset-left)));
                 padding-right: max(20px, calc(20px + env(safe-area-inset-right)));
                 box-sizing: border-box;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
             }
             
             .admin-container {
@@ -85,13 +88,14 @@
                 width: calc(100% - 40px);
                 padding: 15px;
                 padding-top: 15px;
-                height: calc(100vh - 40px);
-                max-height: calc(100vh - 40px);
+                height: calc(100vh - 50px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                max-height: calc(100vh - 50px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
                 overflow-y: auto;
                 overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
                 position: relative;
+                margin-top: 0;
             }
             
             .admin-container::before {
