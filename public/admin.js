@@ -1382,10 +1382,6 @@ addRecommendation() {
 
     this.showTempMessage(`Added ${name} to recommendations`, 'success');
     console.log('✅ Recommendation added successfully');
-    // Update preview if on step 3
-    if (this.currentStep === 3) {
-        this.updatePreview();
-    }
 
     if (nameInput) nameInput.value = '';
     if (descriptionInput) descriptionInput.value = '';
