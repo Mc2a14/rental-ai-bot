@@ -732,6 +732,7 @@ body {
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
     }
     
     .chat-messages {
@@ -739,6 +740,14 @@ body {
         min-height: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        border-radius: 0;
+    }
+    
+    .chat-header {
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
     }
     
     .chat-input-container {
@@ -749,6 +758,8 @@ body {
         border-top: 1px solid var(--border-color);
         border-bottom-left-radius: 20px;
         border-bottom-right-radius: 20px;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
     }
     
     .header-controls {

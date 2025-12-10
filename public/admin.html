@@ -62,9 +62,11 @@
             max-height: 100vh;
             max-height: -webkit-fill-available;
             overflow-y: auto;
+            overflow-x: hidden;
             display: none; /* HIDDEN until authenticated */
             box-sizing: border-box;
             -webkit-overflow-scrolling: touch;
+            position: relative;
         }
         
         @media (max-width: 480px) {
@@ -87,12 +89,34 @@
                 max-height: calc(100vh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
                 overflow-y: auto;
+                overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
+                position: relative;
+            }
+            
+            .admin-container::before {
+                content: '';
+                position: sticky;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: transparent;
+                z-index: 10;
+                pointer-events: none;
             }
             
             .admin-header {
                 padding-top: 0;
                 margin-top: 0;
+                position: relative;
+                z-index: 1;
+            }
+            
+            /* Ensure rounded corners are visible when scrolling */
+            .admin-container::-webkit-scrollbar {
+                width: 0;
+                background: transparent;
             }
         }
         
