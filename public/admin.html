@@ -82,9 +82,17 @@
                 max-width: calc(100% - 20px);
                 width: calc(100% - 20px);
                 padding: 15px;
+                padding-top: 15px;
                 height: calc(100vh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                 max-height: calc(100vh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .admin-header {
+                padding-top: 0;
+                margin-top: 0;
             }
         }
         
