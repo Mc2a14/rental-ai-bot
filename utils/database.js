@@ -94,6 +94,18 @@ class Database {
         )
       `);
 
+      // Add faqs column if it doesn't exist (for existing databases)
+      try {
+        await client.query(`
+          ALTER TABLE properties 
+          ADD COLUMN IF NOT EXISTS faqs JSONB DEFAULT '[]'
+        `);
+        logger.info('✅ FAQs column added/verified in properties table');
+      } catch (error) {
+        // Column might already exist, that's okay
+        logger.info('ℹ️ FAQs column check:', error.message);
+      }
+
       // Create indexes
       await client.query(`
         CREATE INDEX IF NOT EXISTS idx_properties_user_id ON properties(user_id)
