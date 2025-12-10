@@ -157,7 +157,13 @@ class AIService {
       prompt += `\n\n${systemMessage}`;
     }
 
-    prompt += `\n\nBe friendly, helpful, and concise. Answer questions about the property, local recommendations, appliances, and any other guest inquiries. If you don't know something, politely say so and suggest contacting the host.`;
+    prompt += `\n\nCRITICAL RULES:\n`;
+    prompt += `- ONLY use information provided above. DO NOT make up or invent any information.\n`;
+    prompt += `- DO NOT create fake directions, addresses, or details about places that are not in the recommendations list.\n`;
+    prompt += `- If a guest asks about a place (beach, restaurant, etc.) that is NOT in the recommendations list, politely say you don't have that information and suggest they contact the host.\n`;
+    prompt += `- If directions are not provided in the recommendations, DO NOT make up directions. Instead, suggest the guest contact the host for directions.\n`;
+    prompt += `- Be friendly, helpful, and concise. Answer questions about the property, local recommendations, appliances, and any other guest inquiries using ONLY the information provided above.\n`;
+    prompt += `- If you don't know something, politely say so and suggest contacting the host.`;
 
     return prompt;
   }
