@@ -1353,9 +1353,27 @@ addRecommendation() {
     }
 
     const newPlace = { name, category, description, notes };
+    console.log('➕ Adding new recommendation:', newPlace);
+    console.log('📋 Current recommendations before add:', this.recommendations.length);
+    
     this.recommendations.push(newPlace);
+    console.log('📋 Current recommendations after add:', this.recommendations.length);
+    console.log('📋 All recommendations:', JSON.stringify(this.recommendations, null, 2));
+    
+    // Clear form inputs
+    if (nameInput) nameInput.value = '';
+    if (descriptionInput) descriptionInput.value = '';
+    if (notesInput) notesInput.value = '';
+    if (categoryInput) categoryInput.value = '';
+    
+    // Save to localStorage
     this.saveRecommendations();
+    
+    // Update the UI immediately
     this.updateRecommendationsList();
+    
+    this.showTempMessage(`Added ${name} to recommendations`, 'success');
+    console.log('✅ Recommendation added and list updated');
     // Update preview if on step 3
     if (this.currentStep === 3) {
         this.updatePreview();
