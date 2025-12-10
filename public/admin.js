@@ -1081,9 +1081,8 @@ showSuccessMessage(guestLink, propertyName) {
             }
         }, 100);
     }
-}
 
-// FAQ Management - These are class methods, they should be inside the class
+// FAQ Management
 loadFAQs() {
     try {
         const saved = localStorage.getItem('rental_ai_faqs');
