@@ -287,6 +287,57 @@ function setTimeFilter(days) {
     loadAnalytics();
 }
 
+async function loadSuccessfulPatterns(propertyId) {
+    try {
+        const response = await fetch(`/api/analytics/property/${propertyId}/patterns?limit=10`, {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load successful patterns');
+        }
+        
+        const data = await response.json();
+        const patternsList = document.getElementById('successfulPatternsList');
+        
+        if (!patternsList) {
+            console.warn('successfulPatternsList element not found');
+            return;
+        }
+        
+        if (data.success && data.patterns && data.patterns.length > 0) {
+            patternsList.innerHTML = data.patterns.map((pattern, index) => `
+                <div class="question-item" style="border-left: 4px solid #2ecc71; background: #f8fff8;">
+                    <div class="question-text">
+                        <strong>Q:</strong> ${escapeHtml(pattern.question)}
+                        <div style="margin-top: 8px; color: #7f8c8d; font-size: 14px; padding: 10px; background: white; border-radius: 5px; margin-top: 10px;">
+                            <strong>A:</strong> ${escapeHtml(pattern.answer.substring(0, 200))}${pattern.answer.length > 200 ? '...' : ''}
+                        </div>
+                    </div>
+                    <div class="question-stats">
+                        <span class="frequency-badge" style="background: #2ecc71;">
+                            👍 ${pattern.helpfulCount} helpful
+                        </span>
+                        <span class="helpful-rate" style="color: #2ecc71;">
+                            ${Math.round(pattern.helpfulRate * 100)}% success
+                        </span>
+                        ${pattern.category ? `<span class="category-badge">${pattern.category}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            patternsList.innerHTML = '<div class="empty-state" style="padding: 20px; color: #95a5a6; text-align: center;"><i class="fas fa-info-circle"></i><p style="margin-top: 10px;">No successful patterns yet. As guests provide feedback, successful responses will appear here.</p></div>';
+        }
+    } catch (error) {
+        console.error('Error loading successful patterns:', error);
+        const patternsList = document.getElementById('successfulPatternsList');
+        if (patternsList) {
+            patternsList.innerHTML = 
+                '<div class="empty-state" style="padding: 20px; color: #e74c3c; text-align: center;"><i class="fas fa-exclamation-triangle"></i><p style="margin-top: 10px;">Error loading successful patterns</p></div>';
+        }
+    }
+}
+
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
