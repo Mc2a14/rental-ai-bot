@@ -1237,6 +1237,7 @@ saveFAQs() {
         console.error('Error saving FAQs:', error);
     }
 }
+}
 
 // Make functions globally available
 function addFAQ() {
