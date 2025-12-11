@@ -14,6 +14,13 @@ const config = require('./config/config');
 const logger = require('./utils/logger');
 const database = require('./utils/database');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { 
+  generalLimiter, 
+  chatLimiter, 
+  propertySaveLimiter, 
+  analyticsLimiter, 
+  authLimiter 
+} = require('./middleware/rateLimiter');
 
 // Import Routes
 const chatRoutes = require('./routes/chatRoutes');
