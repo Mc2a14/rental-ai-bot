@@ -116,17 +116,17 @@ app.use('/chat', chatLimiter, chatRoutes);
 // Property API - General rate limiting, stricter for saves
 app.use('/api/property', generalLimiter, propertyRoutes);
 
-// Property Config API (backward compatibility)
-app.get('/api/property-config/:propertyId', async (req, res) => {
+// Property Config API (backward compatibility) - General rate limiting
+app.get('/api/property-config/:propertyId', generalLimiter, async (req, res) => {
   const propertyController = require('./controllers/propertyController');
   return propertyController.getPropertyConfig(req, res);
 });
 
-// User API
-app.use('/api/user', userRoutes);
+// User API - Auth rate limiting for login/register
+app.use('/api/user', generalLimiter, userRoutes);
 
-// Analytics API
-app.use('/api/analytics', analyticsRoutes);
+// Analytics API - Analytics rate limiting
+app.use('/api/analytics', analyticsLimiter, analyticsRoutes);
 
 // User Properties API
 app.get('/api/user/:userId/properties', async (req, res) => {
