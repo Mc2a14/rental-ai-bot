@@ -107,14 +107,14 @@ app.use((req, res, next) => {
 });
 
 // ================================================
-// API ROUTES
+// API ROUTES (with Rate Limiting)
 // ================================================
 
-// Chat API
-app.use('/chat', chatRoutes);
+// Chat API - Stricter rate limiting (AI calls are expensive)
+app.use('/chat', chatLimiter, chatRoutes);
 
-// Property API
-app.use('/api/property', propertyRoutes);
+// Property API - General rate limiting, stricter for saves
+app.use('/api/property', generalLimiter, propertyRoutes);
 
 // Property Config API (backward compatibility)
 app.get('/api/property-config/:propertyId', async (req, res) => {
