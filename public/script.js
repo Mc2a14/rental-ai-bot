@@ -488,6 +488,7 @@ class RentalAIChat {
                 
                 // Update UI
                 this.updateUIWithPropertyInfo();
+                this.updatePageTitle(); // Update page title for link previews
             } else {
                 console.log('🏠 No configuration found - using default');
                 this.hostConfig = null;
