@@ -195,11 +195,38 @@ class PropertyService {
           'SELECT * FROM properties WHERE user_id = $1 ORDER BY created_at DESC',
           [userId]
         );
-        return result.rows.map(row => this.mapDatabaseRowToProperty(row));
+        const properties = result.rows.map(row => this.mapDatabaseRowToProperty(row));
+        
+        // Deduplicate by property_id (keep most recent)
+        const seenIds = new Set();
+        const uniqueProperties = properties.filter(p => {
+          const propertyId = p.propertyId || p.id;
+          if (!propertyId || seenIds.has(propertyId)) {
+            return false; // Skip duplicates
+          }
+          seenIds.add(propertyId);
+          return true;
+        });
+        
+        logger.info(`User ${userId}: ${uniqueProperties.length} unique properties out of ${properties.length} total`);
+        return uniqueProperties;
       }
       
       const properties = await this.propertiesFile.read();
-      return Object.values(properties).filter(p => p.userId === userId);
+      const userProperties = Object.values(properties).filter(p => p.userId === userId);
+      
+      // Deduplicate file-based properties too
+      const seenIds = new Set();
+      const uniqueProperties = userProperties.filter(p => {
+        const propertyId = p.propertyId || p.id;
+        if (!propertyId || seenIds.has(propertyId)) {
+          return false;
+        }
+        seenIds.add(propertyId);
+        return true;
+      });
+      
+      return uniqueProperties;
     } catch (error) {
       logger.error('Error getting user properties:', error);
       throw error;
