@@ -237,27 +237,4 @@ class AIService {
           ? `L'heure d'enregistrement est ${hostConfig.checkinTime}. L'heure de départ est ${hostConfig.checkoutTime || '11:00 AM'}.`
           : "Les heures d'enregistrement/départ ne sont pas disponibles. Veuillez contacter l'hôte.",
         contact: hostConfig?.hostContact 
-          ? `Contact de l'hôte: ${hostConfig.hostContact}${hostConfig.maintenanceContact ? `\nMaintenance: ${hostConfig.maintenanceContact}` : ''}`
-          : "Les informations de contact ne sont pas disponibles. Veuillez vérifier votre confirmation de réservation.",
-        default: "Je comprends votre question. Pour une assistance détaillée, veuillez contacter directement l'hôte en utilisant les informations de contact fournies dans votre confirmation de réservation."
-      }
-    };
-
-    const langResponses = responses[language] || responses['en'];
-    
-    if (lowerMessage.includes('wifi') || lowerMessage.includes('internet')) {
-      return langResponses.wifi;
-    }
-    if (lowerMessage.includes('check') && (lowerMessage.includes('in') || lowerMessage.includes('out'))) {
-      return langResponses.checkin;
-    }
-    if (lowerMessage.includes('contact') || lowerMessage.includes('phone') || lowerMessage.includes('number')) {
-      return langResponses.contact;
-    }
-    
-    return langResponses.default;
-  }
-}
-
-module.exports = new AIService();
-
+          ? `Contact de l'hôte: ${hostConfig.hos

@@ -126,6 +126,24 @@ initializeEventListeners() {
     // Use a function to ensure 'this' context is correct
     const self = this;
     
+    // Language selector
+    const langSelect = document.getElementById('adminLanguageSelect');
+    if (langSelect) {
+        // Load saved language preference
+        const savedLang = localStorage.getItem('rental_ai_admin_language') || 'en';
+        langSelect.value = savedLang;
+        this.currentLanguage = savedLang;
+        this.updateUIForLanguage(savedLang);
+        
+        langSelect.addEventListener('change', (e) => {
+            const lang = e.target.value;
+            this.currentLanguage = lang;
+            localStorage.setItem('rental_ai_admin_language', lang);
+            this.updateUIForLanguage(lang);
+        });
+        console.log("✅ Language selector listener added");
+    }
+    
     // Wait a bit to ensure DOM is fully ready
     setTimeout(() => {
         // Navigation buttons - SIMPLE WORKING VERSION
@@ -2053,8 +2071,8 @@ updateFormLabels(t) {
     if (propertyNameLabel) propertyNameLabel.textContent = t.propertyName;
     const propertyNameInput = document.getElementById('propertyName');
     if (propertyNameInput) propertyNameInput.placeholder = t.propertyNamePlaceholder;
-    const propertyNameHelp = document.querySelector('#propertyName').nextElementSibling;
-    if (propertyNameHelp && propertyNameHelp.classList.contains('form-help')) {
+    const propertyNameHelp = document.querySelector('#propertyName').closest('.form-group')?.querySelector('.form-help');
+    if (propertyNameHelp) {
         propertyNameHelp.textContent = t.propertyNameHelp;
     }
     
@@ -2080,8 +2098,8 @@ updateFormLabels(t) {
     if (hostContactLabel) hostContactLabel.textContent = t.hostContact;
     const hostContactInput = document.getElementById('hostContact');
     if (hostContactInput) hostContactInput.placeholder = t.hostContactPlaceholder;
-    const hostContactHelp = document.querySelector('#hostContact').nextElementSibling;
-    if (hostContactHelp && hostContactHelp.classList.contains('form-help')) {
+    const hostContactHelp = document.querySelector('#hostContact').closest('.form-group')?.querySelector('.form-help');
+    if (hostContactHelp) {
         hostContactHelp.textContent = t.hostContactHelp;
     }
     
@@ -2116,8 +2134,8 @@ updateFormLabels(t) {
     if (wifiDetailsLabel) wifiDetailsLabel.textContent = t.wifiDetails;
     const wifiDetailsInput = document.getElementById('wifiDetails');
     if (wifiDetailsInput) wifiDetailsInput.placeholder = t.wifiDetailsPlaceholder;
-    const wifiDetailsHelp = document.querySelector('#wifiDetails').nextElementSibling;
-    if (wifiDetailsHelp && wifiDetailsHelp.classList.contains('form-help')) {
+    const wifiDetailsHelp = document.querySelector('#wifiDetails').closest('.form-group')?.querySelector('.form-help');
+    if (wifiDetailsHelp) {
         wifiDetailsHelp.textContent = t.wifiDetailsHelp;
     }
     
@@ -2125,8 +2143,8 @@ updateFormLabels(t) {
     if (keyAmenitiesLabel) keyAmenitiesLabel.textContent = t.keyAmenities;
     const amenitiesTextarea = document.getElementById('amenities');
     if (amenitiesTextarea) amenitiesTextarea.placeholder = t.amenitiesPlaceholder;
-    const amenitiesHelp = document.querySelector('#amenities').nextElementSibling;
-    if (amenitiesHelp && amenitiesHelp.classList.contains('form-help')) {
+    const amenitiesHelp = document.querySelector('#amenities').closest('.form-group')?.querySelector('.form-help');
+    if (amenitiesHelp) {
         amenitiesHelp.textContent = t.amenitiesHelp;
     }
     
@@ -2137,8 +2155,8 @@ updateFormLabels(t) {
     if (houseRulesLabel) houseRulesLabel.textContent = t.houseRulesLabel;
     const houseRulesTextarea = document.getElementById('houseRules');
     if (houseRulesTextarea) houseRulesTextarea.placeholder = t.houseRulesPlaceholder;
-    const houseRulesHelp = document.querySelector('#houseRules').nextElementSibling;
-    if (houseRulesHelp && houseRulesHelp.classList.contains('form-help')) {
+    const houseRulesHelp = document.querySelector('#houseRules').closest('.form-group')?.querySelector('.form-help');
+    if (houseRulesHelp) {
         houseRulesHelp.textContent = t.houseRulesHelp;
     }
     

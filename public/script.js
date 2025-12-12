@@ -2107,35 +2107,4 @@ const FAQTracker = {
             const knowledgeBase = this.getKnowledgeBase();
             const q = question.toLowerCase().trim();
             
-            const existingEntry = knowledgeBase.find(entry => 
-                entry.question.toLowerCase().trim() === q
-            );
-            
-            if (existingEntry) {
-                if (existingEntry.answer !== aiAnswer) {
-                    existingEntry.answer = aiAnswer;
-                    existingEntry.lastUpdated = new Date().toISOString();
-                    localStorage.setItem('rental_ai_knowledge_base', JSON.stringify(knowledgeBase));
-                }
-                return;
-            }
-            
-            const faqLog = JSON.parse(localStorage.getItem('rental_ai_faq_log') || '[]');
-            const similarQuestions = faqLog.filter(entry => 
-                entry.question.toLowerCase().includes(q.substring(0, 10)) || 
-                q.includes(entry.question.toLowerCase().substring(0, 10))
-            );
-            
-            if (similarQuestions.length >= 2) {
-                this.addToKnowledgeBase(
-                    question,
-                    aiAnswer,
-                    this.detectCategory(question)
-                );
-            }
-            
-        } catch (error) {
-            console.error('Error in auto-learn:', error);
-        }
-    }
-};
+            const existing
