@@ -2063,29 +2063,56 @@ updateUIForLanguage(lang) {
 }
 
 updateFormLabels(t) {
+    console.log('🔄 updateFormLabels called with translations:', t);
+    
+    // Helper function to update label and input
+    const updateLabelAndInput = (inputId, labelText, placeholderText, helpText = null) => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            const formGroup = input.closest('.form-group');
+            if (formGroup) {
+                const label = formGroup.querySelector(`label[for="${inputId}"]`) || formGroup.querySelector('label');
+                if (label) {
+                    label.textContent = labelText;
+                    console.log(`✅ Updated ${inputId} label to:`, labelText);
+                } else {
+                    console.warn(`⚠️ ${inputId} label not found`);
+                }
+            }
+            if (placeholderText) input.placeholder = placeholderText;
+            if (helpText) {
+                const help = formGroup?.querySelector('.form-help');
+                if (help) help.textContent = helpText;
+            }
+        } else {
+            console.warn(`⚠️ ${inputId} input not found`);
+        }
+    };
+    
     // Step 1: Basic Information
     const basicInfoH3 = document.querySelector('#section1 h3');
     if (basicInfoH3) basicInfoH3.innerHTML = `<i class="fas fa-home"></i> ${t.basicInfo}`;
     
-    const propertyNameLabel = document.querySelector('label[for="propertyName"]');
-    if (propertyNameLabel) propertyNameLabel.textContent = t.propertyName;
-    const propertyNameInput = document.getElementById('propertyName');
-    if (propertyNameInput) propertyNameInput.placeholder = t.propertyNamePlaceholder;
-    const propertyNameHelp = document.querySelector('#propertyName').closest('.form-group')?.querySelector('.form-help');
-    if (propertyNameHelp) {
-        propertyNameHelp.textContent = t.propertyNameHelp;
-    }
+    // Property Name
+    updateLabelAndInput('propertyName', t.propertyName, t.propertyNamePlaceholder, t.propertyNameHelp);
     
-    const propertyAddressLabel = document.querySelector('label[for="propertyAddress"]');
-    if (propertyAddressLabel) propertyAddressLabel.textContent = t.propertyAddress;
-    const propertyAddressInput = document.getElementById('propertyAddress');
-    if (propertyAddressInput) propertyAddressInput.placeholder = t.propertyAddressPlaceholder;
+    // Property Address
+    updateLabelAndInput('propertyAddress', t.propertyAddress, t.propertyAddressPlaceholder);
     
-    const propertyTypeLabel = document.querySelector('label[for="propertyType"]');
-    if (propertyTypeLabel) propertyTypeLabel.textContent = t.propertyType;
+    // Property Type
     const propertyTypeSelect = document.getElementById('propertyType');
-    if (propertyTypeSelect && propertyTypeSelect.firstElementChild) {
-        propertyTypeSelect.firstElementChild.textContent = t.selectPropertyType;
+    if (propertyTypeSelect) {
+        const formGroup = propertyTypeSelect.closest('.form-group');
+        if (formGroup) {
+            const propertyTypeLabel = formGroup.querySelector('label[for="propertyType"]') || formGroup.querySelector('label');
+            if (propertyTypeLabel) {
+                propertyTypeLabel.textContent = t.propertyType;
+                console.log('✅ Updated propertyType label to:', t.propertyType);
+            }
+        }
+        if (propertyTypeSelect.firstElementChild) {
+            propertyTypeSelect.firstElementChild.textContent = t.selectPropertyType;
+        }
     }
     const propertyTypeValidation = document.getElementById('propertyTypeValidation');
     if (propertyTypeValidation) propertyTypeValidation.textContent = t.propertyTypeValidation;
@@ -2094,70 +2121,64 @@ updateFormLabels(t) {
     const contactInfoH3 = document.querySelector('#section2 h3');
     if (contactInfoH3) contactInfoH3.innerHTML = `<i class="fas fa-phone"></i> ${t.contactInfo}`;
     
-    const hostContactLabel = document.querySelector('label[for="hostContact"]');
-    if (hostContactLabel) hostContactLabel.textContent = t.hostContact;
-    const hostContactInput = document.getElementById('hostContact');
-    if (hostContactInput) hostContactInput.placeholder = t.hostContactPlaceholder;
-    const hostContactHelp = document.querySelector('#hostContact').closest('.form-group')?.querySelector('.form-help');
-    if (hostContactHelp) {
-        hostContactHelp.textContent = t.hostContactHelp;
-    }
+    // Host Contact
+    updateLabelAndInput('hostContact', t.hostContact, t.hostContactPlaceholder, t.hostContactHelp);
     
-    const maintenanceContactLabel = document.querySelector('label[for="maintenanceContact"]');
-    if (maintenanceContactLabel) maintenanceContactLabel.textContent = t.maintenanceContact;
-    const maintenanceContactInput = document.getElementById('maintenanceContact');
-    if (maintenanceContactInput) maintenanceContactInput.placeholder = t.maintenanceContactPlaceholder;
+    // Maintenance Contact
+    updateLabelAndInput('maintenanceContact', t.maintenanceContact, t.maintenanceContactPlaceholder);
     
     const checkinCheckoutH3 = document.querySelector('#section2 h3:nth-of-type(2)');
     if (checkinCheckoutH3) checkinCheckoutH3.innerHTML = `<i class="fas fa-clock"></i> ${t.checkinCheckout}`;
     
-    const checkinTimeLabel = document.querySelector('label[for="checkInTime"]');
-    if (checkinTimeLabel) checkinTimeLabel.textContent = t.checkinTime;
-    const checkinTimeInput = document.getElementById('checkInTime');
-    if (checkinTimeInput) checkinTimeInput.placeholder = t.checkinTimePlaceholder;
+    // Check-in Time
+    updateLabelAndInput('checkInTime', t.checkinTime, t.checkinTimePlaceholder);
     
-    const checkoutTimeLabel = document.querySelector('label[for="checkOutTime"]');
-    if (checkoutTimeLabel) checkoutTimeLabel.textContent = t.checkoutTime;
-    const checkoutTimeInput = document.getElementById('checkOutTime');
-    if (checkoutTimeInput) checkoutTimeInput.placeholder = t.checkoutTimePlaceholder;
+    // Check-out Time
+    updateLabelAndInput('checkOutTime', t.checkoutTime, t.checkoutTimePlaceholder);
     
-    const lateCheckoutLabel = document.querySelector('label[for="lateCheckout"]');
-    if (lateCheckoutLabel) lateCheckoutLabel.textContent = t.lateCheckout;
-    const lateCheckoutInput = document.getElementById('lateCheckout');
-    if (lateCheckoutInput) lateCheckoutInput.placeholder = t.lateCheckoutPlaceholder;
+    // Late Check-out
+    updateLabelAndInput('lateCheckout', t.lateCheckout, t.lateCheckoutPlaceholder);
     
     // Step 3: Amenities & WiFi
     const amenitiesWifiH3 = document.querySelector('#section3 h3');
     if (amenitiesWifiH3) amenitiesWifiH3.innerHTML = `<i class="fas fa-wifi"></i> ${t.amenitiesWifi}`;
     
-    const wifiDetailsLabel = document.querySelector('label[for="wifiDetails"]');
-    if (wifiDetailsLabel) wifiDetailsLabel.textContent = t.wifiDetails;
-    const wifiDetailsInput = document.getElementById('wifiDetails');
-    if (wifiDetailsInput) wifiDetailsInput.placeholder = t.wifiDetailsPlaceholder;
-    const wifiDetailsHelp = document.querySelector('#wifiDetails').closest('.form-group')?.querySelector('.form-help');
-    if (wifiDetailsHelp) {
-        wifiDetailsHelp.textContent = t.wifiDetailsHelp;
-    }
+    // WiFi Details
+    updateLabelAndInput('wifiDetails', t.wifiDetails, t.wifiDetailsPlaceholder, t.wifiDetailsHelp);
     
-    const keyAmenitiesLabel = document.querySelector('label[for="amenities"]');
-    if (keyAmenitiesLabel) keyAmenitiesLabel.textContent = t.keyAmenities;
+    // Key Amenities
     const amenitiesTextarea = document.getElementById('amenities');
-    if (amenitiesTextarea) amenitiesTextarea.placeholder = t.amenitiesPlaceholder;
-    const amenitiesHelp = document.querySelector('#amenities').closest('.form-group')?.querySelector('.form-help');
-    if (amenitiesHelp) {
-        amenitiesHelp.textContent = t.amenitiesHelp;
+    if (amenitiesTextarea) {
+        const formGroup = amenitiesTextarea.closest('.form-group');
+        if (formGroup) {
+            const keyAmenitiesLabel = formGroup.querySelector('label[for="amenities"]') || formGroup.querySelector('label');
+            if (keyAmenitiesLabel) {
+                keyAmenitiesLabel.textContent = t.keyAmenities;
+                console.log('✅ Updated amenities label to:', t.keyAmenities);
+            }
+        }
+        amenitiesTextarea.placeholder = t.amenitiesPlaceholder;
+        const amenitiesHelp = formGroup?.querySelector('.form-help');
+        if (amenitiesHelp) amenitiesHelp.textContent = t.amenitiesHelp;
     }
     
+    // House Rules
     const houseRulesH3 = document.querySelector('#section3 h3:nth-of-type(2)');
     if (houseRulesH3) houseRulesH3.innerHTML = `<i class="fas fa-clipboard-list"></i> ${t.houseRules}`;
     
-    const houseRulesLabel = document.querySelector('label[for="houseRules"]');
-    if (houseRulesLabel) houseRulesLabel.textContent = t.houseRulesLabel;
     const houseRulesTextarea = document.getElementById('houseRules');
-    if (houseRulesTextarea) houseRulesTextarea.placeholder = t.houseRulesPlaceholder;
-    const houseRulesHelp = document.querySelector('#houseRules').closest('.form-group')?.querySelector('.form-help');
-    if (houseRulesHelp) {
-        houseRulesHelp.textContent = t.houseRulesHelp;
+    if (houseRulesTextarea) {
+        const formGroup = houseRulesTextarea.closest('.form-group');
+        if (formGroup) {
+            const houseRulesLabel = formGroup.querySelector('label[for="houseRules"]') || formGroup.querySelector('label');
+            if (houseRulesLabel) {
+                houseRulesLabel.textContent = t.houseRulesLabel;
+                console.log('✅ Updated houseRules label to:', t.houseRulesLabel);
+            }
+        }
+        houseRulesTextarea.placeholder = t.houseRulesPlaceholder;
+        const houseRulesHelp = formGroup?.querySelector('.form-help');
+        if (houseRulesHelp) houseRulesHelp.textContent = t.houseRulesHelp;
     }
     
     // Recommendations section
