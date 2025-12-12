@@ -373,7 +373,6 @@
         .step-number {
             width: 40px;
             height: 40px;
-            background: #3498db;
             color: white;
             border-radius: 50%;
             display: flex;
@@ -385,18 +384,24 @@
             z-index: 3;
         }
         
-        .step.active .step-number {
+        /* Step 1 - Green (default) */
+        #step1 .step-number {
             background: #2ecc71;
         }
         
-        /* Step 2 - Lighter blue */
+        /* Step 2 - Light blue (default) */
         #step2 .step-number {
             background: #5dade2;
         }
         
-        /* Step 3 - Darker blue */
+        /* Step 3 - Dark blue (default) */
         #step3 .step-number {
             background: #2874a6;
+        }
+        
+        /* Active step - Green (overrides default) */
+        .step.active .step-number {
+            background: #2ecc71;
         }
         
         .step-text {
