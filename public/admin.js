@@ -1592,8 +1592,19 @@ setupBackupButton() {
     backupBtn.innerHTML = '<i class="fas fa-download"></i> Download Backup';
     backupBtn.style.marginLeft = '10px';
     
+    // Add to nav buttons area, next to Reset button
     const navButtons = document.querySelector('.nav-buttons');
-    if (navButtons) navButtons.appendChild(backupBtn);
+    if (navButtons) {
+        // Find or create a container for utility buttons (Reset, Backup)
+        let utilityButtons = document.getElementById('utilityButtons');
+        if (!utilityButtons) {
+            utilityButtons = document.createElement('div');
+            utilityButtons.id = 'utilityButtons';
+            utilityButtons.style.cssText = 'display: flex; gap: 10px; width: 100%; margin-top: 10px;';
+            navButtons.appendChild(utilityButtons);
+        }
+        utilityButtons.appendChild(backupBtn);
+    }
     
     backupBtn.addEventListener('click', () => {
         const config = {
