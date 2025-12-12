@@ -1650,6 +1650,7 @@ setupNavButtonScroll() {
 // Property management methods
 populatePropertySelector() {
     const selector = document.getElementById('propertySelector');
+    const selectorWrapper = document.getElementById('propertySelectorWrapper');
     const newPropertyBtn = document.getElementById('newPropertyBtn');
     
     if (!selector) return;
@@ -1683,16 +1684,20 @@ populatePropertySelector() {
             selector.appendChild(option);
         });
         
-        // Show selector and new property button
-        selector.style.display = 'block';
+        // Show selector wrapper and new property button
+        if (selectorWrapper) {
+            selectorWrapper.style.display = 'block';
+        }
         if (newPropertyBtn) {
-            newPropertyBtn.style.display = 'block';
+            newPropertyBtn.style.display = 'inline-flex';
         }
     } else {
-        // No properties, hide selector
-        selector.style.display = 'none';
+        // No properties, hide selector wrapper
+        if (selectorWrapper) {
+            selectorWrapper.style.display = 'none';
+        }
         if (newPropertyBtn) {
-            newPropertyBtn.style.display = 'block'; // Still show new property button
+            newPropertyBtn.style.display = 'inline-flex'; // Still show new property button
         }
     }
 }
