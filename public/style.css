@@ -857,6 +857,30 @@ body {
     }
 }
 
+/* Desktop: Keep centered container with margins */
+@media (min-width: 769px) {
+    body {
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .chat-container {
+        margin: 0 auto;
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+    }
+    
+    .chat-header {
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .chat-input-container {
+        border-radius: 0 0 20px 20px;
+    }
+}
+
 /* Tablet optimizations */
 @media (min-width: 481px) and (max-width: 768px) {
     .chat-container {
