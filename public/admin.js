@@ -429,8 +429,17 @@ async autoLoadExistingConfig() {
                     console.log(`📋 Property.id: ${property.id}`);
                     console.log(`📋 Property.propertyId: ${property.propertyId}`);
                     
-                    // Store all properties for selector
-                    this.allProperties = data.properties;
+                    // Store all properties for selector - deduplicate by propertyId/id
+                    const seenIds = new Set();
+                    this.allProperties = data.properties.filter(p => {
+                        const propertyId = p.propertyId || p.id;
+                        if (!propertyId || seenIds.has(propertyId)) {
+                            return false; // Skip duplicates
+                        }
+                        seenIds.add(propertyId);
+                        return true;
+                    });
+                    console.log(`📋 Deduplicated properties: ${this.allProperties.length} unique out of ${data.properties.length} total`);
                     
                     // Store the property ID for updates - try multiple possible fields
                     this.currentPropertyId = property.propertyId || property.id || property.property_id;
