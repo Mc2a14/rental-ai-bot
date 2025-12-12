@@ -579,11 +579,18 @@ body {
 /* ================================================ */
 
 @media (max-width: 768px) {
+    html {
+        height: 100dvh;
+    }
+    
     body {
         padding: 0;
         height: 100vh;
+        height: -webkit-fill-available;
+        height: 100dvh; /* Dynamic viewport height */
         min-height: 100vh;
         min-height: -webkit-fill-available;
+        min-height: 100dvh;
         display: flex;
         align-items: stretch;
         justify-content: stretch;
@@ -594,6 +601,7 @@ body {
         right: 0;
         bottom: 0;
         width: 100%;
+        padding-bottom: env(safe-area-inset-bottom);
     }
     
     .chat-container {
@@ -601,8 +609,10 @@ body {
         max-width: 100%;
         height: 100vh;
         height: -webkit-fill-available;
+        height: 100dvh;
         max-height: 100vh;
         max-height: -webkit-fill-available;
+        max-height: 100dvh;
         border-radius: 0;
         margin: 0;
         display: flex;
@@ -712,7 +722,7 @@ body {
     
     .chat-input-container {
         padding: 20px;
-        padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
+        padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom))); /* Extra space for Safari address bar */
         background: var(--bg-chat);
         border-top: 1px solid var(--border-color);
         border-radius: 0;
@@ -721,6 +731,10 @@ body {
         margin: 0;
         width: 100%;
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .chat-messages {
+        padding-bottom: 100px; /* Extra padding to ensure content isn't hidden behind input */
     }
     
     #messageInput {
@@ -740,6 +754,7 @@ body {
     html {
         height: 100%;
         height: -webkit-fill-available;
+        height: 100dvh; /* Dynamic viewport height for mobile browsers */
         overflow: hidden;
     }
     
@@ -748,6 +763,7 @@ body {
         margin: 0;
         height: 100vh;
         height: -webkit-fill-available;
+        height: 100dvh; /* Dynamic viewport height */
         width: 100%;
         overflow: hidden;
         box-sizing: border-box;
@@ -760,12 +776,14 @@ body {
         right: 0;
         bottom: 0;
         -webkit-overflow-scrolling: touch;
+        padding-bottom: env(safe-area-inset-bottom);
     }
     
     .chat-container {
         border-radius: 0;
         height: 100vh;
         height: -webkit-fill-available;
+        height: 100dvh; /* Dynamic viewport height */
         width: 100%;
         margin: 0;
         position: relative;
@@ -776,6 +794,7 @@ body {
         box-shadow: none;
         max-height: 100vh;
         max-height: -webkit-fill-available;
+        max-height: 100dvh;
     }
     
     .chat-messages {
@@ -786,7 +805,7 @@ body {
         border-radius: 0;
         padding: 20px;
         padding-top: 24px;
-        padding-bottom: 20px;
+        padding-bottom: 100px; /* Extra padding to ensure content isn't hidden behind input */
         background: var(--bg-chat);
         display: flex;
         flex-direction: column;
@@ -804,7 +823,7 @@ body {
     .chat-input-container {
         flex-shrink: 0;
         padding: 16px 20px;
-        padding-bottom: max(16px, calc(16px + env(safe-area-inset-bottom)));
+        padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom))); /* Extra space for Safari address bar */
         background: var(--bg-chat);
         border-top: 1px solid var(--border-color);
         border-radius: 0;
@@ -816,6 +835,7 @@ body {
         width: 100%;
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
         min-height: auto;
+        margin-bottom: 0;
     }
     
     .header-controls {
