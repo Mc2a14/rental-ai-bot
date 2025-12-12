@@ -150,9 +150,9 @@
                 border-top-right-radius: 28px;
                 border-bottom-left-radius: 28px;
                 border-bottom-right-radius: 28px;
-                padding: 16px 20px;
-                padding-top: max(16px, calc(16px + env(safe-area-inset-top)));
-                padding-bottom: 16px;
+                padding: 20px 20px;
+                padding-top: max(20px, calc(20px + env(safe-area-inset-top)));
+                padding-bottom: 20px;
                 background: linear-gradient(135deg, #2c3e50, #34495e);
                 color: white;
                 position: relative;
@@ -908,7 +908,8 @@
     <!-- The entire admin setup form (hidden until auth) -->
     <div class="admin-container" id="adminContainer">
         <div class="admin-header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
+            <!-- Top row: Logo/Title + Logout -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                 <div class="header-content" style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0;">
                     <i class="fas fa-robot" style="font-size: 2rem; color: #3498db; flex-shrink: 0;"></i>
                     <div class="header-text" style="display: flex; flex-direction: column; min-width: 0;">
@@ -916,20 +917,28 @@
                         <p style="margin: 0; font-size: 0.9rem; opacity: 0.9; color: rgba(255, 255, 255, 0.9) !important; margin-top: 2px;">Property Setup</p>
                     </div>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex-shrink: 0;">
-                    <button id="newPropertyBtn" style="padding: 10px 18px; background: #2ecc71; color: white; border: none; border-radius: 25px; font-size: 13px; cursor: pointer; display: none; white-space: nowrap; font-weight: 500;">
-                        <i class="fas fa-plus"></i> New Property
-                    </button>
-                    <select id="propertySelector" style="padding: 10px 18px; padding-right: 40px; border: 2px solid white; border-radius: 25px; font-size: 13px; background: white; color: #2c3e50; cursor: pointer; min-width: 150px; max-width: 200px; display: none; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\"><path fill=\"%232c3e50\" d=\"M6 9L1 4h10z\"/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
-                        <option value="">Loading properties...</option>
-                    </select>
-                </div>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 12px;">
+            
+            <!-- Second row: New Property + Dropdown -->
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                <button id="newPropertyBtn" style="padding: 10px 18px; background: #2ecc71; color: white; border: none; border-radius: 25px; font-size: 13px; cursor: pointer; display: none; white-space: nowrap; font-weight: 500;">
+                    <i class="fas fa-plus"></i> New Property
+                </button>
+                <select id="propertySelector" style="padding: 10px 18px; padding-right: 40px; border: 2px solid white; border-radius: 25px; font-size: 13px; background: white; color: #2c3e50; cursor: pointer; min-width: 150px; max-width: 200px; display: none; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\"><path fill=\"%232c3e50\" d=\"M6 9L1 4h10z\"/></svg>'); background-repeat: no-repeat; background-position: right 14px center;">
+                    <option value="">Loading properties...</option>
+                </select>
+            </div>
+            
+            <!-- Third row: View Analytics -->
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
                 <a href="/analytics.html" style="padding: 10px 18px; background: #3498db; color: white; text-decoration: none; border-radius: 25px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 500;">
                     <i class="fas fa-chart-line"></i> View Analytics
                 </a>
-                <p style="margin: 0; font-size: 0.85rem; opacity: 0.9; color: rgba(255, 255, 255, 0.9) !important; text-align: right; flex: 1; min-width: 0;">Setup GuestBud in 3 simple steps</p>
+            </div>
+            
+            <!-- Bottom row: Setup text -->
+            <div style="display: flex; align-items: center;">
+                <p style="margin: 0; font-size: 0.85rem; opacity: 0.9; color: rgba(255, 255, 255, 0.9) !important;">Setup GuestBud in 3 simple steps</p>
             </div>
         </div>
 
