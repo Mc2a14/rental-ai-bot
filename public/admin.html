@@ -17,6 +17,21 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+        }
+        
+        @media (max-width: 480px) {
+            #loadingIndicator {
+                width: 100%;
+                height: 100vh;
+                height: 100dvh;
+            }
         }
         
         .fa-spinner {
@@ -171,14 +186,20 @@
             #propertyConfig {
                 flex: 1;
                 min-height: 0;
-                overflow-y: auto;
-                overflow-x: hidden;
-                -webkit-overflow-scrolling: touch;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
                 padding: 20px;
                 padding-top: 24px;
                 padding-bottom: 300px;
-                display: flex;
-                flex-direction: column;
+                display: block !important;
+                position: relative;
+            }
+            
+            /* Ensure form content can expand beyond viewport */
+            #propertyConfig form,
+            #propertyConfig > * {
+                min-height: auto;
             }
             
             /* Force scrolling to work - ensure container allows flex child to shrink */
