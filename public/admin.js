@@ -1649,8 +1649,21 @@ populatePropertySelector() {
     selector.innerHTML = '';
     
     if (this.allProperties && this.allProperties.length > 0) {
-        // Add each property as an option
-        this.allProperties.forEach(property => {
+        // Deduplicate properties by propertyId/id
+        const seenIds = new Set();
+        const uniqueProperties = this.allProperties.filter(property => {
+            const propertyId = property.propertyId || property.id;
+            if (!propertyId || seenIds.has(propertyId)) {
+                return false; // Skip duplicates
+            }
+            seenIds.add(propertyId);
+            return true;
+        });
+        
+        console.log(`📋 Total properties: ${this.allProperties.length}, Unique: ${uniqueProperties.length}`);
+        
+        // Add each unique property as an option
+        uniqueProperties.forEach(property => {
             const option = document.createElement('option');
             const propertyId = property.propertyId || property.id;
             option.value = propertyId;
