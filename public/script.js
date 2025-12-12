@@ -914,7 +914,15 @@ class RentalAIChat {
         setupBtn.className = 'setup-btn';
         setupBtn.innerHTML = '⚙️ Setup';
         setupBtn.title = 'Configure your property information';
-        setupBtn.addEventListener('click', () => window.location.href = '/admin');
+        setupBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Smooth transition to admin
+            document.body.style.transition = 'opacity 0.2s ease';
+            document.body.style.opacity = '0.8';
+            setTimeout(() => {
+                window.location.href = '/admin';
+            }, 100);
+        });
         headerControls.appendChild(setupBtn);
         
         // Clear button - check if static one exists first
