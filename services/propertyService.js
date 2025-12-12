@@ -197,9 +197,9 @@ class PropertyService {
         );
         const properties = result.rows.map(row => this.mapDatabaseRowToProperty(row));
         
-        // Deduplicate by property_id (keep most recent)
+        // Deduplicate by property_id first (keep most recent)
         const seenIds = new Set();
-        const uniqueProperties = properties.filter(p => {
+        const byId = properties.filter(p => {
           const propertyId = p.propertyId || p.id;
           if (!propertyId || seenIds.has(propertyId)) {
             return false; // Skip duplicates
@@ -208,21 +208,49 @@ class PropertyService {
           return true;
         });
         
-        logger.info(`User ${userId}: ${uniqueProperties.length} unique properties out of ${properties.length} total`);
+        // Then deduplicate by name + address combination (in case same property was saved with different IDs)
+        const seenNameAddress = new Set();
+        const uniqueProperties = byId.filter(p => {
+          const name = (p.name || '').trim().toLowerCase();
+          const address = (p.address || '').trim().toLowerCase();
+          const key = `${name}|||${address}`;
+          
+          if (!name || seenNameAddress.has(key)) {
+            return false; // Skip duplicates by name+address
+          }
+          seenNameAddress.add(key);
+          return true;
+        });
+        
+        logger.info(`User ${userId}: ${uniqueProperties.length} unique properties (by ID: ${byId.length}, by name+address: ${uniqueProperties.length}) out of ${properties.length} total`);
         return uniqueProperties;
       }
       
       const properties = await this.propertiesFile.read();
       const userProperties = Object.values(properties).filter(p => p.userId === userId);
       
-      // Deduplicate file-based properties too
+      // Deduplicate file-based properties by ID first
       const seenIds = new Set();
-      const uniqueProperties = userProperties.filter(p => {
+      const byId = userProperties.filter(p => {
         const propertyId = p.propertyId || p.id;
         if (!propertyId || seenIds.has(propertyId)) {
           return false;
         }
         seenIds.add(propertyId);
+        return true;
+      });
+      
+      // Then deduplicate by name + address
+      const seenNameAddress = new Set();
+      const uniqueProperties = byId.filter(p => {
+        const name = (p.name || '').trim().toLowerCase();
+        const address = (p.address || '').trim().toLowerCase();
+        const key = `${name}|||${address}`;
+        
+        if (!name || seenNameAddress.has(key)) {
+          return false;
+        }
+        seenNameAddress.add(key);
         return true;
       });
       
