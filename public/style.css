@@ -573,19 +573,28 @@ body {
 
 @media (max-width: 768px) {
     body {
-        padding: 10px;
+        padding: 0;
         height: 100vh;
         min-height: 100vh;
+        min-height: -webkit-fill-available;
         display: flex;
         align-items: stretch;
+        justify-content: stretch;
+        overflow: hidden;
     }
     
     .chat-container {
+        width: 100%;
+        max-width: 100%;
         height: 100vh;
+        height: -webkit-fill-available;
         max-height: 100vh;
+        max-height: -webkit-fill-available;
         border-radius: 0;
+        margin: 0;
         display: flex;
         flex-direction: column;
+        box-shadow: none;
     }
     
     .message-content {
@@ -595,10 +604,16 @@ body {
     }
     
     .chat-header {
-        padding: 12px 15px;
+        padding: 12px 20px;
+        padding-top: max(12px, calc(12px + env(safe-area-inset-top)));
         flex-wrap: wrap;
         gap: 8px;
         min-height: auto;
+        border-radius: 0;
+        border-bottom-left-radius: 28px;
+        border-bottom-right-radius: 28px;
+        margin: 0;
+        width: 100%;
     }
     
     .header-content {
@@ -671,14 +686,27 @@ body {
     }
     
     .chat-messages {
-        padding: 15px;
+        padding: 20px;
+        padding-top: 24px;
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        background: var(--bg-chat);
+        margin-top: 0;
+        border-radius: 0;
     }
     
     .chat-input-container {
-        padding: 15px;
+        padding: 20px;
+        padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
+        background: var(--bg-chat);
+        border-top: 1px solid var(--border-color);
+        border-radius: 0;
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        margin: 0;
+        width: 100%;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
     }
     
     #messageInput {
@@ -701,38 +729,36 @@ body {
     }
     
     body {
-        padding: 20px 10px;
-        padding-top: max(20px, calc(20px + env(safe-area-inset-top)));
-        padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
-        padding-left: max(10px, calc(10px + env(safe-area-inset-left)));
-        padding-right: max(10px, calc(10px + env(safe-area-inset-right)));
+        padding: 0;
         margin: 0;
         min-height: 100vh;
         min-height: -webkit-fill-available;
-        position: relative;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         width: 100%;
-        overflow-y: auto;
-        overflow-x: hidden;
+        overflow: hidden;
         box-sizing: border-box;
         display: flex;
-        align-items: flex-start;
-        justify-content: center;
+        align-items: stretch;
+        justify-content: stretch;
         -webkit-overflow-scrolling: touch;
     }
     
     .chat-container {
-        border-radius: 20px;
-        min-height: calc(100vh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-        height: auto;
-        width: calc(100% - 20px);
+        border-radius: 0;
+        height: 100vh;
+        height: -webkit-fill-available;
+        width: 100%;
         margin: 0;
-        margin-top: 20px;
-        margin-bottom: 30px;
         position: relative;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        overflow: visible;
+        overflow: hidden;
+        box-shadow: none;
     }
     
     .chat-messages {
@@ -741,30 +767,34 @@ body {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         border-radius: 0;
-        padding-bottom: 20px;
+        padding: 20px;
+        padding-top: 24px;
+        background: var(--bg-chat);
     }
     
     .chat-header {
-        border-top-left-radius: 20px;
-        border-top-right-radius: 20px;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
+        border-radius: 0;
+        border-bottom-left-radius: 28px;
+        border-bottom-right-radius: 28px;
         flex-shrink: 0;
+        padding-top: max(12px, calc(12px + env(safe-area-inset-top)));
+        width: 100%;
     }
     
     .chat-input-container {
         flex-shrink: 0;
         padding: 20px;
-        padding-bottom: 20px;
+        padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
         background: var(--bg-chat);
         border-top: 1px solid var(--border-color);
-        border-bottom-left-radius: 20px;
-        border-bottom-right-radius: 20px;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        margin-bottom: 0;
+        border-radius: 0;
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        margin: 0;
         position: relative;
         z-index: 1;
+        width: 100%;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
     }
     
     .header-controls {
