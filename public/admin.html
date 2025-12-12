@@ -97,51 +97,43 @@
         
         @media (max-width: 480px) {
             html {
-                height: 100%;
-                height: -webkit-fill-available;
-                height: 100dvh;
-                overflow: hidden;
+                height: auto;
+                min-height: 100%;
+                min-height: -webkit-fill-available;
+                min-height: 100dvh;
+                overflow-x: hidden;
             }
             
             body {
                 padding: 0;
                 margin: 0;
-                height: 100vh;
-                height: -webkit-fill-available;
-                height: 100dvh;
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+                min-height: 100dvh;
                 width: 100%;
-                overflow: hidden !important;
+                overflow-x: hidden;
+                overflow-y: auto;
                 box-sizing: border-box;
-                display: flex;
-                align-items: stretch;
-                justify-content: stretch;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                position: relative;
                 -webkit-overflow-scrolling: touch;
-                padding-bottom: env(safe-area-inset-bottom);
+                background: #f5f7fa;
             }
             
             .admin-container {
                 border-radius: 0;
-                height: 100vh;
-                height: -webkit-fill-available;
-                height: 100dvh;
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+                min-height: 100dvh;
                 width: 100%;
                 max-width: 100%;
                 margin: 0;
                 padding: 0;
                 position: relative;
                 box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
+                display: block;
+                overflow: visible;
                 box-shadow: none;
-                max-height: 100vh;
-                max-height: -webkit-fill-available;
-                max-height: 100dvh;
+                background: white;
             }
             
             .admin-header {
@@ -149,12 +141,13 @@
                 border-bottom-left-radius: 28px;
                 border-bottom-right-radius: 28px;
                 padding: 8px 16px;
-                padding-top: max(8px, calc(8px + env(safe-area-inset-top)));
-                flex-shrink: 0;
+                padding-top: max(12px, calc(12px + env(safe-area-inset-top)));
+                padding-bottom: 12px;
                 background: linear-gradient(135deg, #2c3e50, #34495e);
                 color: white;
-                min-height: auto;
                 position: relative;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             .admin-header p {
@@ -203,19 +196,15 @@
                 color: #3498db;
             }
             
-            /* propertyConfig IS the form element - make it scrollable */
+            /* propertyConfig IS the form element - natural flow */
             form#propertyConfig {
-                flex: 1;
-                min-height: 0;
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-                -webkit-overflow-scrolling: touch !important;
                 padding: 20px;
                 padding-top: 24px;
-                padding-bottom: 180px !important;
+                padding-bottom: 24px;
                 position: relative;
-                height: 100%;
-                display: block !important;
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             /* Ensure all sections have enough content to enable scrolling */
@@ -223,53 +212,22 @@
                 min-height: auto;
             }
             
-            /* Force scrolling to work - ensure container allows flex child to shrink */
-            .admin-container {
-                min-height: 0;
-            }
-            
-            .admin-header {
-                flex-shrink: 0;
-            }
-            
+            /* Navigation buttons at bottom - scrolls with content */
             .nav-buttons {
-                flex-shrink: 0;
-            }
-            
-            /* Remove any height constraints that might prevent scrolling */
-            .form-section {
-                overflow: visible;
-            }
-            
-            /* Ensure form element inside propertyConfig can scroll */
-            form {
-                height: 100%;
-                overflow: visible;
-            }
-            
-            /* Ensure all content inside can expand */
-            #propertyConfig > * {
-                flex-shrink: 0;
-            }
-            
-            /* Navigation buttons at bottom - always visible but can slide */
-            .nav-buttons {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                flex-shrink: 0;
+                position: relative;
                 padding: 14px 16px;
                 padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
                 border-top-left-radius: 28px;
                 border-top-right-radius: 28px;
-                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-                z-index: 100;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
                 background: white;
                 border-top: 2px solid #e1e5e9;
                 display: flex;
                 gap: 10px;
                 justify-content: center;
+                width: 100%;
+                box-sizing: border-box;
+                margin-top: 20px;
             }
             
             /* Button group for side-by-side layout */
@@ -288,10 +246,7 @@
                 font-size: 0.9rem;
             }
             
-            /* Adjust form padding since buttons are fixed - increase significantly */
-            form#propertyConfig {
-                padding-bottom: 180px !important;
-            }
+            /* No need for extra padding since buttons scroll with content */
             
             
             /* Setup steps styling for mobile */
