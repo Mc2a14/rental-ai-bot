@@ -722,7 +722,7 @@ body {
     
     .chat-input-container {
         padding: 20px;
-        padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom))); /* Extra space for Safari address bar */
+        padding-bottom: max(50px, calc(50px + env(safe-area-inset-bottom))); /* Reduced from 80px - positioned lower */
         background: var(--bg-chat);
         border-top: 1px solid var(--border-color);
         border-radius: 0;
@@ -734,7 +734,7 @@ body {
     }
     
     .chat-messages {
-        padding-bottom: 100px; /* Extra padding to ensure content isn't hidden behind input */
+        padding-bottom: 80px; /* Reduced padding to match lower input position */
     }
     
     #messageInput {
@@ -823,7 +823,7 @@ body {
     .chat-input-container {
         flex-shrink: 0;
         padding: 16px 20px;
-        padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom))); /* Extra space for Safari address bar */
+        padding-bottom: max(50px, calc(50px + env(safe-area-inset-bottom))); /* Reduced from 80px - positioned lower */
         background: var(--bg-chat);
         border-top: 1px solid var(--border-color);
         border-radius: 0;
