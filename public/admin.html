@@ -191,15 +191,16 @@
                 -webkit-overflow-scrolling: touch !important;
                 padding: 20px;
                 padding-top: 24px;
-                padding-bottom: 300px;
-                display: block !important;
+                padding-bottom: 300px !important;
                 position: relative;
+                height: 100%;
             }
             
-            /* Ensure form content can expand beyond viewport */
-            #propertyConfig form,
-            #propertyConfig > * {
-                min-height: auto;
+            /* The form inside propertyConfig should not have display flex */
+            #propertyConfig form {
+                display: block;
+                height: auto;
+                min-height: 100%;
             }
             
             /* Force scrolling to work - ensure container allows flex child to shrink */
@@ -215,15 +216,14 @@
                 flex-shrink: 0;
             }
             
-            /* CRITICAL: Ensure propertyConfig can scroll - match Guest app pattern exactly */
-            #propertyConfig {
-                flex: 1;
-                min-height: 0;
-                overflow-y: auto;
-            }
-            
             /* Remove any height constraints that might prevent scrolling */
             .form-section {
+                overflow: visible;
+            }
+            
+            /* Ensure form element inside propertyConfig can scroll */
+            form {
+                height: 100%;
                 overflow: visible;
             }
             
