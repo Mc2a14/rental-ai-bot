@@ -51,6 +51,7 @@ class PropertySetup {
     }, 100);
     
     this.setupAdditionalButtons();
+    this.setupNavButtonScroll();
     console.log("✅ PropertySetup initialized successfully");
 }
 
@@ -1546,7 +1547,15 @@ setupResetButton() {
     resetBtn.style.marginLeft = '10px';
     
     const navButtons = document.querySelector('.nav-buttons');
-    if (navButtons) navButtons.appendChild(resetBtn);
+    if (navButtons) {
+        // Add to button group if it exists, otherwise append directly
+        const buttonGroup = navButtons.querySelector('.nav-button-group');
+        if (buttonGroup) {
+            buttonGroup.appendChild(resetBtn);
+        } else {
+            navButtons.appendChild(resetBtn);
+        }
+    }
     
     resetBtn.addEventListener('click', () => {
         if (confirm('⚠️ WARNING: This will delete ALL your property data. Are you sure?')) {

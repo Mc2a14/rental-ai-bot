@@ -148,12 +148,17 @@
                 border-radius: 0;
                 border-bottom-left-radius: 28px;
                 border-bottom-right-radius: 28px;
-                padding: 12px 20px;
-                padding-top: max(12px, calc(12px + env(safe-area-inset-top)));
+                padding: 10px 16px;
+                padding-top: max(10px, calc(10px + env(safe-area-inset-top)));
                 flex-shrink: 0;
                 background: linear-gradient(135deg, #2c3e50, #34495e);
                 color: white;
                 min-height: auto;
+            }
+            
+            .admin-header p {
+                font-size: 0.85rem;
+                margin: 8px 0 0 0;
             }
             
             .admin-header h1 {
@@ -227,21 +232,51 @@
                 flex-shrink: 0;
             }
             
-            /* Navigation buttons at bottom - sticky positioning */
+            /* Navigation buttons at bottom - appear on scroll */
             .nav-buttons {
-                position: sticky;
-                bottom: 0;
+                position: fixed;
+                bottom: -100px;
+                left: 0;
+                right: 0;
                 flex-shrink: 0;
-                padding: 12px 20px;
+                padding: 12px 16px;
                 padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
                 border-top-left-radius: 28px;
                 border-top-right-radius: 28px;
-                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-                z-index: 10;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+                z-index: 100;
                 background: white;
                 border-top: 1px solid #e1e5e9;
-                margin-top: auto;
-                min-height: auto;
+                transition: bottom 0.3s ease;
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
+            
+            /* Show nav buttons when scrolling or near bottom */
+            .nav-buttons.visible {
+                bottom: 0;
+            }
+            
+            /* Button group for side-by-side layout */
+            .nav-button-group {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            /* Make buttons smaller and side-by-side */
+            .nav-buttons button {
+                flex: 1;
+                min-width: 0;
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+            
+            /* Adjust form padding since buttons are fixed */
+            form#propertyConfig {
+                padding-bottom: 100px !important;
             }
             
             
@@ -910,7 +945,7 @@
                     </a>
                 </div>
             </div>
-            <p>Configure your Rental AI Assistant in 3 simple steps</p>
+            <p>Setup GuestBud in 3 simple steps</p>
         </div>
 
         <div class="setup-steps">
@@ -1189,17 +1224,19 @@
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">
-                    <i class="fas fa-arrow-left"></i> Previous
-                </button>
-                
-                <button type="button" class="btn btn-primary" id="nextBtn">
-                    Next <i class="fas fa-arrow-right"></i>
-                </button>
-                
-                <button type="button" class="btn btn-primary" id="submitBtn" style="display: none;">
-                    <i class="fas fa-check"></i> Save Configuration
-                </button>
+                <div class="nav-button-group">
+                    <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    
+                    <button type="button" class="btn btn-primary" id="nextBtn">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                    
+                    <button type="button" class="btn btn-primary" id="submitBtn" style="display: none;">
+                        <i class="fas fa-check"></i> Save
+                    </button>
+                </div>
                 
                 <!-- Reset and Backup buttons will be added by JavaScript -->
             </div>
