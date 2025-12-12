@@ -122,7 +122,7 @@
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
-                overflow: hidden;
+                overflow: hidden; /* Container itself doesn't scroll */
                 box-shadow: none;
                 max-height: 100vh;
                 max-height: -webkit-fill-available;
@@ -146,9 +146,13 @@
             }
             
             .admin-header h1 {
-                color: white;
+                color: white !important;
                 font-size: 1.5rem;
                 margin-bottom: 5px;
+            }
+            
+            .admin-header .header-text h1 {
+                color: white !important;
             }
             
             .admin-header p {
@@ -171,7 +175,7 @@
             #propertyConfig {
                 flex: 1;
                 min-height: 0;
-                overflow-y: auto;
+                overflow-y: auto !important;
                 overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
                 padding: 20px;
@@ -179,11 +183,21 @@
                 padding-bottom: 120px; /* Extra space for nav buttons */
                 display: flex;
                 flex-direction: column;
+                position: relative;
             }
             
             /* Ensure form sections can scroll */
             .form-section {
                 overflow: visible;
+            }
+            
+            /* Force scrolling to work */
+            .admin-container > * {
+                flex-shrink: 0;
+            }
+            
+            #propertyConfig {
+                flex-shrink: 1;
             }
             
             /* Navigation buttons at bottom - sticky positioning */
