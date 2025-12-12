@@ -10,6 +10,7 @@ class PropertySetup {
     this.faqs = []; // Store FAQs
     this.currentPropertyId = null; // Store the current property ID for updates
     this.allProperties = []; // Store all user properties for selector
+    this.currentLanguage = 'en'; // Store current language preference
     
     // Try to restore propertyId from localStorage on initialization
     try {
@@ -1177,10 +1178,11 @@ updateFAQsList() {
     if (!container) return;
     
     if (this.faqs.length === 0) {
+        const translations = this.getTranslation('noFAQs');
         container.innerHTML = `
             <div class="no-faqs">
                 <i class="fas fa-question-circle"></i>
-                <p>No FAQs yet. Add some to help guests find answers quickly!</p>
+                <p>${translations}</p>
             </div>
         `;
         return;
@@ -1317,7 +1319,8 @@ updateRecommendationsList() {
     });
     
     if (this.recommendations.length === 0) {
-        container.innerHTML = `<div class="no-recommendations"><p>No recommendations yet. Add some to help your guests discover local gems!</p></div>`;
+        const translations = this.getTranslation('noRecommendations');
+        container.innerHTML = `<div class="no-recommendations"><p>${translations}</p></div>`;
         console.log('⚠️ No recommendations to display');
         return;
     }
@@ -1441,7 +1444,8 @@ updateAppliancesList() {
     if (!container) return;
     
     if (this.appliances.length === 0) {
-        container.innerHTML = `<div class="no-appliances"><p>No appliances added yet. Add some above to help guests!</p></div>`;
+        const translations = this.getTranslation('noAppliances');
+        container.innerHTML = `<div class="no-appliances"><p>${translations}</p></div>`;
         return;
     }
 
@@ -1780,6 +1784,506 @@ async switchProperty(propertyId) {
     
     this.showTempMessage(`Switched to ${property.name}`, 'success');
     console.log(`✅ Switched to property: ${property.name}`);
+}
+
+// Language management
+updateUIForLanguage(lang) {
+    const translations = {
+        en: {
+            subtitle: 'Property Setup',
+            newProperty: 'New Property',
+            viewAnalytics: 'View Analytics',
+            setupSteps: 'Setup GuestBud in 3 simple steps',
+            step1: 'Basic Info',
+            step2: 'Details',
+            step3: 'Review',
+            basicInfo: 'Basic Property Information',
+            propertyName: 'Property Name *',
+            propertyNamePlaceholder: 'e.g., Sunset Beach Villa',
+            propertyNameHelp: 'This will be displayed to your guests',
+            propertyAddress: 'Property Address *',
+            propertyAddressPlaceholder: 'e.g., 123 Ocean View Drive, Miami Beach, FL 33139',
+            propertyType: 'Property Type *',
+            selectPropertyType: 'Select a property type',
+            propertyTypeValidation: 'Please select a property type',
+            contactInfo: 'Contact Information',
+            hostContact: 'Host Contact Information *',
+            hostContactPlaceholder: 'e.g., John Smith - (555) 123-4567',
+            hostContactHelp: 'How guests can reach you directly',
+            maintenanceContact: 'Maintenance Contact *',
+            maintenanceContactPlaceholder: 'e.g., (555) 987-6543 (24/7)',
+            checkinCheckout: 'Check-in & Check-out',
+            checkinTime: 'Check-in Time *',
+            checkinTimePlaceholder: 'e.g., 3:00 PM',
+            checkoutTime: 'Check-out Time *',
+            checkoutTimePlaceholder: 'e.g., 11:00 AM',
+            lateCheckout: 'Late Check-out Policy',
+            lateCheckoutPlaceholder: 'e.g., Available upon request ($50 fee after 1 PM)',
+            amenitiesWifi: 'Amenities & WiFi',
+            wifiDetails: 'WiFi Details *',
+            wifiDetailsPlaceholder: 'e.g., Network: VillaChamitos_Guest, Password: Welcome2024',
+            wifiDetailsHelp: 'Your guests will need this information to connect to WiFi',
+            wifiExamples: 'Example WiFi formats:',
+            keyAmenities: 'Key Amenities *',
+            amenitiesPlaceholder: 'Enter each amenity on a new line or separated by commas',
+            amenitiesHelp: 'List the most important amenities your guests should know about',
+            houseRules: 'House Rules',
+            houseRulesLabel: 'House Rules *',
+            houseRulesPlaceholder: 'Enter each house rule on a new line',
+            houseRulesHelp: 'List your specific house rules for guests to follow. These will be shared when guests ask about rules.',
+            previous: 'Previous',
+            next: 'Next',
+            save: 'Save',
+            saveConfiguration: 'Save Configuration',
+            addRecommendation: 'Add Recommendation',
+            yourCurrentRecommendations: 'Your Current Recommendations',
+            noRecommendations: 'No recommendations yet. Add some to help your guests discover local gems!',
+            recommendationName: 'Name/Title *',
+            recommendationNamePlaceholder: 'e.g., Toto Beach',
+            recommendationDescription: 'Description',
+            recommendationDescriptionPlaceholder: 'e.g., Beautiful beach with white sand and clear water',
+            recommendationCategory: 'Category',
+            recommendationNotes: 'Additional Notes',
+            recommendationNotesPlaceholder: 'e.g., Best time to visit: early morning',
+            addAppliance: 'Add Appliance',
+            yourCurrentAppliances: 'Your Appliance Instructions',
+            noAppliances: 'No appliances added yet. Add some above to help guests!',
+            applianceName: 'Appliance Name *',
+            applianceNamePlaceholder: 'e.g., Washing Machine',
+            applianceInstructions: 'Instructions *',
+            applianceInstructionsPlaceholder: 'e.g., Use delicate cycle for clothes. Detergent is in the cabinet above.',
+            addFAQ: 'Add FAQ',
+            yourCurrentFAQs: 'Your Current FAQs',
+            noFAQs: 'No FAQs added yet. Add some above to help your guests!',
+            faqQuestion: 'Question *',
+            faqQuestionPlaceholder: 'e.g., What time is check-in?',
+            faqAnswer: 'Answer *',
+            faqAnswerPlaceholder: 'e.g., Check-in is at 3:00 PM. You can check in anytime after 3 PM.',
+            faqLanguage: 'Language',
+            remove: 'Remove',
+            edit: 'Edit'
+        },
+        es: {
+            subtitle: 'Configuración de Propiedad',
+            newProperty: 'Nueva Propiedad',
+            viewAnalytics: 'Ver Analíticas',
+            setupSteps: 'Configura GuestBud en 3 pasos simples',
+            step1: 'Información Básica',
+            step2: 'Detalles',
+            step3: 'Revisar',
+            basicInfo: 'Información Básica de la Propiedad',
+            propertyName: 'Nombre de la Propiedad *',
+            propertyNamePlaceholder: 'ej., Villa Playa Sunset',
+            propertyNameHelp: 'Esto se mostrará a tus huéspedes',
+            propertyAddress: 'Dirección de la Propiedad *',
+            propertyAddressPlaceholder: 'ej., 123 Ocean View Drive, Miami Beach, FL 33139',
+            propertyType: 'Tipo de Propiedad *',
+            selectPropertyType: 'Selecciona un tipo de propiedad',
+            propertyTypeValidation: 'Por favor selecciona un tipo de propiedad',
+            contactInfo: 'Información de Contacto',
+            hostContact: 'Información de Contacto del Anfitrión *',
+            hostContactPlaceholder: 'ej., Juan Pérez - (555) 123-4567',
+            hostContactHelp: 'Cómo los huéspedes pueden contactarte directamente',
+            maintenanceContact: 'Contacto de Mantenimiento *',
+            maintenanceContactPlaceholder: 'ej., (555) 987-6543 (24/7)',
+            checkinCheckout: 'Check-in y Check-out',
+            checkinTime: 'Hora de Check-in *',
+            checkinTimePlaceholder: 'ej., 3:00 PM',
+            checkoutTime: 'Hora de Check-out *',
+            checkoutTimePlaceholder: 'ej., 11:00 AM',
+            lateCheckout: 'Política de Check-out Tardío',
+            lateCheckoutPlaceholder: 'ej., Disponible bajo solicitud ($50 después de la 1 PM)',
+            amenitiesWifi: 'Amenidades y WiFi',
+            wifiDetails: 'Detalles de WiFi *',
+            wifiDetailsPlaceholder: 'ej., Red: VillaChamitos_Guest, Contraseña: Bienvenido2024',
+            wifiDetailsHelp: 'Tus huéspedes necesitarán esta información para conectarse al WiFi',
+            wifiExamples: 'Ejemplos de formatos WiFi:',
+            keyAmenities: 'Amenidades Principales *',
+            amenitiesPlaceholder: 'Ingresa cada amenidad en una nueva línea o separadas por comas',
+            amenitiesHelp: 'Lista las amenidades más importantes que tus huéspedes deben conocer',
+            houseRules: 'Reglas de la Casa',
+            houseRulesLabel: 'Reglas de la Casa *',
+            houseRulesPlaceholder: 'Ingresa cada regla en una nueva línea',
+            houseRulesHelp: 'Lista tus reglas específicas para que los huéspedes las sigan. Estas se compartirán cuando los huéspedes pregunten sobre las reglas.',
+            previous: 'Anterior',
+            next: 'Siguiente',
+            save: 'Guardar',
+            saveConfiguration: 'Guardar Configuración',
+            addRecommendation: 'Agregar Recomendación',
+            yourCurrentRecommendations: 'Tus Recomendaciones Actuales',
+            noRecommendations: 'Aún no hay recomendaciones. ¡Agrega algunas para ayudar a tus huéspedes a descubrir lugares locales!',
+            recommendationName: 'Nombre/Título *',
+            recommendationNamePlaceholder: 'ej., Playa Toto',
+            recommendationDescription: 'Descripción',
+            recommendationDescriptionPlaceholder: 'ej., Hermosa playa con arena blanca y agua cristalina',
+            recommendationCategory: 'Categoría',
+            recommendationNotes: 'Notas Adicionales',
+            recommendationNotesPlaceholder: 'ej., Mejor hora para visitar: temprano en la mañana',
+            addAppliance: 'Agregar Electrodoméstico',
+            yourCurrentAppliances: 'Tus Instrucciones de Electrodomésticos',
+            noAppliances: 'Aún no se han agregado electrodomésticos. ¡Agrega algunos arriba para ayudar a los huéspedes!',
+            applianceName: 'Nombre del Electrodoméstico *',
+            applianceNamePlaceholder: 'ej., Lavadora',
+            applianceInstructions: 'Instrucciones *',
+            applianceInstructionsPlaceholder: 'ej., Usa ciclo delicado para la ropa. El detergente está en el gabinete de arriba.',
+            addFAQ: 'Agregar FAQ',
+            yourCurrentFAQs: 'Tus FAQs Actuales',
+            noFAQs: 'Aún no se han agregado FAQs. ¡Agrega algunas arriba para ayudar a tus huéspedes!',
+            faqQuestion: 'Pregunta *',
+            faqQuestionPlaceholder: 'ej., ¿A qué hora es el check-in?',
+            faqAnswer: 'Respuesta *',
+            faqAnswerPlaceholder: 'ej., El check-in es a las 3:00 PM. Puedes hacer check-in en cualquier momento después de las 3 PM.',
+            faqLanguage: 'Idioma',
+            remove: 'Eliminar',
+            edit: 'Editar'
+        },
+        fr: {
+            subtitle: 'Configuration de la Propriété',
+            newProperty: 'Nouvelle Propriété',
+            viewAnalytics: 'Voir les Analyses',
+            setupSteps: 'Configurez GuestBud en 3 étapes simples',
+            step1: 'Informations de Base',
+            step2: 'Détails',
+            step3: 'Révision',
+            basicInfo: 'Informations de Base sur la Propriété',
+            propertyName: 'Nom de la Propriété *',
+            propertyNamePlaceholder: 'ex., Villa Plage Sunset',
+            propertyNameHelp: 'Ceci sera affiché à vos invités',
+            propertyAddress: 'Adresse de la Propriété *',
+            propertyAddressPlaceholder: 'ex., 123 Ocean View Drive, Miami Beach, FL 33139',
+            propertyType: 'Type de Propriété *',
+            selectPropertyType: 'Sélectionnez un type de propriété',
+            propertyTypeValidation: 'Veuillez sélectionner un type de propriété',
+            contactInfo: 'Informations de Contact',
+            hostContact: 'Informations de Contact de l\'Hôte *',
+            hostContactPlaceholder: 'ex., Jean Dupont - (555) 123-4567',
+            hostContactHelp: 'Comment les invités peuvent vous contacter directement',
+            maintenanceContact: 'Contact de Maintenance *',
+            maintenanceContactPlaceholder: 'ex., (555) 987-6543 (24/7)',
+            checkinCheckout: 'Enregistrement et Départ',
+            checkinTime: 'Heure d\'Enregistrement *',
+            checkinTimePlaceholder: 'ex., 15:00',
+            checkoutTime: 'Heure de Départ *',
+            checkoutTimePlaceholder: 'ex., 11:00',
+            lateCheckout: 'Politique de Départ Tardif',
+            lateCheckoutPlaceholder: 'ex., Disponible sur demande (50$ après 13h)',
+            amenitiesWifi: 'Équipements et WiFi',
+            wifiDetails: 'Détails WiFi *',
+            wifiDetailsPlaceholder: 'ex., Réseau: VillaChamitos_Guest, Mot de passe: Bienvenue2024',
+            wifiDetailsHelp: 'Vos invités auront besoin de ces informations pour se connecter au WiFi',
+            wifiExamples: 'Exemples de formats WiFi:',
+            keyAmenities: 'Équipements Principaux *',
+            amenitiesPlaceholder: 'Entrez chaque équipement sur une nouvelle ligne ou séparés par des virgules',
+            amenitiesHelp: 'Listez les équipements les plus importants que vos invités devraient connaître',
+            houseRules: 'Règles de la Maison',
+            houseRulesLabel: 'Règles de la Maison *',
+            houseRulesPlaceholder: 'Entrez chaque règle sur une nouvelle ligne',
+            houseRulesHelp: 'Listez vos règles spécifiques pour que les invités les suivent. Celles-ci seront partagées lorsque les invités demanderont des règles.',
+            previous: 'Précédent',
+            next: 'Suivant',
+            save: 'Enregistrer',
+            saveConfiguration: 'Enregistrer la Configuration',
+            addRecommendation: 'Ajouter une Recommandation',
+            yourCurrentRecommendations: 'Vos Recommandations Actuelles',
+            noRecommendations: 'Aucune recommandation pour le moment. Ajoutez-en pour aider vos invités à découvrir des endroits locaux!',
+            recommendationName: 'Nom/Titre *',
+            recommendationNamePlaceholder: 'ex., Plage Toto',
+            recommendationDescription: 'Description',
+            recommendationDescriptionPlaceholder: 'ex., Belle plage avec sable blanc et eau claire',
+            recommendationCategory: 'Catégorie',
+            recommendationNotes: 'Notes Supplémentaires',
+            recommendationNotesPlaceholder: 'ex., Meilleur moment pour visiter: tôt le matin',
+            addAppliance: 'Ajouter un Appareil',
+            yourCurrentAppliances: 'Vos Instructions d\'Appareils',
+            noAppliances: 'Aucun appareil ajouté pour le moment. Ajoutez-en ci-dessus pour aider les invités!',
+            applianceName: 'Nom de l\'Appareil *',
+            applianceNamePlaceholder: 'ex., Machine à Laver',
+            applianceInstructions: 'Instructions *',
+            applianceInstructionsPlaceholder: 'ex., Utilisez le cycle délicat pour les vêtements. La lessive est dans le placard au-dessus.',
+            addFAQ: 'Ajouter une FAQ',
+            yourCurrentFAQs: 'Vos FAQs Actuelles',
+            noFAQs: 'Aucune FAQ ajoutée pour le moment. Ajoutez-en ci-dessus pour aider vos invités!',
+            faqQuestion: 'Question *',
+            faqQuestionPlaceholder: 'ex., À quelle heure est l\'enregistrement?',
+            faqAnswer: 'Réponse *',
+            faqAnswerPlaceholder: 'ex., L\'enregistrement est à 15h00. Vous pouvez vous enregistrer à tout moment après 15h.',
+            faqLanguage: 'Langue',
+            remove: 'Supprimer',
+            edit: 'Modifier'
+        }
+    };
+    
+    const t = translations[lang] || translations.en;
+    
+    // Update header
+    const subtitle = document.getElementById('adminSubtitle');
+    if (subtitle) subtitle.textContent = t.subtitle;
+    
+    const newPropertyBtn = document.getElementById('newPropertyBtn');
+    if (newPropertyBtn) {
+        newPropertyBtn.innerHTML = `<i class="fas fa-plus"></i> ${t.newProperty}`;
+    }
+    
+    const viewAnalytics = document.querySelector('a[href="/analytics.html"]');
+    if (viewAnalytics) {
+        viewAnalytics.innerHTML = `<i class="fas fa-chart-line"></i> ${t.viewAnalytics}`;
+    }
+    
+    const setupStepsText = document.querySelector('.admin-header p');
+    if (setupStepsText) setupStepsText.textContent = t.setupSteps;
+    
+    // Update step labels
+    const step1Text = document.querySelector('#step1 .step-text');
+    if (step1Text) step1Text.textContent = t.step1;
+    const step2Text = document.querySelector('#step2 .step-text');
+    if (step2Text) step2Text.textContent = t.step2;
+    const step3Text = document.querySelector('#step3 .step-text');
+    if (step3Text) step3Text.textContent = t.step3;
+    
+    // Update form labels and placeholders
+    this.updateFormLabels(t);
+}
+
+updateFormLabels(t) {
+    // Step 1: Basic Information
+    const basicInfoH3 = document.querySelector('#section1 h3');
+    if (basicInfoH3) basicInfoH3.innerHTML = `<i class="fas fa-home"></i> ${t.basicInfo}`;
+    
+    const propertyNameLabel = document.querySelector('label[for="propertyName"]');
+    if (propertyNameLabel) propertyNameLabel.textContent = t.propertyName;
+    const propertyNameInput = document.getElementById('propertyName');
+    if (propertyNameInput) propertyNameInput.placeholder = t.propertyNamePlaceholder;
+    const propertyNameHelp = document.querySelector('#propertyName').nextElementSibling;
+    if (propertyNameHelp && propertyNameHelp.classList.contains('form-help')) {
+        propertyNameHelp.textContent = t.propertyNameHelp;
+    }
+    
+    const propertyAddressLabel = document.querySelector('label[for="propertyAddress"]');
+    if (propertyAddressLabel) propertyAddressLabel.textContent = t.propertyAddress;
+    const propertyAddressInput = document.getElementById('propertyAddress');
+    if (propertyAddressInput) propertyAddressInput.placeholder = t.propertyAddressPlaceholder;
+    
+    const propertyTypeLabel = document.querySelector('label[for="propertyType"]');
+    if (propertyTypeLabel) propertyTypeLabel.textContent = t.propertyType;
+    const propertyTypeSelect = document.getElementById('propertyType');
+    if (propertyTypeSelect && propertyTypeSelect.firstElementChild) {
+        propertyTypeSelect.firstElementChild.textContent = t.selectPropertyType;
+    }
+    const propertyTypeValidation = document.getElementById('propertyTypeValidation');
+    if (propertyTypeValidation) propertyTypeValidation.textContent = t.propertyTypeValidation;
+    
+    // Step 2: Contact Information
+    const contactInfoH3 = document.querySelector('#section2 h3');
+    if (contactInfoH3) contactInfoH3.innerHTML = `<i class="fas fa-phone"></i> ${t.contactInfo}`;
+    
+    const hostContactLabel = document.querySelector('label[for="hostContact"]');
+    if (hostContactLabel) hostContactLabel.textContent = t.hostContact;
+    const hostContactInput = document.getElementById('hostContact');
+    if (hostContactInput) hostContactInput.placeholder = t.hostContactPlaceholder;
+    const hostContactHelp = document.querySelector('#hostContact').nextElementSibling;
+    if (hostContactHelp && hostContactHelp.classList.contains('form-help')) {
+        hostContactHelp.textContent = t.hostContactHelp;
+    }
+    
+    const maintenanceContactLabel = document.querySelector('label[for="maintenanceContact"]');
+    if (maintenanceContactLabel) maintenanceContactLabel.textContent = t.maintenanceContact;
+    const maintenanceContactInput = document.getElementById('maintenanceContact');
+    if (maintenanceContactInput) maintenanceContactInput.placeholder = t.maintenanceContactPlaceholder;
+    
+    const checkinCheckoutH3 = document.querySelector('#section2 h3:nth-of-type(2)');
+    if (checkinCheckoutH3) checkinCheckoutH3.innerHTML = `<i class="fas fa-clock"></i> ${t.checkinCheckout}`;
+    
+    const checkinTimeLabel = document.querySelector('label[for="checkInTime"]');
+    if (checkinTimeLabel) checkinTimeLabel.textContent = t.checkinTime;
+    const checkinTimeInput = document.getElementById('checkInTime');
+    if (checkinTimeInput) checkinTimeInput.placeholder = t.checkinTimePlaceholder;
+    
+    const checkoutTimeLabel = document.querySelector('label[for="checkOutTime"]');
+    if (checkoutTimeLabel) checkoutTimeLabel.textContent = t.checkoutTime;
+    const checkoutTimeInput = document.getElementById('checkOutTime');
+    if (checkoutTimeInput) checkoutTimeInput.placeholder = t.checkoutTimePlaceholder;
+    
+    const lateCheckoutLabel = document.querySelector('label[for="lateCheckout"]');
+    if (lateCheckoutLabel) lateCheckoutLabel.textContent = t.lateCheckout;
+    const lateCheckoutInput = document.getElementById('lateCheckout');
+    if (lateCheckoutInput) lateCheckoutInput.placeholder = t.lateCheckoutPlaceholder;
+    
+    // Step 3: Amenities & WiFi
+    const amenitiesWifiH3 = document.querySelector('#section3 h3');
+    if (amenitiesWifiH3) amenitiesWifiH3.innerHTML = `<i class="fas fa-wifi"></i> ${t.amenitiesWifi}`;
+    
+    const wifiDetailsLabel = document.querySelector('label[for="wifiDetails"]');
+    if (wifiDetailsLabel) wifiDetailsLabel.textContent = t.wifiDetails;
+    const wifiDetailsInput = document.getElementById('wifiDetails');
+    if (wifiDetailsInput) wifiDetailsInput.placeholder = t.wifiDetailsPlaceholder;
+    const wifiDetailsHelp = document.querySelector('#wifiDetails').nextElementSibling;
+    if (wifiDetailsHelp && wifiDetailsHelp.classList.contains('form-help')) {
+        wifiDetailsHelp.textContent = t.wifiDetailsHelp;
+    }
+    
+    const keyAmenitiesLabel = document.querySelector('label[for="amenities"]');
+    if (keyAmenitiesLabel) keyAmenitiesLabel.textContent = t.keyAmenities;
+    const amenitiesTextarea = document.getElementById('amenities');
+    if (amenitiesTextarea) amenitiesTextarea.placeholder = t.amenitiesPlaceholder;
+    const amenitiesHelp = document.querySelector('#amenities').nextElementSibling;
+    if (amenitiesHelp && amenitiesHelp.classList.contains('form-help')) {
+        amenitiesHelp.textContent = t.amenitiesHelp;
+    }
+    
+    const houseRulesH3 = document.querySelector('#section3 h3:nth-of-type(2)');
+    if (houseRulesH3) houseRulesH3.innerHTML = `<i class="fas fa-clipboard-list"></i> ${t.houseRules}`;
+    
+    const houseRulesLabel = document.querySelector('label[for="houseRules"]');
+    if (houseRulesLabel) houseRulesLabel.textContent = t.houseRulesLabel;
+    const houseRulesTextarea = document.getElementById('houseRules');
+    if (houseRulesTextarea) houseRulesTextarea.placeholder = t.houseRulesPlaceholder;
+    const houseRulesHelp = document.querySelector('#houseRules').nextElementSibling;
+    if (houseRulesHelp && houseRulesHelp.classList.contains('form-help')) {
+        houseRulesHelp.textContent = t.houseRulesHelp;
+    }
+    
+    // Recommendations section
+    const addRecommendationBtn = document.querySelector('#addRecommendationBtn');
+    if (addRecommendationBtn) addRecommendationBtn.innerHTML = `<i class="fas fa-plus"></i> ${t.addRecommendation}`;
+    const currentRecommendationsH4 = document.querySelector('.current-recommendations h4');
+    if (currentRecommendationsH4) currentRecommendationsH4.textContent = t.yourCurrentRecommendations;
+    const recommendationNameLabel = document.querySelector('label[for="recommendation-name"]');
+    if (recommendationNameLabel) recommendationNameLabel.textContent = t.recommendationName;
+    const recommendationNameInput = document.getElementById('recommendation-name');
+    if (recommendationNameInput) recommendationNameInput.placeholder = t.recommendationNamePlaceholder;
+    const recommendationDescriptionLabel = document.querySelector('label[for="recommendation-description"]');
+    if (recommendationDescriptionLabel) recommendationDescriptionLabel.textContent = t.recommendationDescription;
+    const recommendationDescriptionInput = document.getElementById('recommendation-description');
+    if (recommendationDescriptionInput) recommendationDescriptionInput.placeholder = t.recommendationDescriptionPlaceholder;
+    const recommendationCategoryLabel = document.querySelector('label[for="recommendation-category"]');
+    if (recommendationCategoryLabel) recommendationCategoryLabel.textContent = t.recommendationCategory;
+    const recommendationNotesLabel = document.querySelector('label[for="recommendation-notes"]');
+    if (recommendationNotesLabel) recommendationNotesLabel.textContent = t.recommendationNotes;
+    const recommendationNotesInput = document.getElementById('recommendation-notes');
+    if (recommendationNotesInput) recommendationNotesInput.placeholder = t.recommendationNotesPlaceholder;
+    
+    // Appliances section
+    const addApplianceBtn = document.querySelector('#addApplianceBtn');
+    if (addApplianceBtn) addApplianceBtn.innerHTML = `<i class="fas fa-plus"></i> ${t.addAppliance}`;
+    const currentAppliancesH4 = document.querySelector('.current-appliances h4');
+    if (currentAppliancesH4) currentAppliancesH4.textContent = t.yourCurrentAppliances;
+    const applianceNameLabel = document.querySelector('label[for="appliance-name"]');
+    if (applianceNameLabel) applianceNameLabel.textContent = t.applianceName;
+    const applianceNameInput = document.getElementById('appliance-name');
+    if (applianceNameInput) applianceNameInput.placeholder = t.applianceNamePlaceholder;
+    const applianceInstructionsLabel = document.querySelector('label[for="appliance-instructions"]');
+    if (applianceInstructionsLabel) applianceInstructionsLabel.textContent = t.applianceInstructions;
+    const applianceInstructionsInput = document.getElementById('appliance-instructions');
+    if (applianceInstructionsInput) applianceInstructionsInput.placeholder = t.applianceInstructionsPlaceholder;
+    
+    // FAQs section
+    const addFAQBtn = document.getElementById('addFAQBtn');
+    if (addFAQBtn) addFAQBtn.innerHTML = `<i class="fas fa-plus"></i> ${t.addFAQ}`;
+    const currentFAQsH4 = document.querySelector('.current-faqs h4');
+    if (currentFAQsH4) currentFAQsH4.textContent = t.yourCurrentFAQs;
+    const faqQuestionLabel = document.querySelector('label[for="faq-question"]');
+    if (faqQuestionLabel) faqQuestionLabel.textContent = t.faqQuestion;
+    const faqQuestionInput = document.getElementById('faq-question');
+    if (faqQuestionInput) faqQuestionInput.placeholder = t.faqQuestionPlaceholder;
+    const faqAnswerLabel = document.querySelector('label[for="faq-answer"]');
+    if (faqAnswerLabel) faqAnswerLabel.textContent = t.faqAnswer;
+    const faqAnswerInput = document.getElementById('faq-answer');
+    if (faqAnswerInput) faqAnswerInput.placeholder = t.faqAnswerPlaceholder;
+    const faqLanguageLabel = document.querySelector('label[for="faq-language"]');
+    if (faqLanguageLabel) faqLanguageLabel.textContent = t.faqLanguage;
+    
+    // Section headers and descriptions
+    const recommendedPlacesH3 = document.querySelector('#section3 h3:nth-of-type(3)');
+    if (recommendedPlacesH3) recommendedPlacesH3.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${t.recommendedPlaces}`;
+    const recommendedPlacesDesc = document.querySelector('#section3 .section-description');
+    if (recommendedPlacesDesc && recommendedPlacesDesc.textContent.includes('Add your favorite')) {
+        recommendedPlacesDesc.textContent = t.recommendedPlacesDesc;
+    }
+    
+    const applianceInstructionsH3 = document.querySelector('#section3 h3:nth-of-type(1)');
+    if (applianceInstructionsH3 && applianceInstructionsH3.textContent.includes('Appliance')) {
+        applianceInstructionsH3.innerHTML = `<i class="fas fa-tools"></i> ${t.applianceInstructions}`;
+    }
+    const applianceInstructionsDesc = document.querySelector('#section3 .section-description');
+    if (applianceInstructionsDesc && applianceInstructionsDesc.textContent.includes('Add instructions for appliances')) {
+        applianceInstructionsDesc.textContent = t.applianceInstructionsDesc;
+    }
+    
+    const faqSectionH3 = document.querySelector('#section3 h3:nth-of-type(4)');
+    if (faqSectionH3) faqSectionH3.innerHTML = `<i class="fas fa-question-circle"></i> ${t.faqSection}`;
+    const faqSectionDesc = document.querySelector('.faq-management .section-description');
+    if (faqSectionDesc) faqSectionDesc.textContent = t.faqSectionDesc;
+    
+    // Recommendation form labels
+    const addNewRecommendationH4 = document.querySelector('.add-recommendation-form h4');
+    if (addNewRecommendationH4) addNewRecommendationH4.textContent = t.addNewRecommendation;
+    const placeNameLabel = document.querySelector('label[for="place-name"]');
+    if (placeNameLabel) placeNameLabel.textContent = t.placeName;
+    const placeNameInput = document.getElementById('place-name');
+    if (placeNameInput) placeNameInput.placeholder = t.placeNamePlaceholder;
+    const placeCategoryLabel = document.querySelector('label[for="place-category"]');
+    if (placeCategoryLabel) placeCategoryLabel.textContent = t.placeCategory;
+    const placeDescriptionLabel = document.querySelector('label[for="place-description"]');
+    if (placeDescriptionLabel) placeDescriptionLabel.textContent = t.placeDescription;
+    const placeDescriptionInput = document.getElementById('place-description');
+    if (placeDescriptionInput) placeDescriptionInput.placeholder = t.placeDescriptionPlaceholder;
+    const placeNotesLabel = document.querySelector('label[for="place-notes"]');
+    if (placeNotesLabel) placeNotesLabel.textContent = t.placeNotes;
+    const placeNotesInput = document.getElementById('place-notes');
+    if (placeNotesInput) placeNotesInput.placeholder = t.placeNotesPlaceholder;
+    
+    // Appliance form labels
+    const addNewApplianceH4 = document.querySelector('.add-appliance-form h4');
+    if (addNewApplianceH4) addNewApplianceH4.textContent = t.addNewAppliance;
+    const applianceTypeLabel = document.querySelector('label[for="appliance-type"]');
+    if (applianceTypeLabel) applianceTypeLabel.textContent = t.applianceType;
+    const troubleshootingLabel = document.querySelector('label[for="appliance-troubleshooting"]');
+    if (troubleshootingLabel) troubleshootingLabel.textContent = t.troubleshootingTips;
+    const troubleshootingInput = document.getElementById('appliance-troubleshooting');
+    if (troubleshootingInput) troubleshootingInput.placeholder = t.troubleshootingPlaceholder;
+    
+    // FAQ form labels
+    const addNewFAQH4 = document.querySelector('.add-faq-form h4');
+    if (addNewFAQH4) addNewFAQH4.textContent = t.addNewFAQ;
+    
+    // Navigation buttons
+    const prevBtn = document.getElementById('prevBtn');
+    if (prevBtn) prevBtn.innerHTML = `<i class="fas fa-arrow-left"></i> ${t.previous}`;
+    const nextBtn = document.getElementById('nextBtn');
+    if (nextBtn) nextBtn.innerHTML = `${t.next} <i class="fas fa-arrow-right"></i>`;
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.innerHTML = `<i class="fas fa-check"></i> ${t.save}`;
+    
+    // Update empty state messages
+    this.updateEmptyStateMessages(t);
+}
+
+getTranslation(key) {
+    const translations = {
+        en: {
+            noRecommendations: 'No recommendations yet. Add some to help your guests discover local gems!',
+            noAppliances: 'No appliances added yet. Add some above to help guests!',
+            noFAQs: 'No FAQs added yet. Add some above to help your guests!',
+            remove: 'Remove',
+            edit: 'Edit'
+        },
+        es: {
+            noRecommendations: 'Aún no hay recomendaciones. ¡Agrega algunas para ayudar a tus huéspedes a descubrir lugares locales!',
+            noAppliances: 'Aún no se han agregado electrodomésticos. ¡Agrega algunos arriba para ayudar a los huéspedes!',
+            noFAQs: 'Aún no se han agregado FAQs. ¡Agrega algunas arriba para ayudar a tus huéspedes!',
+            remove: 'Eliminar',
+            edit: 'Editar'
+        },
+        fr: {
+            noRecommendations: 'Aucune recommandation pour le moment. Ajoutez-en pour aider vos invités à découvrir des endroits locaux!',
+            noAppliances: 'Aucun appareil ajouté pour le moment. Ajoutez-en ci-dessus pour aider les invités!',
+            noFAQs: 'Aucune FAQ ajoutée pour le moment. Ajoutez-en ci-dessus pour aider vos invités!',
+            remove: 'Supprimer',
+            edit: 'Modifier'
+        }
+    };
+    const lang = this.currentLanguage || 'en';
+    return translations[lang]?.[key] || translations.en[key] || key;
 }
 
 createNewProperty() {
