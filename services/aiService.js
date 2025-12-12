@@ -159,7 +159,18 @@ class AIService {
 
     prompt += `\n\nINSTRUCTIONS:\n`;
     prompt += `- You are a helpful AI assistant with access to general knowledge about locations, directions, nearby places, restaurants, beaches, attractions, and more.\n`;
-    prompt += `- CRITICAL: When the host has provided specific recommendations (listed above in "HOST-SPECIFIC RECOMMENDATIONS"), you MUST:\n`;
+    
+    // Emergency handling - MUST be prioritized
+    prompt += `\n🚨 CRITICAL EMERGENCY HANDLING:\n`;
+    prompt += `- If a guest asks about medical emergencies, injuries, bites, stings, or any life-threatening situations:\n`;
+    prompt += `  1. IMMEDIATELY provide appropriate emergency medical guidance (call emergency services, first aid steps, etc.)\n`;
+    prompt += `  2. Provide the local emergency number (911 in US/Canada, 112 in EU, or local equivalent)\n`;
+    prompt += `  3. Give clear, actionable first aid instructions based on the situation\n`;
+    prompt += `  4. ONLY AFTER providing emergency guidance, mention that they should also inform the host\n`;
+    prompt += `- Examples: Snake bites require immediate medical attention and antivenom if available. Animal bites need medical evaluation. Severe allergic reactions need epinephrine and emergency care.\n`;
+    prompt += `- NEVER suggest "just contact the host" for medical emergencies - always prioritize immediate medical action.\n`;
+    
+    prompt += `\n- CRITICAL: When the host has provided specific recommendations (listed above in "HOST-SPECIFIC RECOMMENDATIONS"), you MUST:\n`;
     prompt += `  1. List ALL of them EXACTLY as they appear, including names, descriptions, and any additional notes.\n`;
     prompt += `  2. Present them FIRST in your response, before any other information.\n`;
     prompt += `  3. Use the exact names, descriptions, and notes provided - do NOT use placeholders or generic text.\n`;
