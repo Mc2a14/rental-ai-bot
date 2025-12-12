@@ -172,12 +172,18 @@
                 flex: 1;
                 min-height: 0;
                 overflow-y: auto;
+                overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
                 padding: 20px;
                 padding-top: 24px;
-                padding-bottom: 100px; /* Extra space for nav buttons */
+                padding-bottom: 120px; /* Extra space for nav buttons */
                 display: flex;
                 flex-direction: column;
+            }
+            
+            /* Ensure form sections can scroll */
+            .form-section {
+                overflow: visible;
             }
             
             /* Navigation buttons at bottom - sticky positioning */
@@ -847,9 +853,12 @@
     <div class="admin-container" id="adminContainer">
         <div class="admin-header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; flex-direction: column;">
-                    <h1 style="margin: 0; font-size: 1.5rem;"><i class="fas fa-robot"></i> GuestBud</h1>
-                    <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">Property Setup</p>
+                <div class="header-content" style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-robot" style="font-size: 2rem; color: #3498db;"></i>
+                    <div class="header-text" style="display: flex; flex-direction: column;">
+                        <h1 style="margin: 0; font-size: 1.5rem;">GuestBud</h1>
+                        <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">Property Setup</p>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                     <select id="propertySelector" style="padding: 10px 15px; border: 2px solid #3498db; border-radius: 5px; font-size: 14px; background: white; color: #2c3e50; cursor: pointer; min-width: 200px; display: none;">
@@ -1300,4 +1309,48 @@
                             adminScript.onerror = function() {
                                 console.error("❌ Failed to load admin.js");
                                 alert("Failed to load admin interface. Please refresh the page.");
-               
+                            };
+                            document.body.appendChild(adminScript);
+                        };
+                        
+                        // Wait a bit to ensure DOM is fully ready
+                        setTimeout(loadAdminJS, 100);
+                    } else {
+                        // Not authenticated - show login modal using existing auth.js function
+                        console.log("🔒 User not authenticated, showing login modal");
+                        
+                        // Hide loading indicator
+                        document.getElementById('loadingIndicator').style.display = 'none';
+                        
+                        // Use the showLoginModal function from auth.js
+                        if (typeof showLoginModal === 'function') {
+                            showLoginModal();
+                            
+                            // Use handleLogin from auth.js (it's already async)
+                            // No need to override - handleLogin already handles reload
+                        } else {
+                            // Fallback: redirect to main page
+                            alert('Authentication system not available. Redirecting to main page.');
+                            window.location.href = '/';
+                        }
+                    }
+                } else {
+                    console.error("❌ isAuthenticated function not found");
+                    alert('Authentication system error. Please refresh the page.');
+                }
+            } catch (error) {
+                console.error("❌ Error in admin page initialization:", error);
+                document.getElementById('loadingIndicator').innerHTML = `
+                    <div style="color: #e74c3c;">
+                        <h3>Error loading admin page</h3>
+                        <p>${error.message}</p>
+                        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Reload Page
+                        </button>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
