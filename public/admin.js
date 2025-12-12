@@ -1623,6 +1623,15 @@ setupBackupButton() {
     });
 }
 
+setupNavButtonScroll() {
+    // Buttons are now always visible, so we don't need scroll detection
+    // But we can still use this to ensure buttons are visible
+    const navButtons = document.querySelector('.nav-buttons');
+    if (navButtons) {
+        navButtons.classList.add('visible');
+    }
+}
+
 // Property management methods
 populatePropertySelector() {
     const selector = document.getElementById('propertySelector');

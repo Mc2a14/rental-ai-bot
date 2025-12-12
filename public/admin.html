@@ -148,17 +148,31 @@
                 border-radius: 0;
                 border-bottom-left-radius: 28px;
                 border-bottom-right-radius: 28px;
-                padding: 10px 16px;
-                padding-top: max(10px, calc(10px + env(safe-area-inset-top)));
+                padding: 8px 16px;
+                padding-top: max(8px, calc(8px + env(safe-area-inset-top)));
                 flex-shrink: 0;
                 background: linear-gradient(135deg, #2c3e50, #34495e);
                 color: white;
                 min-height: auto;
+                position: relative;
             }
             
             .admin-header p {
-                font-size: 0.85rem;
-                margin: 8px 0 0 0;
+                font-size: 0.8rem;
+                margin: 6px 0 0 0;
+            }
+            
+            /* Reset button in header - mobile */
+            #resetBtnContainer {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                z-index: 10;
+            }
+            
+            #resetBtnContainer button {
+                padding: 6px 10px;
+                font-size: 0.75rem;
             }
             
             .admin-header h1 {
