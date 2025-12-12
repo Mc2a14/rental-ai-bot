@@ -805,7 +805,7 @@ body {
         border-radius: 0;
         padding: 20px;
         padding-top: 24px;
-        padding-bottom: 100px; /* Extra padding to ensure content isn't hidden behind input */
+        padding-bottom: 80px; /* Extra padding to ensure content isn't hidden behind input */
         background: var(--bg-chat);
         display: flex;
         flex-direction: column;
