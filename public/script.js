@@ -238,7 +238,7 @@ class RentalAIChat {
                 headerText.textContent = 'GuestBud';
             }
             if (headerSubtext) {
-                headerSubtext.textContent = 'Rental AI Assistant';
+                headerSubtext.textContent = 'Rental AI Assistant • 24/7 Support';
             }
             if (welcomePropertyName) {
                 welcomePropertyName.textContent = 'this property';
@@ -258,7 +258,7 @@ class RentalAIChat {
         }
         
         if (headerSubtext) {
-            headerSubtext.textContent = 'Rental AI Assistant';
+            headerSubtext.textContent = 'Rental AI Assistant • 24/7 Support';
             console.log('✅ Updated header subtitle');
         }
         
