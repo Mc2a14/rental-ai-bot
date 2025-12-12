@@ -235,10 +235,10 @@ class RentalAIChat {
             const welcomePropertyName = document.getElementById('welcomePropertyName');
             
             if (headerText) {
-                headerText.textContent = 'Rental AI Assistant';
+                headerText.textContent = 'GuestBud';
             }
             if (headerSubtext) {
-                headerSubtext.textContent = '24/7 Support';
+                headerSubtext.textContent = 'Rental AI Assistant';
             }
             if (welcomePropertyName) {
                 welcomePropertyName.textContent = 'this property';
@@ -252,13 +252,13 @@ class RentalAIChat {
         const headerText = document.querySelector('.header-text h2') || document.getElementById('headerTitle');
         const headerSubtext = document.querySelector('.header-text p') || document.getElementById('propertySubtitle');
         
-        if (headerText && this.hostConfig.name) {
-            headerText.textContent = `Rental AI Assistant - ${this.hostConfig.name}`;
+        if (headerText) {
+            headerText.textContent = 'GuestBud';
             console.log('✅ Updated header title');
         }
         
-        if (headerSubtext && this.hostConfig.name) {
-            headerSubtext.textContent = `${this.hostConfig.name} • 24/7 Support`;
+        if (headerSubtext) {
+            headerSubtext.textContent = 'Rental AI Assistant';
             console.log('✅ Updated header subtitle');
         }
         
