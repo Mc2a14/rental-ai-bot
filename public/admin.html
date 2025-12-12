@@ -129,11 +129,6 @@
                 max-height: 100dvh;
             }
             
-            /* Ensure scrolling works */
-            .admin-container {
-                -webkit-overflow-scrolling: touch;
-            }
-            
             .admin-header {
                 border-radius: 0;
                 border-bottom-left-radius: 28px;
@@ -174,17 +169,17 @@
             }
             
             #propertyConfig {
-                flex: 1 1 0;
+                flex: 1;
                 min-height: 0;
-                overflow-y: auto !important;
+                overflow-y: scroll !important;
                 overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch;
                 padding: 20px;
                 padding-top: 24px;
                 padding-bottom: 150px; /* Extra space for nav buttons - increased */
-                display: flex;
-                flex-direction: column;
+                display: block;
                 position: relative;
+                height: 100%;
             }
             
             /* Ensure form sections can scroll */
