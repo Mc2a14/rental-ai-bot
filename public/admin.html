@@ -201,10 +201,15 @@
                 min-height: auto;
             }
             
-            /* Ensure propertyConfig takes maximum available space and can scroll */
+            /* Ensure propertyConfig takes maximum available space and can scroll - match Guest app pattern */
             #propertyConfig {
-                flex: 1 1 0%;
+                flex: 1;
                 min-height: 0;
+            }
+            
+            /* Remove any height constraints that might prevent scrolling */
+            #propertyConfig * {
+                max-height: none !important;
             }
             
             /* Navigation buttons at bottom - sticky positioning */
