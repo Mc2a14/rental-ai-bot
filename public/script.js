@@ -207,6 +207,23 @@ class RentalAIChat {
         }
     }
 
+    // Update page title dynamically for property pages
+    updatePageTitle() {
+        if (this.hostConfig && this.hostConfig.name) {
+            // For property pages, show property name
+            document.title = `GuestBud - ${this.hostConfig.name}`;
+            
+            // Update Open Graph tags if they exist
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle) {
+                ogTitle.setAttribute('content', `GuestBud - ${this.hostConfig.name}`);
+            }
+        } else {
+            // For main page, just show GuestBud
+            document.title = 'GuestBud - Your Rental AI Assistant';
+        }
+    }
+
     // Add this new method to update UI
     updateUIWithPropertyInfo() {
         if (!this.hostConfig) {
@@ -243,6 +260,9 @@ class RentalAIChat {
             headerSubtext.textContent = `${this.hostConfig.name} • 24/7 Support`;
             console.log('✅ Updated header subtitle');
         }
+        
+        // Update page title for link previews
+        this.updatePageTitle();
         
         // Update welcome message
         const welcomePropertyName = document.getElementById('welcomePropertyName');
