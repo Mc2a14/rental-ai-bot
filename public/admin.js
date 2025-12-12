@@ -1902,36 +1902,4 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("🚀 DOM loaded - Checking if PropertySetup should initialize");
     
     // Only initialize if not already initialized and user is authenticated
-    if (!window.propertySetup && typeof isAuthenticated === 'function' && isAuthenticated()) {
-        try {
-            console.log("🔄 Initializing PropertySetup from DOMContentLoaded...");
-            window.propertySetup = new PropertySetup();
-            console.log("✅ PropertySetup initialized successfully from DOMContentLoaded!");
-        } catch (error) {
-            console.error("❌ Error initializing PropertySetup:", error);
-        }
-    } else {
-        if (window.propertySetup) {
-            console.log("✅ PropertySetup already initialized");
-        } else {
-            console.log("🔒 User not authenticated or waiting for dynamic load");
-        }
-    }
-});
-
-// Also try to initialize immediately if DOM is already loaded
-if (document.readyState === 'loading') {
-    // DOM is still loading, wait for DOMContentLoaded
-    console.log("📄 DOM still loading, will initialize on DOMContentLoaded");
-} else {
-    // DOM is already loaded (script loaded dynamically)
-    console.log("📄 DOM already loaded, initializing immediately");
-    if (!window.propertySetup && typeof isAuthenticated === 'function' && isAuthenticated()) {
-        try {
-            window.propertySetup = new PropertySetup();
-            console.log("✅ PropertySetup initialized immediately!");
-        } catch (error) {
-            console.error("❌ Error initializing PropertySetup immediately:", error);
-        }
-    }
-}
+    if (!window.propertySetup && typeof isAuthenticated === 'function' && isAuthenticate
