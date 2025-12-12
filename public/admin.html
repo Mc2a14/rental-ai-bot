@@ -183,7 +183,8 @@
                 color: #3498db;
             }
             
-            #propertyConfig {
+            /* propertyConfig IS the form element - make it scrollable */
+            form#propertyConfig {
                 flex: 1;
                 min-height: 0;
                 overflow-y: auto !important;
@@ -194,13 +195,7 @@
                 padding-bottom: 300px !important;
                 position: relative;
                 height: 100%;
-            }
-            
-            /* The form inside propertyConfig should not have display flex */
-            #propertyConfig form {
-                display: block;
-                height: auto;
-                min-height: 100%;
+                display: block !important;
             }
             
             /* Force scrolling to work - ensure container allows flex child to shrink */
