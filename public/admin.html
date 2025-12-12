@@ -174,9 +174,8 @@
             }
             
             #propertyConfig {
-                flex: 1 1 auto;
+                flex: 1 1 0;
                 min-height: 0;
-                max-height: none;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch;
@@ -186,7 +185,6 @@
                 display: flex;
                 flex-direction: column;
                 position: relative;
-                height: auto; /* Allow content to determine height */
             }
             
             /* Ensure form sections can scroll */
@@ -215,11 +213,10 @@
                 height: 100%;
             }
             
-            /* Increase scrollable content area */
+            /* Ensure propertyConfig takes maximum available space */
             #propertyConfig {
-                flex-grow: 1;
-                flex-shrink: 1;
-                flex-basis: 0;
+                flex: 1;
+                min-height: 0;
             }
             
             /* Navigation buttons at bottom - sticky positioning */
