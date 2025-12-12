@@ -426,4 +426,28 @@
             // Don't update from localStorage here - let RentalAIChat load from server first
             // This prevents showing wrong property data on property pages
             // The RentalAIChat class will update the UI after loading server data
-            console.log('⏳ Waiting f
+            console.log('⏳ Waiting for RentalAIChat to load property data from server...');
+            
+            // Attach event listeners for header controls
+            const setupBtn = document.getElementById('setupBtn');
+            if (setupBtn) {
+                setupBtn.addEventListener('click', () => window.location.href = '/admin');
+            }
+            
+            // Clear button is handled by RentalAIChat.createHeaderControls()
+            // No need to attach listener here to avoid duplicates
+            
+            // Theme toggle already handled in script.js
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) {
+                languageSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
+            }
+            
+            // Quick question buttons are handled by RentalAIChat.setupQuickQuestionButtons()
+            // No need to attach listeners here to avoid duplicates
+            
+            console.log('✅ Header controls initialized successfully!');
+        });
+    </script>
+</body>
+</html>
