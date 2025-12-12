@@ -169,15 +169,16 @@
             }
             
             #propertyConfig {
-                flex: 1 1 0%;
+                flex: 1;
                 min-height: 0;
-                overflow-y: scroll !important;
-                overflow-x: hidden !important;
+                overflow-y: auto;
+                overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
                 padding: 20px;
                 padding-top: 24px;
-                padding-bottom: 200px; /* Extra space for nav buttons - increased significantly */
-                position: relative;
+                padding-bottom: 200px; /* Extra space for nav buttons */
+                display: flex;
+                flex-direction: column;
             }
             
             /* Ensure form sections can scroll */
