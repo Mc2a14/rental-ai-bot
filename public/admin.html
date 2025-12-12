@@ -173,10 +173,11 @@
             }
             
             #propertyConfig {
-                flex: 1;
+                flex: 1 1 auto;
                 min-height: 0;
+                max-height: 100%;
                 overflow-y: auto !important;
-                overflow-x: hidden;
+                overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch;
                 padding: 20px;
                 padding-top: 24px;
@@ -184,6 +185,7 @@
                 display: flex;
                 flex-direction: column;
                 position: relative;
+                height: 0; /* Force flex child to respect parent height */
             }
             
             /* Ensure form sections can scroll */
@@ -191,13 +193,17 @@
                 overflow: visible;
             }
             
-            /* Force scrolling to work */
-            .admin-container > * {
-                flex-shrink: 0;
+            /* Force scrolling to work - ensure container allows flex child to shrink */
+            .admin-container {
+                min-height: 0;
             }
             
-            #propertyConfig {
-                flex-shrink: 1;
+            .admin-header {
+                flex: 0 0 auto;
+            }
+            
+            .nav-buttons {
+                flex: 0 0 auto;
             }
             
             /* Navigation buttons at bottom - sticky positioning */
