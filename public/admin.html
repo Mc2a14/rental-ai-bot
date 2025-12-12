@@ -159,8 +159,10 @@
                 flex-direction: column;
             }
             
-            /* Navigation buttons at bottom */
+            /* Navigation buttons at bottom - sticky positioning */
             .nav-buttons {
+                position: sticky;
+                bottom: 0;
                 flex-shrink: 0;
                 padding: 16px 20px;
                 padding-bottom: max(30px, calc(30px + env(safe-area-inset-bottom)));
@@ -170,6 +172,12 @@
                 z-index: 10;
                 background: white;
                 border-top: 1px solid #e1e5e9;
+                margin-top: auto;
+            }
+            
+            /* Ensure propertyConfig has enough bottom padding for nav buttons */
+            #propertyConfig {
+                padding-bottom: 100px; /* Extra space for nav buttons */
             }
             
             /* Setup steps styling for mobile */
