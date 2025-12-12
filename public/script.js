@@ -139,6 +139,7 @@ class RentalAIChat {
                 
                 // Update UI immediately with server data
                 this.updateUIWithPropertyInfo();
+                this.updatePageTitle(); // Update page title for link previews
             } else {
                 console.error('❌ Property not found on server');
                 console.error('❌ Response:', JSON.stringify(data, null, 2));
