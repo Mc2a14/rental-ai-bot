@@ -485,6 +485,10 @@ async autoLoadExistingConfig() {
                     // Use a small delay to ensure DOM is ready
                     setTimeout(() => {
                         this.populateFormFromConfig(property);
+                        // Update UI for current language after form is populated
+                        if (this.currentLanguage) {
+                            this.updateUIForLanguage(this.currentLanguage);
+                        }
                     }, 100);
                     
                     // Load recommendations and appliances
@@ -566,6 +570,10 @@ async autoLoadExistingConfig() {
             // Use a small delay to ensure DOM is ready
             setTimeout(() => {
                 this.populateFormFromConfig(config);
+                // Update UI for current language after form is populated
+                if (this.currentLanguage) {
+                    this.updateUIForLanguage(this.currentLanguage);
+                }
             }, 100);
             
             // Load recommendations and appliances from config if available
@@ -610,6 +618,47 @@ async autoLoadExistingConfig() {
             this.updateRecommendationsList();
             this.updateAppliancesList();
             this.updateFAQsList();
+            
+            // If we have a property ID but no allProperties array, try to load from server
+            // This ensures the property selector is populated
+            if (this.currentPropertyId && (!this.allProperties || this.allProperties.length === 0)) {
+                console.log('🔄 Property ID found but no allProperties, fetching from server...');
+                // Try to get user and fetch properties
+                try {
+                    let user = null;
+                    if (typeof getCurrentUser === 'function') {
+                        user = getCurrentUser();
+                    }
+                    if (user && (user.userId || user.id)) {
+                        const userId = user.userId || user.id;
+                        const response = await fetch(`/api/user/${userId}/properties`, {
+                            method: 'GET',
+                            credentials: 'include',
+                            cache: 'no-cache'
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success && data.properties && data.properties.length > 0) {
+                                const seenIds = new Set();
+                                this.allProperties = data.properties.filter(p => {
+                                    const propertyId = p.propertyId || p.id;
+                                    if (!propertyId || seenIds.has(propertyId)) {
+                                        return false;
+                                    }
+                                    seenIds.add(propertyId);
+                                    return true;
+                                });
+                                this.populatePropertySelector();
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Could not fetch properties for selector:', error);
+                }
+            } else if (this.allProperties && this.allProperties.length > 0) {
+                // Properties already loaded, just populate selector
+                this.populatePropertySelector();
+            }
             
             console.log('✅ Configuration loaded from localStorage');
             
@@ -2060,6 +2109,12 @@ updateUIForLanguage(lang) {
     
     // Update form labels and placeholders
     this.updateFormLabels(t);
+    
+    // Re-populate property selector if properties are already loaded
+    // This ensures the dropdown doesn't disappear when language changes
+    if (this.allProperties && this.allProperties.length > 0) {
+        this.populatePropertySelector();
+    }
 }
 
 updateFormLabels(t) {
