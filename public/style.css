@@ -879,4 +879,129 @@ body {
     
     .message-content {
         padding: 12px 15px;
-        font-size: 0.9r
+        font-size: 0.9rem;
+        max-width: 90%;
+    }
+    
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    .header-text h2 {
+        font-size: 1rem;
+    }
+    
+    .header-text p {
+        font-size: 0.75rem;
+    }
+}
+
+/* Desktop: Keep centered container with margins */
+@media (min-width: 769px) {
+    body {
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .chat-container {
+        margin: 0 auto;
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+    }
+    
+    .chat-header {
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .chat-input-container {
+        border-radius: 0 0 20px 20px;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 481px) and (max-width: 768px) {
+    .chat-container {
+        max-width: 100%;
+        height: 100vh;
+    }
+    
+    .header-controls {
+        gap: 8px;
+    }
+    
+    .quick-appliance-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Large mobile / Small tablet */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .chat-container {
+        max-width: 90%;
+    }
+}
+
+/* ================================================ */
+/* DESKTOP / LAPTOP OPTIMIZATIONS */
+/* ================================================ */
+@media (min-width: 769px) {
+    body {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 20px !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+    }
+    
+    .chat-container {
+        max-height: 90vh !important;
+        height: auto !important;
+        max-width: 800px !important;
+    }
+    
+    /* Make sure content containers can scroll */
+    .container, .section, main {
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+    }
+}
+
+/* Large desktop screens */
+@media (min-width: 1200px) {
+    .chat-container {
+        max-width: 900px;
+    }
+}
+
+/* ================================================ */
+/* AUTHENTICATION STYLES */
+/* ================================================ */
+
+#adminLoginModal input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+#adminLoginModal button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+#adminLoginModal #loginBtn:hover {
+    background: #2980b9 !important;
+}
+
+#adminLoginModal button:last-child:hover {
+    background: #7f8c8d !important;
+}
+
+/* Logout button hover effect */
+#adminLogoutBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
