@@ -392,4 +392,36 @@ function addLogoutButton() {
 
 // Check authentication
 function checkAdminAccess() {
-    const adminPages = ['/admin', '/admin.html
+    const adminPages = ['/admin', '/admin.html'];
+    const currentPath = window.location.pathname;
+    
+    const isAdminPage = adminPages.some(page => 
+        currentPath.includes(page) || currentPath.endsWith(page.replace('.html', ''))
+    );
+    
+    if (!isAdminPage) return;
+    
+    // If not authenticated, show login modal
+    if (!isAuthenticated()) {
+        showLoginModal();
+    } else {
+        addLogoutButton();
+    }
+}
+
+// Initialize auth system
+function initAuthSystem() {
+    checkAdminAccess();
+}
+
+// Make functions available globally
+window.isAuthenticated = isAuthenticated;
+window.login = login;
+window.register = register;
+window.getCurrentUser = getCurrentUser;
+window.logout = logout;
+window.showLoginModal = showLoginModal;
+window.initAuthSystem = initAuthSystem;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initAuthSystem);
