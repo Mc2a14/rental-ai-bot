@@ -231,12 +231,15 @@ body {
 /* Chat Messages */
 .chat-messages {
     flex: 1;
+    min-height: 0;
     padding: 20px;
     overflow-y: auto;
     overflow-x: hidden;
     background: var(--bg-chat);
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     scroll-behavior: smooth;
+    display: flex;
+    flex-direction: column;
 }
 
 .message {
@@ -376,8 +379,12 @@ body {
 /* Input Area */
 .chat-input-container {
     padding: 20px;
+    padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
     background: var(--bg-chat);
     border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }
 
 .input-wrapper {
