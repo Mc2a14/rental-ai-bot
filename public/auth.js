@@ -323,28 +323,49 @@ function addLogoutButton() {
     const currentUser = getCurrentUser();
     if (!currentUser) return;
     
-    const logoutBtn = document.createElement('button');
-    logoutBtn.id = 'adminLogoutBtn';
-    logoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout (${currentUser.username})`;
-    logoutBtn.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: white;
-        color: #e74c3c;
-        border: 2px solid #e74c3c;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        cursor: pointer;
-        z-index: 1000;
-        transition: all 0.3s ease;
-        box-shadow: 0 3px 6px rgba(231, 76, 60, 0.2);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    `;
+    // Find the admin header to place logout button there
+    const adminHeader = document.querySelector('.admin-header');
+    if (!adminHeader) {
+        console.warn('Admin header not found, cannot add logout button');
+        return;
+    }
+    
+    // Check if logout button already exists in header
+    let logoutBtn = document.getElementById('adminLogoutBtn');
+    if (logoutBtn) {
+        // Update existing button
+        logoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout`;
+    } else {
+        // Create new logout button
+        logoutBtn = document.createElement('button');
+        logoutBtn.id = 'adminLogoutBtn';
+        logoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout`;
+        logoutBtn.style.cssText = `
+            background: white;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(231, 76, 60, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        `;
+        
+        // Add to header's top row (next to GuestBud title)
+        const headerTopRow = adminHeader.querySelector('div[style*="justify-content: space-between"]');
+        if (headerTopRow) {
+            headerTopRow.appendChild(logoutBtn);
+        } else {
+            // Fallback: append to header
+            adminHeader.appendChild(logoutBtn);
+        }
+    }
     
     logoutBtn.addEventListener('mouseenter', () => {
         logoutBtn.style.background = '#e74c3c';
@@ -362,13 +383,11 @@ function addLogoutButton() {
     
     logoutBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (confirm(`Logout ${currentUser.username}?`)) {
+        if (confirm('Logout?')) {
             logout();
             window.location.href = '/';
         }
     });
-    
-    document.body.appendChild(logoutBtn);
 }
 
 // Check authentication
