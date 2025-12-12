@@ -232,30 +232,24 @@
                 flex-shrink: 0;
             }
             
-            /* Navigation buttons at bottom - appear on scroll */
+            /* Navigation buttons at bottom - always visible but can slide */
             .nav-buttons {
                 position: fixed;
-                bottom: -100px;
+                bottom: 0;
                 left: 0;
                 right: 0;
                 flex-shrink: 0;
-                padding: 12px 16px;
+                padding: 14px 16px;
                 padding-bottom: max(20px, calc(20px + env(safe-area-inset-bottom)));
                 border-top-left-radius: 28px;
                 border-top-right-radius: 28px;
-                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
                 z-index: 100;
                 background: white;
-                border-top: 1px solid #e1e5e9;
-                transition: bottom 0.3s ease;
+                border-top: 2px solid #e1e5e9;
                 display: flex;
                 gap: 10px;
                 justify-content: center;
-            }
-            
-            /* Show nav buttons when scrolling or near bottom */
-            .nav-buttons.visible {
-                bottom: 0;
             }
             
             /* Button group for side-by-side layout */
@@ -276,7 +270,12 @@
             
             /* Adjust form padding since buttons are fixed */
             form#propertyConfig {
-                padding-bottom: 100px !important;
+                padding-bottom: 120px !important;
+            }
+            
+            /* Ensure first page has enough content to scroll */
+            #section1 {
+                min-height: calc(100vh - 200px);
             }
             
             
