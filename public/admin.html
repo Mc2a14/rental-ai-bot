@@ -162,17 +162,18 @@
                 margin: 6px 0 0 0;
             }
             
-            /* Reset button in header - mobile */
-            #resetBtnContainer {
-                position: absolute;
-                top: 8px;
-                right: 8px;
-                z-index: 10;
+            /* Utility buttons (Reset, Backup) at bottom */
+            #utilityButtons {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+                margin-top: 10px;
             }
             
-            #resetBtnContainer button {
-                padding: 6px 10px;
-                font-size: 0.75rem;
+            #utilityButtons button {
+                flex: 1;
+                padding: 10px 12px;
+                font-size: 0.85rem;
             }
             
             .admin-header h1 {
@@ -211,7 +212,7 @@
                 -webkit-overflow-scrolling: touch !important;
                 padding: 20px;
                 padding-top: 24px;
-                padding-bottom: 120px !important;
+                padding-bottom: 180px !important;
                 position: relative;
                 height: 100%;
                 display: block !important;
@@ -287,14 +288,9 @@
                 font-size: 0.9rem;
             }
             
-            /* Adjust form padding since buttons are fixed */
+            /* Adjust form padding since buttons are fixed - increase significantly */
             form#propertyConfig {
-                padding-bottom: 120px !important;
-            }
-            
-            /* Ensure first page has enough content to scroll */
-            #section1 {
-                min-height: calc(100vh - 200px);
+                padding-bottom: 180px !important;
             }
             
             

@@ -1544,24 +1544,19 @@ setupResetButton() {
     resetBtn.id = 'resetBtn';
     resetBtn.className = 'btn btn-danger';
     resetBtn.innerHTML = '<i class="fas fa-trash"></i> Reset All Data';
-    resetBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 101; padding: 8px 12px; font-size: 0.8rem;';
     
-    // Add to admin header instead of nav buttons
-    const adminHeader = document.querySelector('.admin-header');
-    if (adminHeader) {
-        // Create a container for the reset button in header
-        let resetContainer = document.getElementById('resetBtnContainer');
-        if (!resetContainer) {
-            resetContainer = document.createElement('div');
-            resetContainer.id = 'resetBtnContainer';
-            resetContainer.style.cssText = 'position: absolute; top: 10px; right: 10px; z-index: 10;';
-            adminHeader.style.position = 'relative';
-            adminHeader.appendChild(resetContainer);
+    // Add to nav buttons area, next to Download Backup
+    const navButtons = document.querySelector('.nav-buttons');
+    if (navButtons) {
+        // Find or create a container for utility buttons (Reset, Backup)
+        let utilityButtons = document.getElementById('utilityButtons');
+        if (!utilityButtons) {
+            utilityButtons = document.createElement('div');
+            utilityButtons.id = 'utilityButtons';
+            utilityButtons.style.cssText = 'display: flex; gap: 10px; width: 100%; margin-top: 10px;';
+            navButtons.appendChild(utilityButtons);
         }
-        resetContainer.appendChild(resetBtn);
-    } else {
-        // Fallback: add to body
-        document.body.appendChild(resetBtn);
+        utilityButtons.appendChild(resetBtn);
     }
     
     resetBtn.addEventListener('click', () => {
