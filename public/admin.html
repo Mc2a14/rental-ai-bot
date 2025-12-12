@@ -171,19 +171,15 @@
             #propertyConfig {
                 flex: 1;
                 min-height: 0;
-                overflow-y: auto;
-                overflow-x: hidden;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch;
                 padding: 20px;
                 padding-top: 24px;
-                padding-bottom: 200px; /* Extra space for nav buttons */
-                display: flex;
-                flex-direction: column;
-            }
-            
-            /* Ensure form sections can scroll */
-            .form-section {
-                overflow: visible;
+                padding-bottom: 250px !important; /* Extra space for nav buttons - ensure it's large enough */
+                position: relative;
+                height: 100%;
+                max-height: 100%;
             }
             
             /* Force scrolling to work - ensure container allows flex child to shrink */
@@ -192,24 +188,28 @@
             }
             
             .admin-header {
-                flex: 0 0 auto;
-                min-height: auto;
+                flex-shrink: 0;
             }
             
             .nav-buttons {
-                flex: 0 0 auto;
-                min-height: auto;
+                flex-shrink: 0;
             }
             
-            /* Ensure propertyConfig takes maximum available space and can scroll - match Guest app pattern */
+            /* CRITICAL: Ensure propertyConfig can scroll - match Guest app pattern exactly */
             #propertyConfig {
                 flex: 1;
                 min-height: 0;
+                overflow-y: auto !important;
             }
             
             /* Remove any height constraints that might prevent scrolling */
-            #propertyConfig * {
-                max-height: none !important;
+            .form-section {
+                overflow: visible;
+            }
+            
+            /* Ensure all content inside can expand */
+            #propertyConfig > * {
+                flex-shrink: 0;
             }
             
             /* Navigation buttons at bottom - sticky positioning */
