@@ -730,7 +730,7 @@ body {
     
     .chat-input-container {
         padding: 20px;
-        padding-bottom: max(5px, calc(5px + env(safe-area-inset-bottom))); /* Lowered by 1/2 inch (12px) - now at 5px */
+        padding-bottom: max(0px, calc(0px + env(safe-area-inset-bottom))); /* Lowered by another 1/2 inch - now at 0px */
         background: var(--bg-chat);
         border-top: 1px solid var(--border-color);
         border-radius: 0;
@@ -742,7 +742,7 @@ body {
     }
     
     .chat-messages {
-        padding-bottom: 70px; /* Reduced padding to match lower input position */
+        padding-bottom: 60px; /* Reduced padding to match lower input position */
     }
     
     #messageInput {
@@ -831,7 +831,7 @@ body {
     .chat-input-container {
         flex-shrink: 0;
         padding: 16px 20px;
-        padding-bottom: max(5px, calc(5px + env(safe-area-inset-bottom))); /* Lowered by 1/2 inch (12px) - now at 5px */
+        padding-bottom: max(0px, calc(0px + env(safe-area-inset-bottom))); /* Lowered by another 1/2 inch - now at 0px */
         background: var(--bg-chat);
         border-top: 1px solid var(--border-color);
         border-radius: 0;
