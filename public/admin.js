@@ -8,6 +8,7 @@ class PropertySetup {
     this.recommendations = [];
     this.appliances = [];
     this.faqs = []; // Store FAQs
+    this.instructions = []; // Store general instructions (like FAQs)
     this.images = []; // Store images
     this.currentPropertyId = null; // Store the current property ID for updates
     this.allProperties = []; // Store all user properties for selector
@@ -31,6 +32,7 @@ class PropertySetup {
         this.loadRecommendations();
         this.loadAppliances();
         this.loadFAQs();
+        this.loadInstructions();
         this.loadImages();
     }
     
@@ -205,6 +207,26 @@ initializeEventListeners() {
             console.log("✅ Add FAQ button listener added");
         } else {
             console.log("⚠️ Add FAQ button not found");
+        }
+        
+        // Add Instruction button
+        const addInstructionBtn = document.getElementById('addInstructionBtn');
+        if (addInstructionBtn) {
+            addInstructionBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("📝 Add Instruction button clicked");
+                if (self) {
+                    self.addInstruction();
+                } else if (window.propertySetup) {
+                    window.propertySetup.addInstruction();
+                } else {
+                    alert('System not ready. Please wait for page to load.');
+                }
+            });
+            console.log("✅ Add Instruction button listener added");
+        } else {
+            console.log("⚠️ Add Instruction button not found");
         }
         
         // Property selector
@@ -518,12 +540,25 @@ async autoLoadExistingConfig() {
                         this.images = [];
                     }
                     
-                    // Load General Instructions
-                    if (property.generalInstructions) {
-                        const generalInstructionsInput = document.getElementById('generalInstructions');
-                        if (generalInstructionsInput) {
-                            generalInstructionsInput.value = property.generalInstructions;
-                        }
+                    // Load Instructions (prefer structured array, fallback to string)
+                    if (property.instructions && Array.isArray(property.instructions)) {
+                        this.instructions = property.instructions;
+                        localStorage.setItem('rental_ai_instructions', JSON.stringify(property.instructions));
+                        console.log(`📝 Loaded ${this.instructions.length} instructions from server`);
+                    } else if (property.generalInstructions) {
+                        // Convert old string format to array format
+                        const instructions = property.generalInstructions.split('\n\n').filter(i => i.trim()).map(inst => {
+                            const parts = inst.split(':');
+                            if (parts.length >= 2) {
+                                return { title: parts[0].trim(), content: parts.slice(1).join(':').trim() };
+                            }
+                            return { title: 'General Instruction', content: inst.trim() };
+                        });
+                        this.instructions = instructions;
+                        localStorage.setItem('rental_ai_instructions', JSON.stringify(this.instructions));
+                        console.log(`📝 Converted ${this.instructions.length} instructions from old format`);
+                    } else {
+                        this.instructions = [];
                     }
                     
                     // Update the UI to show loaded recommendations, appliances, FAQs, and images
@@ -534,6 +569,7 @@ async autoLoadExistingConfig() {
                         this.updateRecommendationsList();
                         this.updateAppliancesList();
                         this.updateFAQsList();
+                        this.updateInstructionsList();
                         this.updateImagesList();
                         console.log('✅ UI lists updated');
                     }, 200);
@@ -621,18 +657,35 @@ async autoLoadExistingConfig() {
                 }
             }
             
-            // Load General Instructions
-            if (config.generalInstructions) {
-                const generalInstructionsInput = document.getElementById('generalInstructions');
-                if (generalInstructionsInput) {
-                    generalInstructionsInput.value = config.generalInstructions;
+            // Load Instructions (prefer structured array, fallback to string)
+            if (config.instructions && Array.isArray(config.instructions)) {
+                this.instructions = config.instructions;
+                console.log(`📝 Loaded ${this.instructions.length} instructions from localStorage config`);
+            } else if (config.generalInstructions) {
+                // Convert old string format to array format
+                const instructions = config.generalInstructions.split('\n\n').filter(i => i.trim()).map(inst => {
+                    const parts = inst.split(':');
+                    if (parts.length >= 2) {
+                        return { title: parts[0].trim(), content: parts.slice(1).join(':').trim() };
+                    }
+                    return { title: 'General Instruction', content: inst.trim() };
+                });
+                this.instructions = instructions;
+                console.log(`📝 Converted ${this.instructions.length} instructions from old format`);
+            } else {
+                // Also try loading from separate localStorage key
+                const savedInstructions = localStorage.getItem('rental_ai_instructions');
+                if (savedInstructions) {
+                    this.instructions = JSON.parse(savedInstructions);
+                    console.log(`📝 Loaded ${this.instructions.length} instructions from localStorage key`);
                 }
             }
             
-            // Update the UI to show loaded recommendations, appliances, FAQs, and images
+            // Update the UI to show loaded recommendations, appliances, FAQs, instructions, and images
             this.updateRecommendationsList();
             this.updateAppliancesList();
             this.updateFAQsList();
+            this.updateInstructionsList();
             this.updateImagesList();
             
             // If we have a property ID but no allProperties array, try to load from server
@@ -787,13 +840,8 @@ populateFormFromConfig(config) {
         console.error('❌ houseRules field not found in DOM!');
     }
     
-    const generalInstructionsField = document.getElementById('generalInstructions');
-    if (generalInstructionsField) {
-        generalInstructionsField.value = config.generalInstructions || '';
-        console.log(`✅ Set generalInstructions to: "${config.generalInstructions || ''}"`);
-    } else {
-        console.error('❌ generalInstructions field not found in DOM!');
-    }
+    // Instructions are now handled as an array, not a single field
+    // This is kept for backward compatibility but won't be used
     
     console.log('✅ Form population complete');
 }
@@ -950,7 +998,7 @@ updatePreview() {
             <strong>House Rules:</strong> ${formData.houseRules ? '✓ Set' : 'Not set'}
         </div>
         <div class="preview-item">
-            <strong>General Instructions:</strong> ${formData.generalInstructions ? '✓ Set' : 'Not set'}
+            <strong>General Instructions:</strong> ${this.instructions.length} instructions
         </div>
         <div class="preview-item">
             <strong>Images:</strong> ${this.images.length} images
@@ -980,8 +1028,7 @@ getFormData() {
         lateCheckout: document.getElementById('lateCheckout')?.value || '',
         wifiDetails: document.getElementById('wifiDetails')?.value || '',
         amenities: document.getElementById('amenities')?.value || '',
-        houseRules: document.getElementById('houseRules')?.value || '',
-        generalInstructions: document.getElementById('generalInstructions')?.value || ''
+        houseRules: document.getElementById('houseRules')?.value || ''
     };
 }
 
@@ -1035,8 +1082,9 @@ async saveConfiguration(e) {
         // Rules
         houseRules: formData.houseRules || '',
         
-        // General Instructions
-        generalInstructions: formData.generalInstructions || '',
+        // General Instructions (as array, like FAQs)
+        generalInstructions: this.instructions.length > 0 ? this.instructions.map(i => `${i.title}: ${i.content}`).join('\n\n') : '',
+        instructions: this.instructions, // Store as structured array
         
         // Appliances, Recommendations, FAQs & Images
         appliances: this.appliances,
@@ -1095,6 +1143,7 @@ async saveConfiguration(e) {
         localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(propertyData));
         localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
         localStorage.setItem('rental_ai_appliances', JSON.stringify(this.appliances));
+        localStorage.setItem('rental_ai_instructions', JSON.stringify(this.instructions));
         localStorage.setItem('rental_ai_images', JSON.stringify(this.images));
         
         // Generate guest link
@@ -1404,6 +1453,133 @@ saveFAQs() {
         console.log(`❓ Saved ${this.faqs.length} FAQs`);
     } catch (error) {
         console.error('Error saving FAQs:', error);
+    }
+}
+
+// General Instructions Management (similar to FAQs)
+loadInstructions() {
+    try {
+        const saved = localStorage.getItem('rental_ai_instructions');
+        this.instructions = saved ? JSON.parse(saved) : [];
+        console.log(`📝 Loaded ${this.instructions.length} instructions`);
+    } catch (error) {
+        console.error('Error loading instructions:', error);
+        this.instructions = [];
+    }
+}
+
+updateInstructionsList() {
+    const container = document.getElementById('instructions-list');
+    if (!container) {
+        console.warn('⚠️ instructions-list container not found');
+        return;
+    }
+    
+    if (this.instructions.length === 0) {
+        container.innerHTML = `
+            <div class="no-instructions">
+                <i class="fas fa-info-circle"></i>
+                <p>No instructions added yet. Add instructions to help guests find parking, building access, key locations, etc.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = this.instructions.map((instruction, index) => `
+        <div class="instruction-item">
+            <div class="instruction-item-header">
+                <div class="instruction-title-text">${escapeHtml(instruction.title)}</div>
+                <div class="instruction-actions">
+                    <button class="btn-small btn-edit" onclick="editInstruction(${index})" title="Edit Instruction">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-delete" onclick="removeInstruction(${index})" title="Delete Instruction">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="instruction-content-text">${escapeHtml(instruction.content)}</div>
+        </div>
+    `).join('');
+}
+
+addInstruction() {
+    const titleInput = document.getElementById('instruction-title');
+    const contentInput = document.getElementById('instruction-content');
+    
+    if (!titleInput || !contentInput) return;
+    
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+    
+    if (!title || !content) {
+        this.showTempMessage('Please enter both title and instruction details', 'warning');
+        return;
+    }
+    
+    const newInstruction = { title, content };
+    this.instructions.push(newInstruction);
+    this.saveInstructions();
+    this.updateInstructionsList();
+    
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
+    
+    // Clear form
+    titleInput.value = '';
+    contentInput.value = '';
+    
+    this.showTempMessage('Instruction added successfully!', 'success');
+}
+
+editInstruction(index) {
+    const instruction = this.instructions[index];
+    if (!instruction) return;
+    
+    const titleInput = document.getElementById('instruction-title');
+    const contentInput = document.getElementById('instruction-content');
+    
+    if (titleInput) titleInput.value = instruction.title;
+    if (contentInput) contentInput.value = instruction.content;
+    
+    // Remove the old instruction
+    this.instructions.splice(index, 1);
+    this.updateInstructionsList();
+    
+    // Scroll to form
+    if (titleInput) {
+        titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        titleInput.focus();
+    }
+    
+    this.showTempMessage('Instruction loaded for editing. Update and click "Add Instruction" to save.', 'info');
+}
+
+removeInstruction(index) {
+    if (!confirm('Are you sure you want to delete this instruction?')) {
+        return;
+    }
+    
+    this.instructions.splice(index, 1);
+    this.saveInstructions();
+    this.updateInstructionsList();
+    
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
+    
+    this.showTempMessage('Instruction removed', 'success');
+}
+
+saveInstructions() {
+    try {
+        localStorage.setItem('rental_ai_instructions', JSON.stringify(this.instructions));
+        console.log(`📝 Saved ${this.instructions.length} instructions`);
+    } catch (error) {
+        console.error('Error saving instructions:', error);
     }
 }
 
@@ -1864,10 +2040,12 @@ setupResetButton() {
             this.appliances = [];
             this.recommendations = [];
             this.faqs = [];
+            this.instructions = [];
             this.images = [];
             this.updateAppliancesList();
             this.updateRecommendationsList();
             this.updateFAQsList();
+            this.updateInstructionsList();
             this.updateImagesList();
             
             this.showTempMessage('All data has been reset.', 'success');
@@ -2048,6 +2226,25 @@ async switchProperty(propertyId) {
         this.updateFAQsList();
     }
     
+    if (property.instructions && Array.isArray(property.instructions)) {
+        this.instructions = property.instructions;
+        this.updateInstructionsList();
+    } else if (property.generalInstructions) {
+        // Convert old format
+        const instructions = property.generalInstructions.split('\n\n').filter(i => i.trim()).map(inst => {
+            const parts = inst.split(':');
+            if (parts.length >= 2) {
+                return { title: parts[0].trim(), content: parts.slice(1).join(':').trim() };
+            }
+            return { title: 'General Instruction', content: inst.trim() };
+        });
+        this.instructions = instructions;
+        this.updateInstructionsList();
+    } else {
+        this.instructions = [];
+        this.updateInstructionsList();
+    }
+    
     if (property.images && Array.isArray(property.images)) {
         this.images = property.images;
         this.updateImagesList();
@@ -2094,10 +2291,15 @@ createNewProperty() {
     this.recommendations = [];
     this.appliances = [];
     this.faqs = [];
+    this.instructions = [];
+    this.images = [];
     
     // Update UI
     this.updateRecommendationsList();
     this.updateAppliancesList();
+    this.updateFAQsList();
+    this.updateInstructionsList();
+    this.updateImagesList();
     this.updateFAQsList();
     
     // Update selector

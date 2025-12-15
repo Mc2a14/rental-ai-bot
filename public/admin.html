@@ -904,6 +904,65 @@
             border: 1px solid #bee5eb;
         }
 
+        /* General Instructions Styles (similar to FAQs) */
+        .general-instructions-management {
+            margin-top: 20px;
+        }
+        
+        .add-instruction-form {
+            margin-bottom: 20px;
+        }
+        
+        .instructions-list {
+            margin-top: 15px;
+        }
+        
+        .instruction-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .instruction-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .instruction-title-text {
+            font-weight: bold;
+            color: #2c3e50;
+            flex: 1;
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+        
+        .instruction-content-text {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .instruction-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .no-instructions {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        
+        .no-instructions i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #bdc3c7;
+        }
+
         /* Edit Mode Banner */
         .edit-mode-banner {
             animation: fadeIn 0.5s ease;
@@ -1165,57 +1224,6 @@
                     <div class="form-help">List your specific house rules for guests to follow. These will be shared when guests ask about rules.</div>
                 </div>
 
-                <!-- General Instructions Section -->
-                <h3 style="margin-top: 30px;"><i class="fas fa-info-circle"></i> General Instructions for Guests</h3>
-                <p class="section-description">Add helpful instructions that your AI assistant can share with guests. This helps reduce repetitive questions about parking, directions, building access, etc.</p>
-                
-                <div class="form-group">
-                    <label for="generalInstructions">General Instructions</label>
-                    <textarea id="generalInstructions" placeholder="Add instructions that will help guests navigate and access your property:&#10;&#10;• Parking: Park in the designated spot labeled 'Unit 5' on the right side of the building.&#10;• Building Access: Enter through the main door. The code is 1234#.&#10;• Unit Location: Take the elevator to the 3rd floor, turn left, Unit 305 is at the end of the hall.&#10;• Key Lock: The key is in a lockbox on the front door. Code is 5678.&#10;• Building Entrance: Look for the blue awning with 'Sunset Apartments' sign.&#10;• QR Code: Scan the QR code on the welcome sheet for WiFi and check-in instructions." rows="8"></textarea>
-                    <div class="form-help">These instructions will be available to the AI bot to answer common guest questions about parking, directions, building access, key locations, etc.</div>
-                </div>
-
-                <!-- Image Management Section -->
-                <h3 style="margin-top: 30px;"><i class="fas fa-images"></i> Helpful Images for Guests</h3>
-                <p class="section-description">Upload images with labels to help guests find important locations like parking, key locks, building entrances, QR codes, etc. These images will be available to the AI bot to reference when answering guest questions.</p>
-                
-                <div class="image-management" style="margin-bottom: 30px;">
-                    <!-- Add New Image Form -->
-                    <div class="add-image-form" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9; margin-bottom: 20px;">
-                        <h4>Add New Image</h4>
-                        
-                        <div class="form-group">
-                            <label for="image-label">Image Label *</label>
-                            <input type="text" id="image-label" placeholder="e.g., Parking Lot, Key Lock, Building Entrance, QR Code" class="form-input">
-                            <div class="form-help">A clear label describing what this image shows (e.g., "Parking Lot", "Key Lock", "Building Entrance", "QR Code")</div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="image-description">Description (Optional)</label>
-                            <textarea id="image-description" placeholder="Additional details about this image or location..." class="form-textarea" rows="2"></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="image-file">Select Image *</label>
-                            <input type="file" id="image-file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" class="form-input">
-                            <div class="form-help">Upload an image (JPEG, PNG, GIF, or WebP). Max size: 5MB</div>
-                        </div>
-                        
-                        <button type="button" class="btn btn-primary" id="uploadImageBtn" onclick="uploadImage()">
-                            <i class="fas fa-upload"></i> Upload Image
-                        </button>
-                        <div id="image-upload-status" style="margin-top: 10px; display: none;"></div>
-                    </div>
-                    
-                    <!-- Current Images List -->
-                    <div class="current-images" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9;">
-                        <h4>Your Images</h4>
-                        <div id="images-list" class="images-list">
-                            <!-- Images will be listed here -->
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Appliance Instructions Section -->
                 <h3 style="margin-top: 30px;"><i class="fas fa-tools"></i> Appliance Instructions</h3>
                 <p class="section-description">Add instructions for appliances guests commonly ask about. Include photos to make it easy!</p>
@@ -1367,6 +1375,82 @@
                         <h4>Your Current FAQs</h4>
                         <div id="faqs-list" class="faqs-list">
                             <!-- FAQs will be listed here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- General Instructions Section -->
+                <h3 style="margin-top: 30px;"><i class="fas fa-info-circle"></i> General Instructions for Guests</h3>
+                <p class="section-description">Add helpful instructions that your AI assistant can share with guests. This helps reduce repetitive questions about parking, directions, building access, etc.</p>
+                
+                <div class="general-instructions-management" style="margin-bottom: 30px;">
+                    <!-- Add New Instruction Form -->
+                    <div class="add-instruction-form" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9; margin-bottom: 20px;">
+                        <h4>Add New Instruction</h4>
+                        
+                        <div class="form-group">
+                            <label for="instruction-title">Instruction Title *</label>
+                            <input type="text" id="instruction-title" placeholder="e.g., Parking, Building Access, Key Location" class="form-input">
+                            <div class="form-help">A short title for this instruction (e.g., "Parking", "Building Access", "Key Location")</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="instruction-content">Instruction Details *</label>
+                            <textarea id="instruction-content" placeholder="Enter the detailed instructions:&#10;&#10;Park in the designated spot labeled 'Unit 5' on the right side of the building. Look for the blue sign with your unit number." class="form-textarea" rows="4"></textarea>
+                            <div class="form-help">Provide clear, detailed instructions that will help guests find or access this location/feature.</div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" id="addInstructionBtn">
+                            <i class="fas fa-plus"></i> Add Instruction
+                        </button>
+                    </div>
+                    
+                    <!-- Current Instructions List -->
+                    <div class="current-instructions" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9;">
+                        <h4>Your Current Instructions</h4>
+                        <div id="instructions-list" class="instructions-list">
+                            <!-- Instructions will be listed here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Management Section -->
+                <h3 style="margin-top: 30px;"><i class="fas fa-images"></i> Helpful Images for Guests</h3>
+                <p class="section-description">Upload images with labels to help guests find important locations like parking, key locks, building entrances, QR codes, etc. These images will be available to the AI bot to reference when answering guest questions.</p>
+                
+                <div class="image-management" style="margin-bottom: 30px;">
+                    <!-- Add New Image Form -->
+                    <div class="add-image-form" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9; margin-bottom: 20px;">
+                        <h4>Add New Image</h4>
+                        
+                        <div class="form-group">
+                            <label for="image-label">Image Label *</label>
+                            <input type="text" id="image-label" placeholder="e.g., Parking Lot, Key Lock, Building Entrance, QR Code" class="form-input">
+                            <div class="form-help">A clear label describing what this image shows (e.g., "Parking Lot", "Key Lock", "Building Entrance", "QR Code")</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="image-description">Description (Optional)</label>
+                            <textarea id="image-description" placeholder="Additional details about this image or location..." class="form-textarea" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="image-file">Select Image *</label>
+                            <input type="file" id="image-file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" class="form-input">
+                            <div class="form-help">Upload an image (JPEG, PNG, GIF, or WebP). Max size: 5MB</div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" id="uploadImageBtn" onclick="uploadImage()">
+                            <i class="fas fa-upload"></i> Upload Image
+                        </button>
+                        <div id="image-upload-status" style="margin-top: 10px; display: none;"></div>
+                    </div>
+                    
+                    <!-- Current Images List -->
+                    <div class="current-images" style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e1e5e9;">
+                        <h4>Your Images</h4>
+                        <div id="images-list" class="images-list">
+                            <!-- Images will be listed here -->
                         </div>
                     </div>
                 </div>

@@ -45,8 +45,8 @@ class PropertyService {
         host_contact, maintenance_contact, emergency_contact,
         checkin_time, checkout_time, late_checkout,
         amenities, house_rules, recommendations, appliances, faqs,
-        general_instructions, images
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        general_instructions, instructions, images
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING *
     `, [
       propertyId,
@@ -66,6 +66,7 @@ class PropertyService {
       JSON.stringify(propertyData.appliances || []),
       JSON.stringify(propertyData.faqs || []),
       propertyData.generalInstructions || null,
+      JSON.stringify(propertyData.instructions || []),
       JSON.stringify(propertyData.images || [])
     ]);
 
@@ -91,6 +92,7 @@ class PropertyService {
       userId: userId,
       ...propertyData,
       generalInstructions: propertyData.generalInstructions || null,
+      instructions: propertyData.instructions || [],
       images: propertyData.images || [],
       created: new Date().toISOString(),
       updated: new Date().toISOString()
@@ -172,6 +174,7 @@ class PropertyService {
       appliances: typeof row.appliances === 'string' ? JSON.parse(row.appliances) : (row.appliances || []),
       faqs: typeof row.faqs === 'string' ? JSON.parse(row.faqs) : (row.faqs || []),
       generalInstructions: row.general_instructions || null,
+      instructions: typeof row.instructions === 'string' ? JSON.parse(row.instructions) : (row.instructions || []),
       images: typeof row.images === 'string' ? JSON.parse(row.images) : (row.images || []),
       created: row.created_at?.toISOString(),
       updated: row.updated_at?.toISOString()
@@ -348,6 +351,10 @@ class PropertyService {
     if (updates.generalInstructions !== undefined) {
       setClause.push(`general_instructions = $${paramCount++}`);
       values.push(updates.generalInstructions);
+    }
+    if (updates.instructions !== undefined) {
+      setClause.push(`instructions = $${paramCount++}`);
+      values.push(JSON.stringify(updates.instructions));
     }
     if (updates.images !== undefined) {
       setClause.push(`images = $${paramCount++}`);

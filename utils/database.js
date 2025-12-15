@@ -89,6 +89,7 @@ class Database {
           appliances JSONB DEFAULT '[]',
           faqs JSONB DEFAULT '[]',
           general_instructions TEXT,
+          instructions JSONB DEFAULT '[]',
           images JSONB DEFAULT '[]',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -135,6 +136,25 @@ class Database {
         }
       } catch (error) {
         logger.warn('ℹ️ General instructions column check:', error.message);
+      }
+
+      // Add instructions column if it doesn't exist
+      try {
+        const columnCheck = await client.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name='properties' AND column_name='instructions'
+        `);
+        
+        if (columnCheck.rows.length === 0) {
+          await client.query(`
+            ALTER TABLE properties 
+            ADD COLUMN instructions JSONB DEFAULT '[]'
+          `);
+          logger.info('✅ Instructions column added to existing properties table');
+        }
+      } catch (error) {
+        logger.warn('ℹ️ Instructions column check:', error.message);
       }
 
       // Add images column if it doesn't exist

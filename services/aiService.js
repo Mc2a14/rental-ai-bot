@@ -151,7 +151,14 @@ class AIService {
         prompt += `\nHouse Rules:\n${hostConfig.houseRules}\n`;
       }
       
-      if (hostConfig.generalInstructions) {
+      // General Instructions (prefer structured array, fallback to string)
+      if (hostConfig.instructions && Array.isArray(hostConfig.instructions) && hostConfig.instructions.length > 0) {
+        prompt += `\nGeneral Instructions for Guests:\n`;
+        hostConfig.instructions.forEach((instruction, index) => {
+          prompt += `${index + 1}. ${instruction.title}: ${instruction.content}\n`;
+        });
+        prompt += `\n`;
+      } else if (hostConfig.generalInstructions) {
         prompt += `\nGeneral Instructions for Guests:\n${hostConfig.generalInstructions}\n`;
       }
       

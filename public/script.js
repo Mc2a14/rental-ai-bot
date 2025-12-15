@@ -1587,6 +1587,12 @@ class RentalAIChat {
         formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
         formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
         
+        // Convert markdown image links to actual images
+        // Pattern: [text](url) where url is /uploads/...
+        formatted = formatted.replace(/\[([^\]]+)\]\((\/uploads\/[^\)]+)\)/g, (match, altText, imageUrl) => {
+            return `<div style="margin: 15px 0;"><img src="${imageUrl}" alt="${altText}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
+        });
+        
         return formatted;
     }
 
