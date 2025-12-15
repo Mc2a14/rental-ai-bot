@@ -23,6 +23,8 @@ router.post('/property/:propertyId/generate-faqs', analyticsController.generateF
 router.get('/property/:propertyId/notifications', notificationController.getNotifications.bind(notificationController));
 router.post('/property/:propertyId/notifications/mark-read', notificationController.markAsRead.bind(notificationController));
 router.get('/property/:propertyId/notifications/unread-count', notificationController.getUnreadCount.bind(notificationController));
+router.delete('/property/:propertyId/notifications/:notificationId', notificationController.deleteNotification.bind(notificationController));
+router.delete('/property/:propertyId/notifications/clear-all', notificationController.clearAll.bind(notificationController));
 
 module.exports = router;
 

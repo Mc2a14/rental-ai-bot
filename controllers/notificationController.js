@@ -89,6 +89,58 @@ class NotificationController {
       });
     }
   }
+
+  async deleteNotification(req, res) {
+    try {
+      const { propertyId, notificationId } = req.params;
+
+      if (!propertyId || !notificationId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Property ID and notification ID are required'
+        });
+      }
+
+      const success = await notificationService.deleteNotification(propertyId, parseInt(notificationId));
+
+      return res.json({
+        success,
+        message: success ? 'Notification deleted' : 'Failed to delete notification'
+      });
+    } catch (error) {
+      logger.error('Error deleting notification:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error deleting notification'
+      });
+    }
+  }
+
+  async clearAll(req, res) {
+    try {
+      const { propertyId } = req.params;
+
+      if (!propertyId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Property ID is required'
+        });
+      }
+
+      const success = await notificationService.clearAllNotifications(propertyId);
+
+      return res.json({
+        success,
+        message: success ? 'All notifications cleared' : 'Failed to clear notifications'
+      });
+    } catch (error) {
+      logger.error('Error clearing notifications:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error clearing notifications'
+      });
+    }
+  }
 }
 
 module.exports = new NotificationController();

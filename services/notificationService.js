@@ -227,6 +227,57 @@ class NotificationService {
       return 0;
     }
   }
+
+  /**
+   * Delete a single notification
+   * @param {string} propertyId - The property ID
+   * @param {number} notificationId - The notification ID to delete
+   * @returns {Promise<boolean>} - Success status
+   */
+  async deleteNotification(propertyId, notificationId) {
+    try {
+      if (!await this.ensureDatabase()) {
+        return false;
+      }
+
+      await database.query(
+        `DELETE FROM check_in_out_notifications 
+         WHERE property_id = $1 AND id = $2`,
+        [propertyId, notificationId]
+      );
+
+      logger.info(`Deleted notification ${notificationId} for property ${propertyId}`);
+      return true;
+    } catch (error) {
+      logger.error('Error deleting notification:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete all notifications for a property
+   * @param {string} propertyId - The property ID
+   * @returns {Promise<boolean>} - Success status
+   */
+  async clearAllNotifications(propertyId) {
+    try {
+      if (!await this.ensureDatabase()) {
+        return false;
+      }
+
+      await database.query(
+        `DELETE FROM check_in_out_notifications 
+         WHERE property_id = $1`,
+        [propertyId]
+      );
+
+      logger.info(`Cleared all notifications for property ${propertyId}`);
+      return true;
+    } catch (error) {
+      logger.error('Error clearing notifications:', error);
+      return false;
+    }
+  }
 }
 
 module.exports = new NotificationService();

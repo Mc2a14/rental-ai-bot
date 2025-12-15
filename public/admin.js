@@ -2589,6 +2589,17 @@ function initNotifications() {
         });
     }
     
+    // Clear all notifications
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', async () => {
+            if (confirm('Are you sure you want to delete all notifications? This cannot be undone.')) {
+                await clearAllNotifications();
+                loadNotifications();
+            }
+        });
+    }
+    
     // Refresh notifications
     if (refreshNotificationsBtn) {
         refreshNotificationsBtn.addEventListener('click', () => {
@@ -2663,13 +2674,18 @@ async function loadNotifications() {
             const borderColor = notif.notification_type === 'check_in' ? '#2196f3' : '#4caf50';
             
             return `
-                <div style="padding: 15px; margin: 10px; border-radius: 8px; border-left: 4px solid ${borderColor}; background: ${bgColor}; ${notif.read ? 'opacity: 0.7;' : ''}">
+                <div id="notif_${notif.id}" style="padding: 15px; margin: 10px; border-radius: 8px; border-left: 4px solid ${borderColor}; background: ${bgColor}; ${notif.read ? 'opacity: 0.7;' : ''}">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
                             <span style="font-size: 20px;">${icon}</span>
                             <strong style="color: #2c3e50;">${typeText}</strong>
+                            ${!notif.read ? '<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-left: 8px;">NEW</span>' : ''}
                         </div>
-                        <span style="font-size: 11px; color: #7f8c8d;">${timeAgo}</span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <span style="font-size: 11px; color: #7f8c8d;">${timeAgo}</span>
+                            ${!notif.read ? `<button onclick="markNotificationRead(${notif.id})" style="background: #3498db; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: 5px;" title="Mark as read">✓</button>` : ''}
+                            <button onclick="deleteNotification(${notif.id})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: 5px;" title="Delete">×</button>
+                        </div>
                     </div>
                     ${notif.guest_message ? `<p style="margin: 8px 0 0 0; color: #34495e; font-size: 13px; font-style: italic;">"${escapeHtml(notif.guest_message)}"</p>` : ''}
                     <div style="margin-top: 8px; font-size: 11px; color: #95a5a6;">${date.toLocaleString()}</div>
@@ -2702,6 +2718,70 @@ async function markAllNotificationsRead() {
         }
     } catch (error) {
         console.error('Error marking notifications as read:', error);
+    }
+}
+
+// Mark a single notification as read
+async function markNotificationRead(notificationId) {
+    try {
+        const propertyId = window.propertySetup?.currentPropertyId;
+        if (!propertyId) return;
+        
+        const response = await fetch(`/api/analytics/property/${propertyId}/notifications/mark-read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notificationIds: [notificationId] })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ Notification marked as read');
+            loadNotifications();
+            loadNotificationCount();
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+// Delete a single notification
+async function deleteNotification(notificationId) {
+    try {
+        const propertyId = window.propertySetup?.currentPropertyId;
+        if (!propertyId) return;
+        
+        const response = await fetch(`/api/analytics/property/${propertyId}/notifications/${notificationId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ Notification deleted');
+            loadNotifications();
+            loadNotificationCount();
+        }
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+    }
+}
+
+// Clear all notifications (delete all)
+async function clearAllNotifications() {
+    try {
+        const propertyId = window.propertySetup?.currentPropertyId;
+        if (!propertyId) return;
+        
+        const response = await fetch(`/api/analytics/property/${propertyId}/notifications/clear-all`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ All notifications cleared');
+            loadNotificationCount();
+        }
+    } catch (error) {
+        console.error('Error clearing notifications:', error);
     }
 }
 
