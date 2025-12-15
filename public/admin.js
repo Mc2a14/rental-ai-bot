@@ -56,6 +56,10 @@ class PropertySetup {
     
     this.setupAdditionalButtons();
     this.setupNavButtonScroll();
+    
+    // Setup progress indicator
+    this.setupProgressIndicator();
+    
     console.log("✅ PropertySetup initialized successfully");
 }
 
@@ -340,6 +344,114 @@ validateField(field) {
     }
     
     return isValid;
+}
+
+calculateProgress() {
+    // Define all fields and their weights
+    const fields = {
+        // Required fields (must be filled)
+        required: [
+            { id: 'propertyName', weight: 15 },
+            { id: 'hostContact', weight: 15 },
+            { id: 'checkInTime', weight: 15 },
+            { id: 'checkOutTime', weight: 15 }
+        ],
+        // Optional fields (nice to have)
+        optional: [
+            { id: 'propertyAddress', weight: 5 },
+            { id: 'propertyType', weight: 3 },
+            { id: 'maintenanceContact', weight: 3 },
+            { id: 'lateCheckout', weight: 2 },
+            { id: 'wifiDetails', weight: 5 },
+            { id: 'amenities', weight: 5 },
+            { id: 'houseRules', weight: 5 },
+            { id: 'recommendations', weight: 5, isArray: true },
+            { id: 'appliances', weight: 5, isArray: true },
+            { id: 'faqs', weight: 5, isArray: true },
+            { id: 'instructions', weight: 5, isArray: true },
+            { id: 'images', weight: 5, isArray: true }
+        ]
+    };
+    
+    let progress = 0;
+    let maxProgress = 0;
+    
+    // Calculate required fields (must be 100% to save)
+    fields.required.forEach(field => {
+        maxProgress += field.weight;
+        const element = document.getElementById(field.id);
+        if (element && element.value && element.value.trim()) {
+            progress += field.weight;
+        }
+    });
+    
+    // Calculate optional fields
+    fields.optional.forEach(field => {
+        maxProgress += field.weight;
+        if (field.isArray) {
+            // Check if array has items
+            const array = field.id === 'recommendations' ? this.recommendations :
+                         field.id === 'appliances' ? this.appliances :
+                         field.id === 'faqs' ? this.faqs :
+                         field.id === 'instructions' ? this.instructions :
+                         field.id === 'images' ? this.images : [];
+            if (array && array.length > 0) {
+                progress += field.weight;
+            }
+        } else {
+            const element = document.getElementById(field.id);
+            if (element && element.value && element.value.trim()) {
+                progress += field.weight;
+            }
+        }
+    });
+    
+    const percentage = maxProgress > 0 ? Math.round((progress / maxProgress) * 100) : 0;
+    return { percentage, progress, maxProgress };
+}
+
+updateProgressIndicator() {
+    const { percentage } = this.calculateProgress();
+    const progressBar = document.getElementById('progressBar');
+    const progressPercentage = document.getElementById('progressPercentage');
+    
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+    }
+    
+    if (progressPercentage) {
+        progressPercentage.textContent = `${percentage}%`;
+        
+        // Change color based on progress
+        if (percentage < 40) {
+            progressBar.style.background = '#e74c3c'; // Red
+        } else if (percentage < 70) {
+            progressBar.style.background = '#f39c12'; // Orange
+        } else {
+            progressBar.style.background = '#2ecc71'; // Green
+        }
+    }
+}
+
+setupProgressIndicator() {
+    // Update progress on any field change
+    const allFields = document.querySelectorAll('input, textarea, select');
+    allFields.forEach(field => {
+        field.addEventListener('input', () => {
+            this.updateProgressIndicator();
+        });
+        field.addEventListener('change', () => {
+            this.updateProgressIndicator();
+        });
+    });
+    
+    // Initial update
+    setTimeout(() => {
+        this.updateProgressIndicator();
+    }, 500);
+    
+    // Update when arrays change (recommendations, FAQs, etc.)
+    // This will be called from methods that modify arrays
 }
 
 validateCurrentStep() {
@@ -1337,6 +1449,7 @@ async loadFAQsFromServer(propertyId) {
 }
 
 updateFAQsList() {
+    this.updateProgressIndicator(); // Update progress when FAQs change
     const container = document.getElementById('faqs-list');
     if (!container) return;
     
@@ -1469,6 +1582,7 @@ loadInstructions() {
 }
 
 updateInstructionsList() {
+    this.updateProgressIndicator(); // Update progress when instructions change
     const container = document.getElementById('instructions-list');
     if (!container) {
         console.warn('⚠️ instructions-list container not found');
@@ -1683,6 +1797,7 @@ async uploadImage() {
         
         // Add image to local array
         this.images.push(result.image);
+        this.updateProgressIndicator(); // Update progress when image is added
         this.saveImages();
         this.updateImagesList();
         
@@ -1727,6 +1842,7 @@ removeImage(index) {
     
     // Remove from array
     this.images.splice(index, 1);
+    this.updateProgressIndicator(); // Update progress when image is removed
     this.saveImages();
     this.updateImagesList();
     
@@ -1760,6 +1876,7 @@ loadRecommendations() {
 }
 
 updateRecommendationsList() {
+    this.updateProgressIndicator(); // Update progress when recommendations change
     const container = document.getElementById('recommendations-list');
     if (!container) {
         console.warn('⚠️ recommendations-list container not found');
@@ -1892,6 +2009,7 @@ loadAppliances() {
 }
 
 updateAppliancesList() {
+    this.updateProgressIndicator(); // Update progress when appliances change
     const container = document.getElementById('appliances-list');
     if (!container) return;
     

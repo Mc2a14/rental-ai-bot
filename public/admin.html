@@ -1098,6 +1098,16 @@
                         <h1 style="margin: 0; font-size: 1.5rem; color: white !important;">GuestBud</h1>
                         <p id="adminSubtitle" style="margin: 0; font-size: 0.9rem; opacity: 0.9; color: rgba(255, 255, 255, 0.9) !important; margin-top: 2px;">Property Setup</p>
                     </div>
+                    <!-- Progress Indicator -->
+                    <div id="progressIndicator" style="background: rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 8px 16px; min-width: 120px; text-align: center; margin-left: auto;">
+                        <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.9); margin-bottom: 4px;">Setup Progress</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; background: rgba(255, 255, 255, 0.3); border-radius: 10px; height: 8px; overflow: hidden; min-width: 60px;">
+                                <div id="progressBar" style="background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 10px;"></div>
+                            </div>
+                            <span id="progressPercentage" style="font-size: 0.85rem; font-weight: bold; color: white; min-width: 35px;">0%</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1171,19 +1181,20 @@
                 <h3><i class="fas fa-home"></i> Basic Property Information</h3>
                 
                 <div class="form-group">
-                    <label for="propertyName">Property Name *</label>
+                    <label for="propertyName">Property Name <span style="color: #e74c3c;">*</span></label>
                     <input type="text" id="propertyName" required placeholder="e.g., Sunset Beach Villa">
                     <div class="form-help">This will be displayed to your guests</div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="propertyAddress">Property Address *</label>
-                    <input type="text" id="propertyAddress" required placeholder="e.g., 123 Ocean View Drive, Miami Beach, FL 33139">
+                    <label for="propertyAddress">Property Address <span style="color: #7f8c8d; font-size: 0.85rem;">(Optional)</span></label>
+                    <input type="text" id="propertyAddress" placeholder="e.g., 123 Ocean View Drive, Miami Beach, FL 33139">
+                    <div class="form-help" style="color: #7f8c8d;">Add later for better directions</div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="propertyType">Property Type *</label>
-                    <select id="propertyType" required>
+                    <label for="propertyType">Property Type <span style="color: #7f8c8d; font-size: 0.85rem;">(Optional)</span></label>
+                    <select id="propertyType">
                         <option value="">Select a property type</option>
                         <option value="Vacation Home">Vacation Home</option>
                         <option value="Apartment">Apartment</option>
@@ -1203,25 +1214,26 @@
                 <h3><i class="fas fa-phone"></i> Contact Information</h3>
                 
                 <div class="form-group">
-                    <label for="hostContact">Host Contact Information *</label>
+                    <label for="hostContact">Host Contact Information <span style="color: #e74c3c;">*</span></label>
                     <input type="text" id="hostContact" required placeholder="e.g., John Smith - (555) 123-4567">
                     <div class="form-help">How guests can reach you directly</div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="maintenanceContact">Maintenance Contact *</label>
-                    <input type="text" id="maintenanceContact" required placeholder="e.g., (555) 987-6543 (24/7)">
+                    <label for="maintenanceContact">Maintenance Contact <span style="color: #7f8c8d; font-size: 0.85rem;">(Optional)</span></label>
+                    <input type="text" id="maintenanceContact" placeholder="e.g., (555) 987-6543 (24/7)">
+                    <div class="form-help" style="color: #7f8c8d;">Add later if needed</div>
                 </div>
                 
                 <h3 style="margin-top: 30px;"><i class="fas fa-clock"></i> Check-in & Check-out</h3>
                 
                 <div class="form-group">
-                    <label for="checkInTime">Check-in Time *</label>
+                    <label for="checkInTime">Check-in Time <span style="color: #e74c3c;">*</span></label>
                     <input type="text" id="checkInTime" required placeholder="e.g., 3:00 PM">
                 </div>
                 
                 <div class="form-group">
-                    <label for="checkOutTime">Check-out Time *</label>
+                    <label for="checkOutTime">Check-out Time <span style="color: #e74c3c;">*</span></label>
                     <input type="text" id="checkOutTime" required placeholder="e.g., 11:00 AM">
                 </div>
                 
@@ -1236,8 +1248,8 @@
                 <h3><i class="fas fa-wifi"></i> Amenities & WiFi</h3>
                 
                 <div class="form-group">
-                    <label for="wifiDetails">WiFi Details *</label>
-                    <input type="text" id="wifiDetails" required placeholder="e.g., Network: VillaChamitos_Guest, Password: Welcome2024">
+                    <label for="wifiDetails">WiFi Details <span style="color: #7f8c8d; font-size: 0.85rem;">(Optional)</span></label>
+                    <input type="text" id="wifiDetails" placeholder="e.g., Network: VillaChamitos_Guest, Password: Welcome2024">
                     <div class="form-help">Your guests will need this information to connect to WiFi</div>
                     
                     <div class="wifi-examples">
@@ -1251,16 +1263,16 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="amenities">Key Amenities *</label>
-                    <textarea id="amenities" required placeholder="Enter each amenity on a new line or separated by commas&#10;• Air Conditioning&#10;• Kitchen&#10;• Smart TV&#10;• Coffee Maker&#10;• Parking Spot A15"></textarea>
+                    <label for="amenities">Key Amenities <span style="color: #7f8c8d; font-size: 0.85rem;">(Optional)</span></label>
+                    <textarea id="amenities" placeholder="Enter each amenity on a new line or separated by commas&#10;• Air Conditioning&#10;• Kitchen&#10;• Smart TV&#10;• Coffee Maker&#10;• Parking Spot A15"></textarea>
                     <div class="form-help">List the most important amenities your guests should know about</div>
                 </div>
 
                 <h3 style="margin-top: 30px;"><i class="fas fa-clipboard-list"></i> House Rules</h3>
                 
                 <div class="form-group">
-                    <label for="houseRules">House Rules *</label>
-                    <textarea id="houseRules" required placeholder="Enter each house rule on a new line&#10;• No smoking inside the property&#10;• No pets allowed&#10;• Quiet hours: 10 PM - 7 AM&#10;• No parties or events&#10;• Turn off lights and AC when leaving&#10;• Dispose of trash in designated bins&#10;• Report any damages immediately"></textarea>
+                    <label for="houseRules">House Rules <span style="color: #7f8c8d; font-size: 0.85rem;">(Optional)</span></label>
+                    <textarea id="houseRules" placeholder="Enter each house rule on a new line&#10;• No smoking inside the property&#10;• No pets allowed&#10;• Quiet hours: 10 PM - 7 AM&#10;• No parties or events&#10;• Turn off lights and AC when leaving&#10;• Dispose of trash in designated bins&#10;• Report any damages immediately"></textarea>
                     <div class="form-help">List your specific house rules for guests to follow. These will be shared when guests ask about rules.</div>
                 </div>
 
