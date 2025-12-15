@@ -17,16 +17,20 @@ class NotificationService {
 
     const lowerMessage = message.toLowerCase().trim();
     
-    // Check-in patterns (including past tense and variations)
+    // Check-in patterns (including past tense, typos, and variations)
     const checkInPatterns = [
       /^(i\s+)?(just\s+)?checked\s+in/i,
+      /^(i\s+)?(just\s+)?cheked\s+in/i,  // Handle typo "cheked"
       /^(i\s+)?(just\s+)?check\s+in/i,
       /^(i\s+)?(just\s+)?arrived/i,
       /^(i\s+)?(just\s+)?got\s+here/i,
       /^(i\s+)?(just\s+)?made\s+it/i,
       /^(i\s+)?(just\s+)?here\s+now/i,
       /^checked\s+in/i,  // "Checked in" at start
+      /^cheked\s+in/i,   // "Cheked in" at start (typo)
       /^check\s+in/i,    // "Check in" at start
+      /(i\s+)?(just\s+)?checked\s+in/i,  // More flexible - anywhere in message
+      /(i\s+)?(just\s+)?cheked\s+in/i,   // Typo version
       /check\s*[- ]?in/i,
       /checkin/i,
       /arrived\s+at\s+the\s+property/i,
@@ -38,6 +42,7 @@ class NotificationService {
       /we're\s+here/i,
       /were\s+here/i,
       /we\s+checked\s+in/i,
+      /we\s+cheked\s+in/i,  // Typo version
       /we\s+check\s+in/i
     ];
 

@@ -69,18 +69,25 @@ class ChatController {
       if (propertyId) {
         try {
           const notificationType = notificationService.detectCheckInOut(message);
+          logger.info(`🔍 Checking notification for message: "${message.substring(0, 50)}..." - Detected: ${notificationType || 'none'}`);
           if (notificationType) {
-            await notificationService.recordNotification(
+            const notificationId = await notificationService.recordNotification(
               propertyId,
               notificationType,
               message.trim()
             );
-            logger.info(`📢 ${notificationType} notification detected and recorded`);
+            if (notificationId) {
+              logger.info(`📢 ${notificationType} notification detected and recorded (ID: ${notificationId})`);
+            } else {
+              logger.warn(`⚠️ Failed to record ${notificationType} notification`);
+            }
           }
         } catch (err) {
           logger.error('Error recording notification:', err);
           // Continue even if notification recording fails
         }
+      } else {
+        logger.warn('⚠️ No propertyId provided, skipping notification detection');
       }
 
       // Track question for analytics
