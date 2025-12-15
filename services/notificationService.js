@@ -17,13 +17,16 @@ class NotificationService {
 
     const lowerMessage = message.toLowerCase().trim();
     
-    // Check-in patterns
+    // Check-in patterns (including past tense and variations)
     const checkInPatterns = [
       /^(i\s+)?(just\s+)?checked\s+in/i,
+      /^(i\s+)?(just\s+)?check\s+in/i,
       /^(i\s+)?(just\s+)?arrived/i,
       /^(i\s+)?(just\s+)?got\s+here/i,
       /^(i\s+)?(just\s+)?made\s+it/i,
       /^(i\s+)?(just\s+)?here\s+now/i,
+      /^checked\s+in/i,  // "Checked in" at start
+      /^check\s+in/i,    // "Check in" at start
       /check\s*[- ]?in/i,
       /checkin/i,
       /arrived\s+at\s+the\s+property/i,
@@ -33,15 +36,20 @@ class NotificationService {
       /we\s+arrived/i,
       /we\s+just\s+arrived/i,
       /we're\s+here/i,
-      /were\s+here/i
+      /were\s+here/i,
+      /we\s+checked\s+in/i,
+      /we\s+check\s+in/i
     ];
 
-    // Check-out patterns
+    // Check-out patterns (including past tense and variations)
     const checkOutPatterns = [
       /^(i\s+)?(just\s+)?checked\s+out/i,
+      /^(i\s+)?(just\s+)?check\s+out/i,
       /^(i\s+)?(just\s+)?left/i,
       /^(i\s+)?(just\s+)?departed/i,
       /^(i\s+)?(just\s+)?on\s+my\s+way\s+out/i,
+      /^checked\s+out/i,  // "Checked out" at start
+      /^check\s+out/i,    // "Check out" at start
       /check\s*[- ]?out/i,
       /checkout/i,
       /left\s+the\s+property/i,
@@ -50,7 +58,9 @@ class NotificationService {
       /we\s+just\s+left/i,
       /we're\s+leaving/i,
       /were\s+leaving/i,
-      /we\s+departed/i
+      /we\s+departed/i,
+      /we\s+checked\s+out/i,
+      /we\s+check\s+out/i
     ];
 
     // Check for check-in first (more specific patterns)

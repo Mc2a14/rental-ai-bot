@@ -2541,16 +2541,28 @@ function initNotifications() {
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     const refreshNotificationsBtn = document.getElementById('refreshNotificationsBtn');
     
-    if (!notificationsBtn || !notificationsPanel) {
-        console.warn('Notifications elements not found');
+    if (!notificationsBtn) {
+        console.warn('Notifications button not found');
         return;
     }
     
+    if (!notificationsPanel) {
+        console.warn('Notifications panel not found');
+        return;
+    }
+    
+    console.log('✅ Notifications system initialized');
+    
     // Toggle notifications panel
-    notificationsBtn.addEventListener('click', () => {
-        const isVisible = notificationsPanel.style.display !== 'none';
+    notificationsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔔 Notifications button clicked');
+        const isVisible = notificationsPanel.style.display !== 'none' && notificationsPanel.style.display !== '';
+        console.log('Current visibility:', isVisible, 'Display:', notificationsPanel.style.display);
         notificationsPanel.style.display = isVisible ? 'none' : 'block';
         if (!isVisible) {
+            console.log('Loading notifications...');
             loadNotifications();
         }
     });
@@ -2612,9 +2624,15 @@ async function loadNotificationCount() {
 
 async function loadNotifications() {
     try {
+        console.log('📋 Loading notifications...');
         const propertyId = window.propertySetup?.currentPropertyId;
+        console.log('Property ID:', propertyId);
+        
         if (!propertyId) {
-            document.getElementById('notificationsList').innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;"><p>No property selected</p></div>';
+            const list = document.getElementById('notificationsList');
+            if (list) {
+                list.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;"><p>No property selected. Please select a property first.</p></div>';
+            }
             return;
         }
         
@@ -2695,11 +2713,16 @@ function getTimeAgo(date) {
 }
 
 // Initialize notifications when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initNotifications);
-} else {
-    initNotifications();
-}
+// Wait a bit for PropertySetup to initialize first
+setTimeout(() => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initNotifications, 500);
+        });
+    } else {
+        setTimeout(initNotifications, 500);
+    }
+}, 1000);
 
 // Global wrapper functions for image management
 function uploadImage() {
