@@ -18,9 +18,36 @@ After completing this setup, uploaded images will persist even when Railway rest
 
 ## Step 2: Create a New Volume
 
-1. In your project dashboard, look for the **"New"** button (usually at the top right or in a sidebar)
-2. Click **"New"** → Select **"Volume"** from the dropdown menu
-3. You'll see a dialog to configure the volume
+**Where to find it - Multiple ways:**
+
+### Option A: Top Menu Bar
+1. Look at the **top of the page** - you should see your project name
+2. Look for a **"+"** button or **"New"** button in the top right area
+3. Click it → Select **"Volume"** from the dropdown
+
+### Option B: Left Sidebar
+1. Look at the **left sidebar** of your project
+2. You might see a list of services/resources
+3. Look for a **"+"** icon or **"Add"** button at the bottom or top of the sidebar
+4. Click it → Select **"Volume"**
+
+### Option C: Service Settings
+1. Click on your **service** (the one running your app - might be called "rental-ai-bot" or similar)
+2. Look for a **"Settings"** tab or **"Storage"** tab
+3. Look for **"Volumes"** section
+4. Click **"Add Volume"** or **"Create Volume"**
+
+### Option D: Project Settings
+1. Click on your **project name** at the top
+2. Look for **"Settings"** or **"Resources"** tab
+3. Look for **"Volumes"** section
+4. Click **"Create Volume"** or **"Add Volume"**
+
+### Still Can't Find It?
+- Railway's UI changes frequently
+- Try clicking around different tabs: **Settings**, **Resources**, **Storage**
+- Look for any button that says **"Add"**, **"Create"**, **"New"**, or has a **"+"** icon
+- The volume option might be under **"Resources"** or **"Data"** section
 
 ---
 
