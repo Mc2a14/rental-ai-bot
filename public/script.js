@@ -1580,24 +1580,39 @@ class RentalAIChat {
         console.log('🔍 formatBotResponse - Raw text:', text);
         console.log('🔍 Contains /uploads/:', text.includes('/uploads/'));
         
+        // Track processed URLs to avoid double-processing
+        const processedUrls = new Set();
+        
         // First, preserve line breaks but mark them for later processing
         let formatted = text;
         
         // Convert markdown image links to actual images FIRST (before other replacements)
         // Pattern 1: Image markdown ![text](url) where url is /uploads/...
         formatted = formatted.replace(/!\[([^\]]+)\]\((\/uploads\/[^\)]+)\)/g, (match, altText, imageUrl) => {
+            if (processedUrls.has(imageUrl)) {
+                return match; // Skip if already processed
+            }
+            processedUrls.add(imageUrl);
             console.log('✅ Found markdown image (image format):', altText, imageUrl);
             // Make URL absolute if it's relative
             const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
-            return `<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
+            // Use a unique ID for the error handler to avoid quote issues
+            const imageId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            return `<div id="${imageId}_container" style="margin: 15px 0; text-align: center;"><img id="${imageId}" src="${fullImageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="(function(){const img=document.getElementById('${imageId}');const container=document.getElementById('${imageId}_container');if(img&&container){container.innerHTML='<p style=&quot;color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;&quot;>⚠️ Image not available. The file may have been removed or the server restarted.</p>';}})();"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
         });
         
-        // Pattern 2: Link markdown [text](url) where url is /uploads/...
+        // Pattern 2: Link markdown [text](url) where url is /uploads/... (only if not already processed)
         formatted = formatted.replace(/\[([^\]]+)\]\((\/uploads\/[^\)]+)\)/g, (match, altText, imageUrl) => {
+            if (processedUrls.has(imageUrl)) {
+                return match; // Skip if already processed
+            }
+            processedUrls.add(imageUrl);
             console.log('✅ Found markdown image (link format):', altText, imageUrl);
             // Make URL absolute if it's relative
             const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
-            return `<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
+            // Use a unique ID for the error handler to avoid quote issues
+            const imageId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            return `<div id="${imageId}_container" style="margin: 15px 0; text-align: center;"><img id="${imageId}" src="${fullImageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="(function(){const img=document.getElementById('${imageId}');const container=document.getElementById('${imageId}_container');if(img&&container){container.innerHTML='<p style=&quot;color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;&quot;>⚠️ Image not available. The file may have been removed or the server restarted.</p>';}})();"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
         });
         
         // Now do other text replacements
@@ -1620,13 +1635,14 @@ class RentalAIChat {
         const originalText = text;
         
         // Look for /uploads/ URLs - be more aggressive in detection
-        // Pattern 1: URLs with file extensions (most common)
+        // Pattern 1: URLs with file extensions (most common) - only if not already processed
         formatted = formatted.replace(/([^<"'])(\/uploads\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp|JPG|JPEG|PNG|GIF|WEBP))/gi, (match, before, imageUrl, ext) => {
-            // Skip if already inside an HTML tag (already converted)
-            if (before.includes('<img') || before.includes('src=') || before.includes('href=') || before.includes('</div>')) {
+            // Skip if already inside an HTML tag (already converted) or already processed
+            if (before.includes('<img') || before.includes('src=') || before.includes('href=') || before.includes('</div>') || processedUrls.has(imageUrl)) {
                 return match;
             }
             
+            processedUrls.add(imageUrl);
             console.log('✅ Found image URL:', imageUrl);
             
             // Extract label from the original text before the URL
@@ -1670,19 +1686,22 @@ class RentalAIChat {
             console.log('📸 Rendering image with label:', label);
             // Make URL absolute if it's relative
             const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
-            return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
+            // Use a unique ID for the error handler
+            const imageId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            return `${before}<div id="${imageId}_container" style="margin: 15px 0; text-align: center;"><img id="${imageId}" src="${fullImageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="(function(){const img=document.getElementById('${imageId}');const container=document.getElementById('${imageId}_container');if(img&&container){container.innerHTML='<p style=&quot;color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;&quot;>⚠️ Image not available. The file may have been removed or the server restarted.</p>';}})();"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
         });
         
-        // Pattern 2: URLs without file extensions (fallback)
+        // Pattern 2: URLs without file extensions (fallback) - only if not already processed
         formatted = formatted.replace(/([^<"'])(\/uploads\/[^\s<>"']+)/gi, (match, before, imageUrl) => {
-            // Skip if already converted or if it has an extension (already handled above)
+            // Skip if already converted or if it has an extension (already handled above) or already processed
             if (before.includes('<img') || before.includes('src=') || before.includes('href=') || 
-                before.includes('</div>') || imageUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                before.includes('</div>') || imageUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || processedUrls.has(imageUrl)) {
                 return match;
             }
             
             // Only process if it looks like an image path
             if (imageUrl.includes('image') || imageUrl.includes('photo') || imageUrl.includes('img')) {
+                processedUrls.add(imageUrl);
                 const matchIndex = originalText.indexOf(imageUrl);
                 const textBefore = originalText.substring(Math.max(0, matchIndex - 300), matchIndex);
                 
@@ -1695,7 +1714,9 @@ class RentalAIChat {
                 console.log('📸 Rendering image (no extension) with label:', label);
                 // Make URL absolute if it's relative
                 const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
-                return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
+                // Use a unique ID for the error handler
+                const imageId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                return `${before}<div id="${imageId}_container" style="margin: 15px 0; text-align: center;"><img id="${imageId}" src="${fullImageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="(function(){const img=document.getElementById('${imageId}');const container=document.getElementById('${imageId}_container');if(img&&container){container.innerHTML='<p style=&quot;color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;&quot;>⚠️ Image not available. The file may have been removed or the server restarted.</p>';}})();"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
             }
             
             return match;
