@@ -2528,6 +2528,179 @@ if (document.readyState === 'loading') {
     }
 }
 
+// ================================================
+// NOTIFICATIONS SYSTEM
+// ================================================
+
+let notificationsInterval = null;
+
+function initNotifications() {
+    const notificationsBtn = document.getElementById('notificationsBtn');
+    const notificationsPanel = document.getElementById('notificationsPanel');
+    const closeNotifications = document.getElementById('closeNotifications');
+    const markAllReadBtn = document.getElementById('markAllReadBtn');
+    const refreshNotificationsBtn = document.getElementById('refreshNotificationsBtn');
+    
+    if (!notificationsBtn || !notificationsPanel) {
+        console.warn('Notifications elements not found');
+        return;
+    }
+    
+    // Toggle notifications panel
+    notificationsBtn.addEventListener('click', () => {
+        const isVisible = notificationsPanel.style.display !== 'none';
+        notificationsPanel.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) {
+            loadNotifications();
+        }
+    });
+    
+    // Close panel
+    if (closeNotifications) {
+        closeNotifications.addEventListener('click', () => {
+            notificationsPanel.style.display = 'none';
+        });
+    }
+    
+    // Mark all as read
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', async () => {
+            await markAllNotificationsRead();
+            loadNotifications();
+        });
+    }
+    
+    // Refresh notifications
+    if (refreshNotificationsBtn) {
+        refreshNotificationsBtn.addEventListener('click', () => {
+            loadNotifications();
+        });
+    }
+    
+    // Load notifications on page load
+    loadNotificationCount();
+    
+    // Auto-refresh notification count every 30 seconds
+    notificationsInterval = setInterval(() => {
+        loadNotificationCount();
+    }, 30000);
+}
+
+async function loadNotificationCount() {
+    try {
+        const propertyId = window.propertySetup?.currentPropertyId;
+        if (!propertyId) return;
+        
+        const response = await fetch(`/api/analytics/property/${propertyId}/notifications/unread-count`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                if (data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading notification count:', error);
+    }
+}
+
+async function loadNotifications() {
+    try {
+        const propertyId = window.propertySetup?.currentPropertyId;
+        if (!propertyId) {
+            document.getElementById('notificationsList').innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;"><p>No property selected</p></div>';
+            return;
+        }
+        
+        const response = await fetch(`/api/analytics/property/${propertyId}/notifications?limit=50`);
+        const data = await response.json();
+        
+        const list = document.getElementById('notificationsList');
+        if (!list) return;
+        
+        if (!data.success || !data.notifications || data.notifications.length === 0) {
+            list.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;"><i class="fas fa-bell-slash" style="font-size: 32px; margin-bottom: 10px; opacity: 0.5;"></i><p>No notifications yet</p><p style="font-size: 12px; margin-top: 10px;">Guests can notify you when they check in or check out</p></div>';
+            return;
+        }
+        
+        list.innerHTML = data.notifications.map(notif => {
+            const date = new Date(notif.timestamp);
+            const timeAgo = getTimeAgo(date);
+            const icon = notif.notification_type === 'check_in' ? '🔵' : '🟢';
+            const typeText = notif.notification_type === 'check_in' ? 'Check-in' : 'Check-out';
+            const bgColor = notif.notification_type === 'check_in' ? '#e3f2fd' : '#e8f5e9';
+            const borderColor = notif.notification_type === 'check_in' ? '#2196f3' : '#4caf50';
+            
+            return `
+                <div style="padding: 15px; margin: 10px; border-radius: 8px; border-left: 4px solid ${borderColor}; background: ${bgColor}; ${notif.read ? 'opacity: 0.7;' : ''}">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 20px;">${icon}</span>
+                            <strong style="color: #2c3e50;">${typeText}</strong>
+                        </div>
+                        <span style="font-size: 11px; color: #7f8c8d;">${timeAgo}</span>
+                    </div>
+                    ${notif.guest_message ? `<p style="margin: 8px 0 0 0; color: #34495e; font-size: 13px; font-style: italic;">"${escapeHtml(notif.guest_message)}"</p>` : ''}
+                    <div style="margin-top: 8px; font-size: 11px; color: #95a5a6;">${date.toLocaleString()}</div>
+                </div>
+            `;
+        }).join('');
+        
+        // Update badge count
+        loadNotificationCount();
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        document.getElementById('notificationsList').innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;"><p>Error loading notifications</p></div>';
+    }
+}
+
+async function markAllNotificationsRead() {
+    try {
+        const propertyId = window.propertySetup?.currentPropertyId;
+        if (!propertyId) return;
+        
+        const response = await fetch(`/api/analytics/property/${propertyId}/notifications/mark-read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ All notifications marked as read');
+        }
+    } catch (error) {
+        console.error('Error marking notifications as read:', error);
+    }
+}
+
+function getTimeAgo(date) {
+    const now = new Date();
+    const diff = now - date;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+}
+
+// Initialize notifications when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNotifications);
+} else {
+    initNotifications();
+}
+
 // Global wrapper functions for image management
 function uploadImage() {
     if (window.propertySetup) {

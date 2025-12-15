@@ -1,6 +1,7 @@
 // Chat Controller
 const aiService = require('../services/aiService');
 const analyticsService = require('../services/analyticsService');
+const notificationService = require('../services/notificationService');
 const logger = require('../utils/logger');
 
 class ChatController {
@@ -64,6 +65,24 @@ class ChatController {
         language
       );
       
+      // Check for check-in/check-out notifications
+      if (propertyId) {
+        try {
+          const notificationType = notificationService.detectCheckInOut(message);
+          if (notificationType) {
+            await notificationService.recordNotification(
+              propertyId,
+              notificationType,
+              message.trim()
+            );
+            logger.info(`📢 ${notificationType} notification detected and recorded`);
+          }
+        } catch (err) {
+          logger.error('Error recording notification:', err);
+          // Continue even if notification recording fails
+        }
+      }
+
       // Track question for analytics
       let questionId = null;
       if (result.success && propertyId) {

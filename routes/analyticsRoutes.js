@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
+const notificationController = require('../controllers/notificationController');
 
 // Get analytics stats for a property
 router.get('/property/:propertyId/stats', analyticsController.getStats.bind(analyticsController));
@@ -17,6 +18,11 @@ router.get('/property/:propertyId/faqs', analyticsController.getFAQs.bind(analyt
 
 // Generate FAQs from frequent questions
 router.post('/property/:propertyId/generate-faqs', analyticsController.generateFAQs.bind(analyticsController));
+
+// Notification routes
+router.get('/property/:propertyId/notifications', notificationController.getNotifications.bind(notificationController));
+router.post('/property/:propertyId/notifications/mark-read', notificationController.markAsRead.bind(notificationController));
+router.get('/property/:propertyId/notifications/unread-count', notificationController.getUnreadCount.bind(notificationController));
 
 module.exports = router;
 

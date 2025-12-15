@@ -176,6 +176,26 @@ class Database {
         logger.warn('ℹ️ Images column check:', error.message);
       }
 
+      // Create check_in_out_notifications table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS check_in_out_notifications (
+          id SERIAL PRIMARY KEY,
+          property_id VARCHAR(255) NOT NULL,
+          notification_type VARCHAR(20) NOT NULL CHECK (notification_type IN ('check_in', 'check_out')),
+          guest_message TEXT,
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          read BOOLEAN DEFAULT FALSE,
+          FOREIGN KEY (property_id) REFERENCES properties(property_id) ON DELETE CASCADE
+        )
+      `);
+      logger.info('✅ Check-in/out notifications table created');
+
+      // Create index for faster queries
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_check_in_out_property_timestamp 
+        ON check_in_out_notifications(property_id, timestamp DESC)
+      `);
+
       // Create indexes
       await client.query(`
         CREATE INDEX IF NOT EXISTS idx_properties_user_id ON properties(user_id)
