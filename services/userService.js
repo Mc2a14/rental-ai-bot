@@ -116,6 +116,7 @@ class UserService {
     );
 
     if (result.rows.length === 0) {
+      logger.warn(`Login attempt failed: Username '${username}' not found`);
       return {
         success: false,
         message: 'Invalid username or password'
@@ -125,7 +126,15 @@ class UserService {
     const user = result.rows[0];
     
     // In production, use bcrypt to compare hashed passwords
-    if (user.password_hash !== password) {
+    // For now, passwords are stored as plain text (direct comparison)
+    // Trim both to handle accidental whitespace
+    const storedPassword = (user.password_hash || '').trim();
+    const providedPassword = (password || '').trim();
+    
+    logger.info(`Login attempt for user: ${username}, stored password length: ${storedPassword.length}, provided password length: ${providedPassword.length}`);
+    
+    if (storedPassword !== providedPassword) {
+      logger.warn(`Login attempt failed: Password mismatch for user '${username}'`);
       return {
         success: false,
         message: 'Invalid username or password'

@@ -14,7 +14,9 @@ class UserController {
         });
       }
       
-      const result = await userService.authenticateUser(username, password);
+      logger.info(`Login attempt for username: ${username}`);
+      
+      const result = await userService.authenticateUser(username.trim(), password);
       
       if (result.success) {
         // Set session data
@@ -22,13 +24,14 @@ class UserController {
         req.session.username = result.user.username;
         req.session.loggedIn = true;
         
-        logger.info(`User logged in: ${result.user.username} (session: ${req.sessionID})`);
+        logger.info(`✅ User logged in successfully: ${result.user.username} (session: ${req.sessionID})`);
         
         return res.json({
           success: true,
           user: result.user
         });
       } else {
+        logger.warn(`❌ Login failed for username: ${username} - ${result.message}`);
         return res.json({
           success: false,
           message: result.message
