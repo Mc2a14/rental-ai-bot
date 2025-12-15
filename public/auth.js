@@ -266,6 +266,25 @@ function showLoginModal() {
     document.getElementById('showCreateAccountBtn').addEventListener('click', showCreateAccountForm);
     document.getElementById('showLoginBtn').addEventListener('click', showLoginForm);
     
+    // Forgot password handlers
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForgotPasswordForm();
+        });
+    }
+    
+    const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+    if (resetPasswordBtn) {
+        resetPasswordBtn.addEventListener('click', handleResetPassword);
+    }
+    
+    const backToLoginBtn = document.getElementById('backToLoginBtn');
+    if (backToLoginBtn) {
+        backToLoginBtn.addEventListener('click', showLoginForm);
+    }
+    
     // Enter key support
     document.getElementById('loginPassword').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleLogin();
