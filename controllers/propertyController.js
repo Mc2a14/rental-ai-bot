@@ -155,6 +155,75 @@ class PropertyController {
       return res.json({});
     }
   }
+
+  async uploadImage(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No image file provided'
+        });
+      }
+
+      const { propertyId, label, description } = req.body;
+
+      if (!propertyId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Property ID is required'
+        });
+      }
+
+      if (!label) {
+        return res.status(400).json({
+          success: false,
+          message: 'Image label is required (e.g., "Parking Lot", "Key Lock", "Building Entrance")'
+        });
+      }
+
+      // Get the property to add image to
+      const property = await propertyService.getProperty(propertyId);
+      if (!property) {
+        return res.status(404).json({
+          success: false,
+          message: 'Property not found'
+        });
+      }
+
+      // Create image object
+      const imageUrl = `/uploads/${req.file.filename}`;
+      const imageData = {
+        id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        url: imageUrl,
+        label: label,
+        description: description || '',
+        filename: req.file.filename,
+        uploadedAt: new Date().toISOString()
+      };
+
+      // Add image to property's images array
+      const images = property.images || [];
+      images.push(imageData);
+
+      // Update property with new image
+      await propertyService.updateProperty(propertyId, { images });
+
+      logger.info(`Image uploaded for property ${propertyId}: ${label}`);
+
+      return res.json({
+        success: true,
+        image: imageData,
+        message: 'Image uploaded successfully'
+      });
+    } catch (error) {
+      logger.error('Image upload error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error uploading image',
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new PropertyController();

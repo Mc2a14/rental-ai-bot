@@ -44,8 +44,9 @@ class PropertyService {
         property_id, user_id, name, address, type,
         host_contact, maintenance_contact, emergency_contact,
         checkin_time, checkout_time, late_checkout,
-        amenities, house_rules, recommendations, appliances, faqs
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        amenities, house_rules, recommendations, appliances, faqs,
+        general_instructions, images
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `, [
       propertyId,
@@ -63,7 +64,9 @@ class PropertyService {
       propertyData.houseRules || null,
       JSON.stringify(propertyData.recommendations || []),
       JSON.stringify(propertyData.appliances || []),
-      JSON.stringify(propertyData.faqs || [])
+      JSON.stringify(propertyData.faqs || []),
+      propertyData.generalInstructions || null,
+      JSON.stringify(propertyData.images || [])
     ]);
 
     const row = result.rows[0];
@@ -87,6 +90,8 @@ class PropertyService {
       id: propertyId,
       userId: userId,
       ...propertyData,
+      generalInstructions: propertyData.generalInstructions || null,
+      images: propertyData.images || [],
       created: new Date().toISOString(),
       updated: new Date().toISOString()
     };
@@ -166,6 +171,8 @@ class PropertyService {
       recommendations: typeof row.recommendations === 'string' ? JSON.parse(row.recommendations) : (row.recommendations || []),
       appliances: typeof row.appliances === 'string' ? JSON.parse(row.appliances) : (row.appliances || []),
       faqs: typeof row.faqs === 'string' ? JSON.parse(row.faqs) : (row.faqs || []),
+      generalInstructions: row.general_instructions || null,
+      images: typeof row.images === 'string' ? JSON.parse(row.images) : (row.images || []),
       created: row.created_at?.toISOString(),
       updated: row.updated_at?.toISOString()
     };
@@ -337,6 +344,14 @@ class PropertyService {
     if (updates.faqs !== undefined) {
       setClause.push(`faqs = $${paramCount++}`);
       values.push(JSON.stringify(updates.faqs));
+    }
+    if (updates.generalInstructions !== undefined) {
+      setClause.push(`general_instructions = $${paramCount++}`);
+      values.push(updates.generalInstructions);
+    }
+    if (updates.images !== undefined) {
+      setClause.push(`images = $${paramCount++}`);
+      values.push(JSON.stringify(updates.images));
     }
     
     setClause.push(`updated_at = CURRENT_TIMESTAMP`);

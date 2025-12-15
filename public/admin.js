@@ -8,6 +8,7 @@ class PropertySetup {
     this.recommendations = [];
     this.appliances = [];
     this.faqs = []; // Store FAQs
+    this.images = []; // Store images
     this.currentPropertyId = null; // Store the current property ID for updates
     this.allProperties = []; // Store all user properties for selector
     
@@ -30,6 +31,7 @@ class PropertySetup {
         this.loadRecommendations();
         this.loadAppliances();
         this.loadFAQs();
+        this.loadImages();
     }
     
     console.log("🔄 Initializing event listeners...");
@@ -506,7 +508,25 @@ async autoLoadExistingConfig() {
                         this.faqs = [];
                     }
                     
-                    // Update the UI to show loaded recommendations, appliances, and FAQs
+                    // Load Images from server
+                    if (property.images && Array.isArray(property.images)) {
+                        this.images = property.images;
+                        localStorage.setItem('rental_ai_images', JSON.stringify(property.images));
+                        console.log(`🖼️ Loaded ${this.images.length} images from server`);
+                    } else {
+                        console.log('⚠️ No images found in property data');
+                        this.images = [];
+                    }
+                    
+                    // Load General Instructions
+                    if (property.generalInstructions) {
+                        const generalInstructionsInput = document.getElementById('generalInstructions');
+                        if (generalInstructionsInput) {
+                            generalInstructionsInput.value = property.generalInstructions;
+                        }
+                    }
+                    
+                    // Update the UI to show loaded recommendations, appliances, FAQs, and images
                     // Use a small delay to ensure DOM is ready
                     setTimeout(() => {
                         console.log('🔄 Updating UI lists...');
@@ -514,6 +534,7 @@ async autoLoadExistingConfig() {
                         this.updateRecommendationsList();
                         this.updateAppliancesList();
                         this.updateFAQsList();
+                        this.updateImagesList();
                         console.log('✅ UI lists updated');
                     }, 200);
                     
@@ -587,10 +608,32 @@ async autoLoadExistingConfig() {
                 }
             }
             
-            // Update the UI to show loaded recommendations and appliances
+            // Load Images from config if available
+            if (config.images && Array.isArray(config.images)) {
+                this.images = config.images;
+                console.log(`🖼️ Loaded ${this.images.length} images from localStorage config`);
+            } else {
+                // Also try loading from separate localStorage key
+                const savedImages = localStorage.getItem('rental_ai_images');
+                if (savedImages) {
+                    this.images = JSON.parse(savedImages);
+                    console.log(`🖼️ Loaded ${this.images.length} images from localStorage key`);
+                }
+            }
+            
+            // Load General Instructions
+            if (config.generalInstructions) {
+                const generalInstructionsInput = document.getElementById('generalInstructions');
+                if (generalInstructionsInput) {
+                    generalInstructionsInput.value = config.generalInstructions;
+                }
+            }
+            
+            // Update the UI to show loaded recommendations, appliances, FAQs, and images
             this.updateRecommendationsList();
             this.updateAppliancesList();
             this.updateFAQsList();
+            this.updateImagesList();
             
             // If we have a property ID but no allProperties array, try to load from server
             // This ensures the property selector is populated
@@ -744,6 +787,14 @@ populateFormFromConfig(config) {
         console.error('❌ houseRules field not found in DOM!');
     }
     
+    const generalInstructionsField = document.getElementById('generalInstructions');
+    if (generalInstructionsField) {
+        generalInstructionsField.value = config.generalInstructions || '';
+        console.log(`✅ Set generalInstructions to: "${config.generalInstructions || ''}"`);
+    } else {
+        console.error('❌ generalInstructions field not found in DOM!');
+    }
+    
     console.log('✅ Form population complete');
 }
 
@@ -792,6 +843,7 @@ prevStep() {
 
     updateStepDisplay() {
         console.log("🔄 Updating step display...");
+        console.log(`📍 Current step: ${this.currentStep}`);
         
         // Update step indicators
         document.querySelectorAll('.step').forEach((step, index) => {
@@ -804,7 +856,15 @@ prevStep() {
 
         // Show/hide sections
         document.querySelectorAll('.form-section').forEach((section, index) => {
-            section.style.display = (index + 1 === this.currentStep) ? 'block' : 'none';
+            const shouldShow = index + 1 === this.currentStep;
+            section.style.display = shouldShow ? 'block' : 'none';
+            if (shouldShow && index + 1 === 3) {
+                console.log("✅ Step 3 is now visible - General Instructions and Image Management should be visible");
+                // Ensure images list is updated when step 3 is shown
+                setTimeout(() => {
+                    this.updateImagesList();
+                }, 100);
+            }
         });
 
         // Update navigation buttons
@@ -819,6 +879,8 @@ prevStep() {
         // Update preview on step 3
         if (this.currentStep === 3) {
             this.updatePreview();
+            // Also update images list when step 3 is shown
+            this.updateImagesList();
         }
 
         // Scroll to top of page - multiple methods for compatibility
@@ -888,6 +950,12 @@ updatePreview() {
             <strong>House Rules:</strong> ${formData.houseRules ? '✓ Set' : 'Not set'}
         </div>
         <div class="preview-item">
+            <strong>General Instructions:</strong> ${formData.generalInstructions ? '✓ Set' : 'Not set'}
+        </div>
+        <div class="preview-item">
+            <strong>Images:</strong> ${this.images.length} images
+        </div>
+        <div class="preview-item">
             <strong>Recommendations:</strong> ${this.recommendations.length} places
         </div>
         <div class="preview-item">
@@ -912,7 +980,8 @@ getFormData() {
         lateCheckout: document.getElementById('lateCheckout')?.value || '',
         wifiDetails: document.getElementById('wifiDetails')?.value || '',
         amenities: document.getElementById('amenities')?.value || '',
-        houseRules: document.getElementById('houseRules')?.value || ''
+        houseRules: document.getElementById('houseRules')?.value || '',
+        generalInstructions: document.getElementById('generalInstructions')?.value || ''
     };
 }
 
@@ -966,10 +1035,14 @@ async saveConfiguration(e) {
         // Rules
         houseRules: formData.houseRules || '',
         
-        // Appliances, Recommendations & FAQs
+        // General Instructions
+        generalInstructions: formData.generalInstructions || '',
+        
+        // Appliances, Recommendations, FAQs & Images
         appliances: this.appliances,
         recommendations: this.recommendations,
         faqs: this.faqs,
+        images: this.images,
         
         // Metadata
         lastUpdated: new Date().toISOString()
@@ -1022,6 +1095,7 @@ async saveConfiguration(e) {
         localStorage.setItem('rentalAIPropertyConfig', JSON.stringify(propertyData));
         localStorage.setItem('rental_ai_recommendations', JSON.stringify(this.recommendations));
         localStorage.setItem('rental_ai_appliances', JSON.stringify(this.appliances));
+        localStorage.setItem('rental_ai_images', JSON.stringify(this.images));
         
         // Generate guest link
         const guestLink = `${window.location.origin}/property/${result.propertyId}`;
@@ -1333,6 +1407,170 @@ saveFAQs() {
     }
 }
 
+// Image Management
+loadImages() {
+    try {
+        const saved = localStorage.getItem('rental_ai_images');
+        this.images = saved ? JSON.parse(saved) : [];
+        console.log(`🖼️ Loaded ${this.images.length} images`);
+    } catch (error) {
+        console.error('Error loading images:', error);
+        this.images = [];
+    }
+}
+
+updateImagesList() {
+    const container = document.getElementById('images-list');
+    if (!container) {
+        console.warn('⚠️ images-list container not found');
+        return;
+    }
+    
+    if (this.images.length === 0) {
+        container.innerHTML = `
+            <div class="no-images">
+                <i class="fas fa-images"></i>
+                <p>No images added yet. Upload images to help guests find parking, key locks, building entrances, etc.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = this.images.map((image, index) => `
+        <div class="image-item">
+            <img src="${image.url}" alt="${escapeHtml(image.label)}" class="image-preview" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'150\'%3E%3Crect fill=\'%23ddd\' width=\'150\' height=\'150\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'14\' dy=\'10.5\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3EImage%3C/text%3E%3C/svg%3E';">
+            <div class="image-info">
+                <div class="image-label">${escapeHtml(image.label)}</div>
+                ${image.description ? `<div class="image-description">${escapeHtml(image.description)}</div>` : ''}
+                <div class="image-actions">
+                    <button class="btn-small btn-delete" onclick="removeImage(${index})" title="Delete Image">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async uploadImage() {
+    const labelInput = document.getElementById('image-label');
+    const descriptionInput = document.getElementById('image-description');
+    const fileInput = document.getElementById('image-file');
+    const statusDiv = document.getElementById('image-upload-status');
+    
+    if (!labelInput || !fileInput) return;
+    
+    const label = labelInput.value.trim();
+    const description = descriptionInput ? descriptionInput.value.trim() : '';
+    const file = fileInput.files[0];
+    
+    if (!label) {
+        this.showTempMessage('Please enter an image label (e.g., "Parking Lot", "Key Lock")', 'warning');
+        return;
+    }
+    
+    if (!file) {
+        this.showTempMessage('Please select an image file', 'warning');
+        return;
+    }
+    
+    if (!this.currentPropertyId) {
+        this.showTempMessage('Please save your property first before uploading images', 'warning');
+        return;
+    }
+    
+    // Show loading status
+    if (statusDiv) {
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'image-upload-status loading';
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading image...';
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('propertyId', this.currentPropertyId);
+        formData.append('label', label);
+        formData.append('description', description);
+        
+        const response = await fetch('/api/property/upload-image', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to upload image');
+        }
+        
+        // Add image to local array
+        this.images.push(result.image);
+        this.saveImages();
+        this.updateImagesList();
+        
+        // Clear form
+        labelInput.value = '';
+        if (descriptionInput) descriptionInput.value = '';
+        fileInput.value = '';
+        
+        // Show success
+        if (statusDiv) {
+            statusDiv.className = 'image-upload-status success';
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Image uploaded successfully!';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        this.showTempMessage('Image uploaded successfully!', 'success');
+        
+        // Update preview if on step 3
+        if (this.currentStep === 3) {
+            this.updatePreview();
+        }
+        
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        if (statusDiv) {
+            statusDiv.className = 'image-upload-status error';
+            statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Error: ${error.message}`;
+        }
+        this.showTempMessage('Failed to upload image: ' + error.message, 'error');
+    }
+}
+
+removeImage(index) {
+    if (!confirm('Are you sure you want to delete this image?')) {
+        return;
+    }
+    
+    const image = this.images[index];
+    if (!image) return;
+    
+    // Remove from array
+    this.images.splice(index, 1);
+    this.saveImages();
+    this.updateImagesList();
+    
+    // Update preview if on step 3
+    if (this.currentStep === 3) {
+        this.updatePreview();
+    }
+    
+    this.showTempMessage('Image removed', 'success');
+}
+
+saveImages() {
+    try {
+        localStorage.setItem('rental_ai_images', JSON.stringify(this.images));
+        console.log(`🖼️ Saved ${this.images.length} images`);
+    } catch (error) {
+        console.error('Error saving images:', error);
+    }
+}
+
 // Recommendations management
 loadRecommendations() {
     try {
@@ -1625,8 +1863,12 @@ setupResetButton() {
             this.updateStepDisplay();
             this.appliances = [];
             this.recommendations = [];
+            this.faqs = [];
+            this.images = [];
             this.updateAppliancesList();
             this.updateRecommendationsList();
+            this.updateFAQsList();
+            this.updateImagesList();
             
             this.showTempMessage('All data has been reset.', 'success');
         }
@@ -1796,6 +2038,22 @@ async switchProperty(propertyId) {
     } else {
         this.appliances = [];
         this.updateAppliancesList();
+    }
+    
+    if (property.faqs && Array.isArray(property.faqs)) {
+        this.faqs = property.faqs;
+        this.updateFAQsList();
+    } else {
+        this.faqs = [];
+        this.updateFAQsList();
+    }
+    
+    if (property.images && Array.isArray(property.images)) {
+        this.images = property.images;
+        this.updateImagesList();
+    } else {
+        this.images = [];
+        this.updateImagesList();
     }
     
     if (property.faqs && Array.isArray(property.faqs)) {
@@ -2065,5 +2323,22 @@ if (document.readyState === 'loading') {
         } catch (error) {
             console.error("❌ Error initializing PropertySetup immediately:", error);
         }
+    }
+}
+
+// Global wrapper functions for image management
+function uploadImage() {
+    if (window.propertySetup) {
+        window.propertySetup.uploadImage();
+    } else {
+        alert('System not ready. Please wait for page to load.');
+    }
+}
+
+function removeImage(index) {
+    if (window.propertySetup) {
+        window.propertySetup.removeImage(index);
+    } else {
+        alert('System not ready. Please wait for page to load.');
     }
 }

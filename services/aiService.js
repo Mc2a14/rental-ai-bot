@@ -150,6 +150,22 @@ class AIService {
       if (hostConfig.houseRules) {
         prompt += `\nHouse Rules:\n${hostConfig.houseRules}\n`;
       }
+      
+      if (hostConfig.generalInstructions) {
+        prompt += `\nGeneral Instructions for Guests:\n${hostConfig.generalInstructions}\n`;
+      }
+      
+      if (hostConfig.images && Array.isArray(hostConfig.images) && hostConfig.images.length > 0) {
+        prompt += `\nHelpful Images Available:\n`;
+        hostConfig.images.forEach((image, index) => {
+          prompt += `${index + 1}. ${image.label}`;
+          if (image.description) {
+            prompt += ` - ${image.description}`;
+          }
+          prompt += ` (Image URL: ${image.url})\n`;
+        });
+        prompt += `\nWhen guests ask about locations like parking, key locks, building entrances, or QR codes, you can reference these images.`;
+      }
     }
 
     // Additional system message (recommendations, appliances, etc.)
@@ -178,6 +194,8 @@ class AIService {
     prompt += `- If a guest asks about restaurants, beaches, or places to visit, ALWAYS start with the complete list of host's recommendations.\n`;
     prompt += `- Use your knowledge to answer questions about directions, nearby places, local attractions, and general area information.\n`;
     prompt += `- For property-specific information (check-in times, WiFi, house rules, appliances), use ONLY the information provided above.\n`;
+    prompt += `- When guests ask about parking, building access, key locations, or directions to the property, refer to the "General Instructions for Guests" section above, which contains specific instructions from the host.\n`;
+    prompt += `- If helpful images are available (listed above), you can mention them when relevant. For example, if a guest asks "Where is the parking lot?", you can say "I have an image showing the parking lot location - you can view it at [image URL]". However, always provide the text instructions first, then mention the image as additional help.\n`;
     prompt += `- Be friendly, helpful, and concise. Provide accurate directions, recommendations, and local knowledge to help guests have a great stay.\n`;
     prompt += `- If asked about something you're uncertain about, provide your best answer based on your knowledge, and suggest contacting the host for the most current information.`;
 
