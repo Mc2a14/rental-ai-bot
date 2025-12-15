@@ -1012,6 +1012,28 @@
             justify-content: center;
         }
 
+        /* Progress Indicator Styles */
+        #progressIndicator {
+            margin-top: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            #progressIndicator {
+                padding: 10px 12px;
+            }
+            
+            #progressIndicator > div {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            #progressIndicator > div > div:last-child {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             .setup-steps {
@@ -1097,16 +1119,6 @@
                     <div class="header-text" style="display: flex; flex-direction: column; min-width: 0;">
                         <h1 style="margin: 0; font-size: 1.5rem; color: white !important;">GuestBud</h1>
                         <p id="adminSubtitle" style="margin: 0; font-size: 0.9rem; opacity: 0.9; color: rgba(255, 255, 255, 0.9) !important; margin-top: 2px;">Property Setup</p>
-                    </div>
-                    <!-- Progress Indicator -->
-                    <div id="progressIndicator" style="background: rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 8px 16px; min-width: 120px; text-align: center; margin-left: auto;">
-                        <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.9); margin-bottom: 4px;">Setup Progress</div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div style="flex: 1; background: rgba(255, 255, 255, 0.3); border-radius: 10px; height: 8px; overflow: hidden; min-width: 60px;">
-                                <div id="progressBar" style="background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 10px;"></div>
-                            </div>
-                            <span id="progressPercentage" style="font-size: 0.85rem; font-weight: bold; color: white; min-width: 35px;">0%</span>
-                        </div>
                     </div>
                 </div>
             </div>
