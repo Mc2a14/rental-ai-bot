@@ -1460,7 +1460,19 @@ class RentalAIChat {
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             // Get propertyId for analytics tracking (reuse pathParts from above)
-            const propertyId = isPropertyPage ? pathParts[1] : (this.hostConfig?.id || this.hostConfig?.propertyId || null);
+            let propertyId = isPropertyPage ? pathParts[1] : null;
+            
+            // If not on property page, try to get from hostConfig
+            if (!propertyId && this.hostConfig) {
+                propertyId = this.hostConfig.id || this.hostConfig.propertyId || this.hostConfig.property_id || null;
+            }
+            
+            // Log propertyId for debugging
+            if (propertyId) {
+                console.log('📋 Property ID for notification:', propertyId);
+            } else {
+                console.warn('⚠️ No propertyId available - notifications will not be recorded');
+            }
             
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
