@@ -16,5 +16,8 @@ router.get('/me', (req, res) => userController.getCurrentUser(req, res));
 // POST /api/user/logout - Logout user
 router.post('/logout', (req, res) => userController.logout(req, res));
 
+// POST /api/user/reset-password - Reset user password
+router.post('/reset-password', authLimiter, (req, res) => userController.resetPassword(req, res));
+
 module.exports = router;
 

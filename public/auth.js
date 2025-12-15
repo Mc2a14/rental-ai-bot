@@ -67,6 +67,24 @@ async function login(username, password) {
     }
 }
 
+// Reset password
+async function resetPassword(username, newPassword) {
+    try {
+        const response = await fetch('/api/user/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, newPassword })
+        });
+        
+        const data = await response.json();
+        return data.success;
+    } catch (error) {
+        console.error('Password reset error:', error);
+        return false;
+    }
+}
+
 // Register new user
 async function register(username, password) {
     try {
@@ -153,6 +171,11 @@ function showLoginModal() {
                     <div id="loginError" style="color: #e74c3c; font-size: 0.9rem; min-height: 20px; margin-top: 5px; display: none;">
                         Incorrect username or password.
                     </div>
+                    <div style="text-align: right; margin-top: 10px;">
+                        <a href="#" id="forgotPasswordLink" style="color: #3498db; text-decoration: none; font-size: 0.9rem;">
+                            <i class="fas fa-key"></i> Forgot Password?
+                        </a>
+                    </div>
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -163,6 +186,34 @@ function showLoginModal() {
                     <button id="showCreateAccountBtn" 
                             style="flex: 1; background: #95a5a6; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1rem; cursor: pointer;">
                         <i class="fas fa-user-plus"></i> New
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Forgot Password Form (hidden by default) -->
+            <div id="forgotPasswordForm" style="display: none;">
+                <div style="margin-bottom: 20px;">
+                    <p style="color: #7f8c8d; margin-bottom: 20px; font-size: 0.95rem;">
+                        Enter your username and a new password to reset your account.
+                    </p>
+                    <input type="text" id="resetUsername" placeholder="Username" 
+                           style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1rem; margin-bottom: 15px;">
+                    <input type="password" id="resetPassword" placeholder="New Password" 
+                           style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1rem; margin-bottom: 15px;">
+                    <input type="password" id="resetConfirmPassword" placeholder="Confirm New Password" 
+                           style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1rem; margin-bottom: 15px;">
+                    <div id="resetError" style="color: #e74c3c; font-size: 0.9rem; min-height: 20px; margin-top: 5px; display: none;"></div>
+                    <div id="resetSuccess" style="color: #2ecc71; font-size: 0.9rem; min-height: 20px; margin-top: 5px; display: none;"></div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button id="resetPasswordBtn" 
+                            style="flex: 2; background: #e67e22; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1rem; cursor: pointer;">
+                        <i class="fas fa-key"></i> Reset Password
+                    </button>
+                    <button id="backToLoginBtn" 
+                            style="flex: 1; background: #95a5a6; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1rem; cursor: pointer;">
+                        <i class="fas fa-arrow-left"></i> Back
                     </button>
                 </div>
             </div>
@@ -306,14 +357,77 @@ async function handleCreateAccount() {
 
 function showCreateAccountForm() {
     document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('forgotPasswordForm').style.display = 'none';
     document.getElementById('createAccountForm').style.display = 'block';
     document.getElementById('newUsername').focus();
 }
 
 function showLoginForm() {
     document.getElementById('createAccountForm').style.display = 'none';
+    document.getElementById('forgotPasswordForm').style.display = 'none';
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('loginUsername').focus();
+}
+
+function showForgotPasswordForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('createAccountForm').style.display = 'none';
+    document.getElementById('forgotPasswordForm').style.display = 'block';
+    document.getElementById('resetUsername').focus();
+}
+
+async function handleResetPassword() {
+    const username = document.getElementById('resetUsername').value;
+    const newPassword = document.getElementById('resetPassword').value;
+    const confirmPassword = document.getElementById('resetConfirmPassword').value;
+    const errorDiv = document.getElementById('resetError');
+    const successDiv = document.getElementById('resetSuccess');
+    
+    // Reset styles
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    // Validation
+    if (!username || !newPassword) {
+        errorDiv.textContent = 'Username and password are required';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    if (newPassword.length < 4) {
+        errorDiv.textContent = 'Password must be at least 4 characters';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Reset password
+    const success = await resetPassword(username, newPassword);
+    
+    if (success) {
+        successDiv.textContent = 'Password reset successfully! Please login with your new password.';
+        successDiv.style.display = 'block';
+        
+        // Clear form
+        document.getElementById('resetUsername').value = '';
+        document.getElementById('resetPassword').value = '';
+        document.getElementById('resetConfirmPassword').value = '';
+        
+        // Switch back to login form after 2 seconds
+        setTimeout(() => {
+            showLoginForm();
+            document.getElementById('loginUsername').value = username;
+            document.getElementById('loginPassword').focus();
+        }, 2000);
+    } else {
+        errorDiv.textContent = 'Username not found or reset failed';
+        errorDiv.style.display = 'block';
+    }
 }
 
 // Add logout button

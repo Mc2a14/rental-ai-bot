@@ -155,6 +155,50 @@ class UserController {
       });
     }
   }
+
+  async resetPassword(req, res) {
+    try {
+      const { username, newPassword } = req.body;
+      
+      if (!username || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username and new password are required'
+        });
+      }
+      
+      if (newPassword.length < 4) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 4 characters'
+        });
+      }
+      
+      logger.info(`Password reset request for username: ${username}`);
+      
+      const result = await userService.resetPassword(username, newPassword);
+      
+      if (result.success) {
+        logger.info(`✅ Password reset successful for username: ${username}`);
+        return res.json({
+          success: true,
+          message: result.message || 'Password reset successfully'
+        });
+      } else {
+        logger.warn(`❌ Password reset failed for username: ${username} - ${result.message}`);
+        return res.json({
+          success: false,
+          message: result.message || 'Password reset failed'
+        });
+      }
+    } catch (error) {
+      logger.error('Password reset error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Server error during password reset'
+      });
+    }
+  }
 }
 
 module.exports = new UserController();

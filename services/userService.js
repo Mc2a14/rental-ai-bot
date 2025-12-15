@@ -226,6 +226,72 @@ class UserService {
       role: user.role
     };
   }
+
+  async resetPassword(username, newPassword) {
+    try {
+      if (await this.ensureDatabase()) {
+        return await this.resetPasswordInDatabase(username, newPassword);
+      }
+      
+      return await this.resetPasswordInFile(username, newPassword);
+    } catch (error) {
+      logger.error('Error resetting password:', error);
+      throw error;
+    }
+  }
+
+  async resetPasswordInDatabase(username, newPassword) {
+    // Check if user exists
+    const result = await database.query(
+      'SELECT user_id FROM users WHERE username = $1',
+      [username]
+    );
+
+    if (result.rows.length === 0) {
+      logger.warn(`Password reset failed: Username '${username}' not found`);
+      return {
+        success: false,
+        message: 'Username not found'
+      };
+    }
+
+    // Update password
+    await database.query(
+      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE username = $2',
+      [newPassword.trim(), username]
+    );
+
+    logger.info(`Password reset successful for user: ${username}`);
+    
+    return {
+      success: true,
+      message: 'Password reset successfully'
+    };
+  }
+
+  async resetPasswordInFile(username, newPassword) {
+    const users = await this.usersFile.read();
+    const userIndex = users.findIndex(u => u.username === username);
+    
+    if (userIndex === -1) {
+      logger.warn(`Password reset failed: Username '${username}' not found`);
+      return {
+        success: false,
+        message: 'Username not found'
+      };
+    }
+    
+    // Update password
+    users[userIndex].password = newPassword.trim();
+    await this.usersFile.write(users);
+
+    logger.info(`Password reset successful for user: ${username}`);
+    
+    return {
+      success: true,
+      message: 'Password reset successfully'
+    };
+  }
 }
 
 module.exports = new UserService();
