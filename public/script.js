@@ -1584,10 +1584,20 @@ class RentalAIChat {
         let formatted = text;
         
         // Convert markdown image links to actual images FIRST (before other replacements)
-        // Pattern: [text](url) where url is /uploads/...
+        // Pattern 1: Image markdown ![text](url) where url is /uploads/...
+        formatted = formatted.replace(/!\[([^\]]+)\]\((\/uploads\/[^\)]+)\)/g, (match, altText, imageUrl) => {
+            console.log('✅ Found markdown image (image format):', altText, imageUrl);
+            // Make URL absolute if it's relative
+            const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
+            return `<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
+        });
+        
+        // Pattern 2: Link markdown [text](url) where url is /uploads/...
         formatted = formatted.replace(/\[([^\]]+)\]\((\/uploads\/[^\)]+)\)/g, (match, altText, imageUrl) => {
-            console.log('✅ Found markdown image:', altText, imageUrl);
-            return `<div style="margin: 15px 0; text-align: center;"><img src="${imageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
+            console.log('✅ Found markdown image (link format):', altText, imageUrl);
+            // Make URL absolute if it's relative
+            const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
+            return `<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
         });
         
         // Now do other text replacements
@@ -1658,7 +1668,9 @@ class RentalAIChat {
             }
             
             console.log('📸 Rendering image with label:', label);
-            return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${imageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
+            // Make URL absolute if it's relative
+            const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
+            return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
         });
         
         // Pattern 2: URLs without file extensions (fallback)
@@ -1681,7 +1693,9 @@ class RentalAIChat {
                 }
                 
                 console.log('📸 Rendering image (no extension) with label:', label);
-                return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${imageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
+                // Make URL absolute if it's relative
+                const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : window.location.origin + imageUrl;
+                return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${fullImageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); const errorDiv = this.parentElement; errorDiv.innerHTML='<p style=\\'color: #e74c3c; font-size: 0.9em; padding: 10px; background: #fee; border-radius: 5px;\\'>⚠️ Image not available. The file may have been removed or the server restarted.<br><a href=\\'${fullImageUrl}\\' target=\\'_blank\\' style=\\'color: #3498db; text-decoration: underline;\\'>Try opening directly</a></p>';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
             }
             
             return match;
