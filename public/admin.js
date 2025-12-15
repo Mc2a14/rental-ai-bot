@@ -1154,8 +1154,24 @@ async saveConfiguration(e) {
         return;
     }
     
-    if (!this.validateCurrentStep()) {
-        this.showTempMessage('Please fill in all required fields before saving.', 'error');
+    // Only validate required fields (not optional ones)
+    const requiredFields = ['propertyName', 'hostContact', 'checkInTime', 'checkOutTime'];
+    let missingRequired = [];
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field || !field.value || !field.value.trim()) {
+            missingRequired.push(fieldId);
+        }
+    });
+    
+    if (missingRequired.length > 0) {
+        this.showTempMessage('Please fill in all required fields: Property Name, Host Contact, Check-in Time, and Check-out Time.', 'error');
+        // Scroll to first missing field
+        const firstMissing = document.getElementById(missingRequired[0]);
+        if (firstMissing) {
+            firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstMissing.focus();
+        }
         return;
     }
 
