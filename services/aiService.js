@@ -171,7 +171,8 @@ class AIService {
           }
           prompt += ` (Image URL: ${image.url})\n`;
         });
-        prompt += `\nWhen guests ask about locations like parking, key locks, building entrances, or QR codes, you can reference these images.`;
+        prompt += `\nWhen guests ask about locations like parking, key locks, building entrances, or QR codes, you can reference these images.\n`;
+        prompt += `IMPORTANT: When mentioning an image, use markdown format: [Image Label](image_url). For example: [Parking Lot](/uploads/filename.jpg). This ensures the image displays properly in the chat.`;
       }
     }
 

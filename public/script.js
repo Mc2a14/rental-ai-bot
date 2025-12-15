@@ -1593,6 +1593,51 @@ class RentalAIChat {
             return `<div style="margin: 15px 0;"><img src="${imageUrl}" alt="${altText}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
         });
         
+        // Also handle plain URLs to /uploads/ (when AI doesn't use markdown format)
+        // Look for /uploads/ URLs that aren't already in img tags
+        formatted = formatted.replace(/([^<"'])(\/uploads\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp))/gi, (match, before, imageUrl, ext) => {
+            // Skip if already inside an HTML tag (already converted)
+            if (before.includes('<img') || before.includes('src=') || before.includes('href=')) {
+                return match;
+            }
+            
+            // Extract label from the text before the URL
+            let label = 'Image';
+            const textBefore = formatted.substring(Math.max(0, formatted.indexOf(match) - 150), formatted.indexOf(match));
+            
+            // Look for common patterns that indicate what the image shows
+            const patterns = [
+                /(?:parking|park)\s+(?:lot|area|location|spot)/i,
+                /(?:key|lockbox|lock)\s+(?:location|code|box)/i,
+                /(?:building|entrance|entry)\s+(?:location|door|way)/i,
+                /(?:qr\s*code|qrcode)/i,
+                /(?:location|spot|area)\s+(?:for|showing)/i
+            ];
+            
+            for (const pattern of patterns) {
+                const found = textBefore.match(pattern);
+                if (found) {
+                    label = found[0].trim();
+                    break;
+                }
+            }
+            
+            // If no specific label found, try to get a phrase from the sentence
+            if (label === 'Image') {
+                const sentenceMatch = textBefore.match(/([^\.!?]{10,50})$/);
+                if (sentenceMatch) {
+                    const phrase = sentenceMatch[1].trim();
+                    // Extract meaningful words
+                    const words = phrase.split(/\s+/).filter(w => w.length > 3);
+                    if (words.length > 0) {
+                        label = words.slice(-3).join(' '); // Last 3 meaningful words
+                    }
+                }
+            }
+            
+            return `${before}<div style="margin: 15px 0;"><img src="${imageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto;" onerror="this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic; text-align: center;">${label}</p></div>`;
+        });
+        
         return formatted;
     }
 
