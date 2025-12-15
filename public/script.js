@@ -1485,6 +1485,9 @@ class RentalAIChat {
             if (data.success) {
                 // Store questionId for feedback tracking
                 const questionId = data.questionId || null;
+                // Debug: log the raw response to see image URLs
+                console.log('AI Response:', data.response);
+                console.log('Contains /uploads/:', data.response.includes('/uploads/'));
                 this.addMessage(data.response, 'bot', false, questionId);
                 console.log('AI Response - Using config:', data.usingCustomConfig || false);
                 
@@ -1573,7 +1576,22 @@ class RentalAIChat {
     }
 
     formatBotResponse(text) {
-        let formatted = text.replace(/\n/g, '<br>');
+        // Debug: log the raw text to see what we're working with
+        console.log('🔍 formatBotResponse - Raw text:', text);
+        console.log('🔍 Contains /uploads/:', text.includes('/uploads/'));
+        
+        // First, preserve line breaks but mark them for later processing
+        let formatted = text;
+        
+        // Convert markdown image links to actual images FIRST (before other replacements)
+        // Pattern: [text](url) where url is /uploads/...
+        formatted = formatted.replace(/\[([^\]]+)\]\((\/uploads\/[^\)]+)\)/g, (match, altText, imageUrl) => {
+            console.log('✅ Found markdown image:', altText, imageUrl);
+            return `<div style="margin: 15px 0; text-align: center;"><img src="${imageUrl}" alt="${altText}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
+        });
+        
+        // Now do other text replacements
+        formatted = formatted.replace(/\n/g, '<br>');
         formatted = formatted.replace(/(\d+)\.\s/g, '<strong>$1.</strong> ');
         formatted = formatted.replace(/Emergency:/g, '<strong>🚨 Emergency:</strong>');
         formatted = formatted.replace(/Contact:/g, '<strong>📞 Contact:</strong>');
@@ -1587,56 +1605,89 @@ class RentalAIChat {
         formatted = formatted.replace(/Appliance:/g, '<strong>🛠️ Appliance:</strong>');
         formatted = formatted.replace(/Instructions:/g, '<strong>📋 Instructions:</strong>');
         
-        // Convert markdown image links to actual images
-        // Pattern: [text](url) where url is /uploads/...
-        formatted = formatted.replace(/\[([^\]]+)\]\((\/uploads\/[^\)]+)\)/g, (match, altText, imageUrl) => {
-            return `<div style="margin: 15px 0;"><img src="${imageUrl}" alt="${altText}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${altText}</p></div>`;
-        });
-        
         // Also handle plain URLs to /uploads/ (when AI doesn't use markdown format)
-        // Look for /uploads/ URLs that aren't already in img tags
-        formatted = formatted.replace(/([^<"'])(\/uploads\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp))/gi, (match, before, imageUrl, ext) => {
+        // Save original text BEFORE HTML conversion for context extraction
+        const originalText = text;
+        
+        // Look for /uploads/ URLs - be more aggressive in detection
+        // Pattern 1: URLs with file extensions (most common)
+        formatted = formatted.replace(/([^<"'])(\/uploads\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp|JPG|JPEG|PNG|GIF|WEBP))/gi, (match, before, imageUrl, ext) => {
             // Skip if already inside an HTML tag (already converted)
-            if (before.includes('<img') || before.includes('src=') || before.includes('href=')) {
+            if (before.includes('<img') || before.includes('src=') || before.includes('href=') || before.includes('</div>')) {
                 return match;
             }
             
-            // Extract label from the text before the URL
-            let label = 'Image';
-            const textBefore = formatted.substring(Math.max(0, formatted.indexOf(match) - 150), formatted.indexOf(match));
+            console.log('✅ Found image URL:', imageUrl);
+            
+            // Extract label from the original text before the URL
+            const matchIndex = originalText.indexOf(imageUrl);
+            const textBefore = originalText.substring(Math.max(0, matchIndex - 300), matchIndex);
+            
+            let label = 'Parking Location';
             
             // Look for common patterns that indicate what the image shows
             const patterns = [
-                /(?:parking|park)\s+(?:lot|area|location|spot)/i,
-                /(?:key|lockbox|lock)\s+(?:location|code|box)/i,
-                /(?:building|entrance|entry)\s+(?:location|door|way)/i,
-                /(?:qr\s*code|qrcode)/i,
-                /(?:location|spot|area)\s+(?:for|showing)/i
+                /(?:parking|park)\s+(?:lot|area|location|spot|space)/i,
+                /(?:key|lockbox|lock)\s+(?:location|code|box|position)/i,
+                /(?:building|entrance|entry)\s+(?:location|door|way|access)/i,
+                /(?:qr\s*code|qrcode|q\s*r\s*code)/i,
+                /(?:image|picture|photo)\s+(?:showing|of|for)\s+([^\.]+)/i,
+                /(?:showing|shows|shows?)\s+([^\.]+?)(?:\.|$)/i
             ];
             
             for (const pattern of patterns) {
                 const found = textBefore.match(pattern);
                 if (found) {
-                    label = found[0].trim();
+                    if (found[1]) {
+                        label = found[1].trim();
+                    } else {
+                        label = found[0].trim();
+                    }
+                    // Clean up label
+                    label = label.replace(/^(the|a|an)\s+/i, '').trim();
                     break;
                 }
             }
             
-            // If no specific label found, try to get a phrase from the sentence
-            if (label === 'Image') {
-                const sentenceMatch = textBefore.match(/([^\.!?]{10,50})$/);
-                if (sentenceMatch) {
-                    const phrase = sentenceMatch[1].trim();
-                    // Extract meaningful words
-                    const words = phrase.split(/\s+/).filter(w => w.length > 3);
-                    if (words.length > 0) {
-                        label = words.slice(-3).join(' '); // Last 3 meaningful words
-                    }
+            // If still no label, look for "parking lot", "key lock", etc. in nearby text
+            if (label === 'Parking Location') {
+                const simpleMatch = textBefore.match(/(parking|key|lock|building|entrance|qr)/i);
+                if (simpleMatch) {
+                    label = simpleMatch[0] + ' location';
                 }
             }
             
-            return `${before}<div style="margin: 15px 0;"><img src="${imageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto;" onerror="this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic; text-align: center;">${label}</p></div>`;
+            console.log('📸 Rendering image with label:', label);
+            return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${imageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
         });
+        
+        // Pattern 2: URLs without file extensions (fallback)
+        formatted = formatted.replace(/([^<"'])(\/uploads\/[^\s<>"']+)/gi, (match, before, imageUrl) => {
+            // Skip if already converted or if it has an extension (already handled above)
+            if (before.includes('<img') || before.includes('src=') || before.includes('href=') || 
+                before.includes('</div>') || imageUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                return match;
+            }
+            
+            // Only process if it looks like an image path
+            if (imageUrl.includes('image') || imageUrl.includes('photo') || imageUrl.includes('img')) {
+                const matchIndex = originalText.indexOf(imageUrl);
+                const textBefore = originalText.substring(Math.max(0, matchIndex - 300), matchIndex);
+                
+                let label = 'Image';
+                const simpleMatch = textBefore.match(/(parking|key|lock|building|entrance|qr)/i);
+                if (simpleMatch) {
+                    label = simpleMatch[0] + ' location';
+                }
+                
+                console.log('📸 Rendering image (no extension) with label:', label);
+                return `${before}<div style="margin: 15px 0; text-align: center;"><img src="${imageUrl}" alt="${label}" style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block; margin: 10px auto; cursor: pointer;" onclick="window.open(this.src, '_blank')" onerror="console.error('Image failed to load:', this.src); this.style.display='none';"><p style="margin-top: 8px; font-size: 0.9em; color: #666; font-style: italic;">${label}</p></div>`;
+            }
+            
+            return match;
+        });
+        
+        console.log('✅ formatBotResponse complete. Final formatted length:', formatted.length);
         
         return formatted;
     }
