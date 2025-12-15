@@ -2333,7 +2333,8 @@ clearForm() {
 }
 }
 
-module.exports = PropertySetup;
+// Make PropertySetup available globally
+window.PropertySetup = PropertySetup;
 
 // Make functions globally available
 function addFAQ() {
@@ -2535,19 +2536,25 @@ if (document.readyState === 'loading') {
 let notificationsInterval = null;
 
 function initNotifications() {
+    console.log('🔔 initNotifications called');
     const notificationsBtn = document.getElementById('notificationsBtn');
     const notificationsPanel = document.getElementById('notificationsPanel');
     const closeNotifications = document.getElementById('closeNotifications');
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     const refreshNotificationsBtn = document.getElementById('refreshNotificationsBtn');
     
+    console.log('Notifications button found:', !!notificationsBtn);
+    console.log('Notifications panel found:', !!notificationsPanel);
+    
     if (!notificationsBtn) {
-        console.warn('Notifications button not found');
+        console.warn('⚠️ Notifications button not found - retrying in 500ms');
+        setTimeout(initNotifications, 500);
         return;
     }
     
     if (!notificationsPanel) {
-        console.warn('Notifications panel not found');
+        console.warn('⚠️ Notifications panel not found - retrying in 500ms');
+        setTimeout(initNotifications, 500);
         return;
     }
     
@@ -2713,16 +2720,27 @@ function getTimeAgo(date) {
 }
 
 // Initialize notifications when DOM is ready
-// Wait a bit for PropertySetup to initialize first
-setTimeout(() => {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(initNotifications, 500);
-        });
-    } else {
-        setTimeout(initNotifications, 500);
+// Wait for PropertySetup to initialize first
+function initializeNotificationsSystem() {
+    // Wait for PropertySetup to be available
+    if (typeof window.propertySetup === 'undefined') {
+        setTimeout(initializeNotificationsSystem, 200);
+        return;
     }
-}, 1000);
+    
+    // Wait a bit more for property to load
+    setTimeout(() => {
+        console.log('🔔 Initializing notifications system...');
+        initNotifications();
+    }, 1000);
+}
+
+// Start initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeNotificationsSystem);
+} else {
+    initializeNotificationsSystem();
+}
 
 // Global wrapper functions for image management
 function uploadImage() {
