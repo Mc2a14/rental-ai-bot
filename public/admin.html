@@ -1124,7 +1124,7 @@
             </div>
             
             <!-- Second row: New Property + Dropdown + Progress -->
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
                 <button id="newPropertyBtn" style="padding: 10px 18px; background: #2ecc71; color: white; border: none; border-radius: 25px; font-size: 13px; cursor: pointer; display: none; white-space: nowrap; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; height: 38px; box-sizing: border-box;">
                     <i class="fas fa-plus"></i> New Property
                 </button>
@@ -1134,15 +1134,13 @@
                     </select>
                     <div style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #2c3e50;"></div>
                 </div>
-                <!-- Progress Indicator - Next to Property Dropdown -->
-                <div id="progressIndicator" style="background: rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; max-width: 300px;">
-                    <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.95); font-weight: 500; white-space: nowrap;">
-                        <i class="fas fa-tasks" style="margin-right: 4px;"></i>Progress
+                <!-- Progress Indicator - Compact, next to Property Dropdown -->
+                <div id="progressIndicator" style="background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 6px 10px; display: flex; align-items: center; gap: 6px; height: 38px; box-sizing: border-box; flex-shrink: 0;">
+                    <i class="fas fa-tasks" style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.9);"></i>
+                    <div style="width: 60px; background: rgba(255, 255, 255, 0.3); border-radius: 8px; height: 6px; overflow: hidden;">
+                        <div id="progressBar" style="background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 8px;"></div>
                     </div>
-                    <div style="flex: 1; background: rgba(255, 255, 255, 0.3); border-radius: 10px; height: 8px; overflow: hidden; min-width: 60px;">
-                        <div id="progressBar" style="background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 10px;"></div>
-                    </div>
-                    <span id="progressPercentage" style="font-size: 0.8rem; font-weight: bold; color: white; min-width: 35px; text-align: right; white-space: nowrap;">0%</span>
+                    <span id="progressPercentage" style="font-size: 0.75rem; font-weight: bold; color: white; min-width: 32px; text-align: right; white-space: nowrap;">0%</span>
                 </div>
             </div>
             
