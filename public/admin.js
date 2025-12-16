@@ -2408,6 +2408,11 @@ async switchProperty(propertyId) {
     this.currentStep = 1;
     this.updateStepDisplay();
     
+    // Update progress indicator for the new property
+    setTimeout(() => {
+        this.updateProgressIndicator();
+    }, 300);
+    
     this.showTempMessage(`Switched to ${property.name}`, 'success');
     console.log(`✅ Switched to property: ${property.name}`);
 }
