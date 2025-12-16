@@ -1139,20 +1139,20 @@
                 </button>
             </div>
             
-            <!-- Progress Indicator + View Analytics - Same row below Property Dropdown -->
+            <!-- View Analytics + Progress Indicator - Same row below Property Dropdown -->
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
-                <!-- Shortened Progress Indicator -->
-                <div id="progressIndicator" style="background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; max-width: 300px;">
-                    <i class="fas fa-tasks" style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.95); flex-shrink: 0;"></i>
-                    <div style="flex: 1; background: rgba(255, 255, 255, 0.3); border-radius: 8px; height: 8px; overflow: hidden; min-width: 80px;">
-                        <div id="progressBar" style="background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 8px;"></div>
-                    </div>
-                    <span id="progressPercentage" style="font-size: 0.75rem; font-weight: bold; color: white; min-width: 35px; text-align: right; white-space: nowrap; flex-shrink: 0;">0%</span>
-                </div>
-                <!-- View Analytics -->
+                <!-- View Analytics (first) -->
                 <a href="/analytics.html" style="padding: 10px 18px; background: #3498db; color: white; text-decoration: none; border-radius: 25px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 500; height: 38px; box-sizing: border-box; flex-shrink: 0;">
                     <i class="fas fa-chart-line"></i> View Analytics
                 </a>
+                <!-- Shortened Progress Indicator (to the right) -->
+                <div id="progressIndicator" style="background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 6px 10px; display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <i class="fas fa-tasks" style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.95); flex-shrink: 0;"></i>
+                    <div style="width: 50px; background: rgba(255, 255, 255, 0.3); border-radius: 8px; height: 8px; overflow: hidden;">
+                        <div id="progressBar" style="background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 8px;"></div>
+                    </div>
+                    <span id="progressPercentage" style="font-size: 0.7rem; font-weight: bold; color: white; min-width: 30px; text-align: right; white-space: nowrap; flex-shrink: 0;">0%</span>
+                </div>
             </div>
             
             <!-- Notifications Panel (hidden by default) -->
