@@ -1014,23 +1014,22 @@
 
         /* Progress Indicator Styles */
         #progressIndicator {
-            margin-top: 8px;
+            flex-shrink: 0;
         }
         
         @media (max-width: 768px) {
             #progressIndicator {
-                padding: 10px 12px;
+                padding: 6px 8px !important;
+                gap: 4px !important;
             }
             
-            #progressIndicator > div {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+            #progressIndicator > div:first-of-type {
+                width: 50px !important;
             }
             
-            #progressIndicator > div > div:last-child {
-                width: 100%;
-                max-width: 100%;
+            #progressPercentage {
+                min-width: 28px !important;
+                font-size: 0.7rem !important;
             }
         }
         
