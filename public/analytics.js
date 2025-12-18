@@ -117,6 +117,23 @@ function displayAnalytics(stats) {
     // Total questions
     document.getElementById('totalQuestions').textContent = stats.total || 0;
     
+    // Page views
+    if (stats.pageViews) {
+        const totalViews = stats.pageViews.totalViews || 0;
+        const uniqueVisitors = stats.pageViews.uniqueVisitors || 0;
+        document.getElementById('totalPageViews').textContent = totalViews;
+        document.getElementById('uniqueVisitors').textContent = `${uniqueVisitors} unique visitors`;
+        
+        // Show page views section if there are views
+        if (totalViews > 0) {
+            document.getElementById('pageViewsSection').style.display = 'block';
+            displayPageViews(stats.pageViews);
+        }
+    } else {
+        document.getElementById('totalPageViews').textContent = '0';
+        document.getElementById('uniqueVisitors').textContent = '0 unique visitors';
+    }
+    
     // Helpful rate
     const helpfulRate = Math.round(stats.helpfulRate || 0);
     document.getElementById('helpfulRate').textContent = helpfulRate + '%';
@@ -134,14 +151,6 @@ function displayAnalytics(stats) {
         document.getElementById('topCategory').textContent = stats.byCategory[0].category;
     } else {
         document.getElementById('topCategory').textContent = '-';
-    }
-    
-    // Languages
-    if (stats.byLanguage && stats.byLanguage.length > 0) {
-        const languages = stats.byLanguage.map(l => `${l.language.toUpperCase()}: ${l.count}`).join(', ');
-        document.getElementById('languages').textContent = languages;
-    } else {
-        document.getElementById('languages').textContent = '-';
     }
     
     // Most frequent questions
@@ -193,6 +202,94 @@ function displayAnalytics(stats) {
         });
     } else {
         categoryList.innerHTML = '<li class="empty-state">No categories yet</li>';
+    }
+}
+
+function displayPageViews(pageViews) {
+    const pageViewsContent = document.getElementById('pageViewsContent');
+    pageViewsContent.innerHTML = '';
+    
+    if (!pageViews || pageViews.totalViews === 0) {
+        pageViewsContent.innerHTML = '<div class="empty-state">No page views yet</div>';
+        return;
+    }
+    
+    // Summary
+    const summaryDiv = document.createElement('div');
+    summaryDiv.style.cssText = 'background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;';
+    summaryDiv.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+            <div>
+                <strong style="color: #7f8c8d; font-size: 0.9rem;">Total Views</strong>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #2c3e50;">${pageViews.totalViews}</div>
+            </div>
+            <div>
+                <strong style="color: #7f8c8d; font-size: 0.9rem;">Unique Visitors</strong>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #3498db;">${pageViews.uniqueVisitors}</div>
+            </div>
+        </div>
+    `;
+    pageViewsContent.appendChild(summaryDiv);
+    
+    // Views by day
+    if (pageViews.viewsByDay && pageViews.viewsByDay.length > 0) {
+        const dailyDiv = document.createElement('div');
+        dailyDiv.style.marginBottom = '20px';
+        dailyDiv.innerHTML = '<h3 style="margin-bottom: 10px; color: #2c3e50;">Views by Day</h3>';
+        
+        const dailyList = document.createElement('ul');
+        dailyList.className = 'question-list';
+        dailyList.style.maxHeight = '200px';
+        dailyList.style.overflowY = 'auto';
+        
+        pageViews.viewsByDay.forEach(day => {
+            const li = document.createElement('li');
+            li.className = 'question-item';
+            const date = new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            li.innerHTML = `
+                <div class="question-text">
+                    <span>${date}</span>
+                </div>
+                <div class="question-stats">
+                    <span class="frequency-badge">${day.count} views</span>
+                </div>
+            `;
+            dailyList.appendChild(li);
+        });
+        
+        dailyDiv.appendChild(dailyList);
+        pageViewsContent.appendChild(dailyDiv);
+    }
+    
+    // Recent views
+    if (pageViews.recentViews && pageViews.recentViews.length > 0) {
+        const recentDiv = document.createElement('div');
+        recentDiv.innerHTML = '<h3 style="margin-bottom: 10px; color: #2c3e50;">Recent Views</h3>';
+        
+        const recentList = document.createElement('ul');
+        recentList.className = 'question-list';
+        recentList.style.maxHeight = '200px';
+        recentList.style.overflowY = 'auto';
+        
+        pageViews.recentViews.forEach(view => {
+            const li = document.createElement('li');
+            li.className = 'question-item';
+            const date = new Date(view.viewedAt).toLocaleString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            li.innerHTML = `
+                <div class="question-text">
+                    <span>${date}</span>
+                </div>
+            `;
+            recentList.appendChild(li);
+        });
+        
+        recentDiv.appendChild(recentList);
+        pageViewsContent.appendChild(recentDiv);
     }
 }
 

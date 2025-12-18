@@ -220,6 +220,35 @@ class Database {
         )
       `);
 
+      // Create page_views table to track property page visits
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS page_views (
+          id SERIAL PRIMARY KEY,
+          property_id VARCHAR(255) NOT NULL,
+          session_id VARCHAR(255),
+          ip_address VARCHAR(45),
+          user_agent TEXT,
+          referrer TEXT,
+          viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (property_id) REFERENCES properties(property_id) ON DELETE CASCADE
+        )
+      `);
+      logger.info('✅ Page views table created');
+
+      // Create indexes for page_views
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_page_views_property_id 
+        ON page_views(property_id)
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_page_views_viewed_at 
+        ON page_views(viewed_at DESC)
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_page_views_property_viewed 
+        ON page_views(property_id, viewed_at DESC)
+      `);
+
       // Create indexes for questions
       await client.query(`
         CREATE INDEX IF NOT EXISTS idx_questions_property_id ON questions(property_id)

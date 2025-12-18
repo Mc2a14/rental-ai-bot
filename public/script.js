@@ -88,6 +88,45 @@ class RentalAIChat {
         }
         
         console.log('=== PROPERTY DATA LOADED ===');
+        
+        // Track page view when property is loaded
+        this.trackPageView();
+    }
+    
+    async trackPageView() {
+        // Only track if we have a property ID
+        const propertyId = this.getPropertyIdFromUrl();
+        if (!propertyId) {
+            console.log('⚠️ No property ID found, skipping page view tracking');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/analytics/property/${propertyId}/pageview`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                console.log('✅ Page view tracked');
+            } else {
+                console.warn('⚠️ Failed to track page view');
+            }
+        } catch (error) {
+            console.error('Error tracking page view:', error);
+            // Don't show error to user, just log it
+        }
+    }
+    
+    getPropertyIdFromUrl() {
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        const isPropertyPage = pathParts.length >= 2 && pathParts[0] === 'property' && pathParts[1];
+        if (isPropertyPage) {
+            return pathParts[1];
+        }
+        // Fallback: try to get from hostConfig
+        return this.hostConfig?.id || this.hostConfig?.propertyId || this.hostConfig?.property_id || null;
     }
 
     // Add this new method to script.js

@@ -44,6 +44,102 @@ class AnalyticsService {
     }
   }
 
+  async trackPageView(propertyId, sessionId = null, ipAddress = null, userAgent = null, referrer = null) {
+    try {
+      if (!await this.ensureDatabase()) {
+        logger.warn('Database not available, skipping page view tracking');
+        return null;
+      }
+
+      const result = await database.query(
+        `INSERT INTO page_views (property_id, session_id, ip_address, user_agent, referrer)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id`,
+        [propertyId, sessionId, ipAddress, userAgent, referrer]
+      );
+
+      logger.info(`Page view tracked for property: ${propertyId}`);
+      return result.rows[0].id;
+    } catch (error) {
+      logger.error('Error tracking page view:', error);
+      return null;
+    }
+  }
+
+  async getPageViewStats(propertyId, days = 30) {
+    try {
+      if (!await this.ensureDatabase()) {
+        return {
+          totalViews: 0,
+          uniqueVisitors: 0,
+          viewsByDay: [],
+          recentViews: []
+        };
+      }
+
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+
+      // Total views
+      const totalResult = await database.query(
+        `SELECT COUNT(*) as count FROM page_views 
+         WHERE property_id = $1 AND viewed_at >= $2`,
+        [propertyId, since]
+      );
+
+      // Unique visitors (by session_id or ip_address)
+      const uniqueResult = await database.query(
+        `SELECT COUNT(DISTINCT COALESCE(session_id, ip_address)) as count 
+         FROM page_views 
+         WHERE property_id = $1 AND viewed_at >= $2`,
+        [propertyId, since]
+      );
+
+      // Views by day
+      const dailyResult = await database.query(
+        `SELECT DATE(viewed_at) as date, COUNT(*) as count
+         FROM page_views 
+         WHERE property_id = $1 AND viewed_at >= $2
+         GROUP BY DATE(viewed_at)
+         ORDER BY date DESC`,
+        [propertyId, since]
+      );
+
+      // Recent views (last 10)
+      const recentResult = await database.query(
+        `SELECT viewed_at, session_id, ip_address, referrer
+         FROM page_views 
+         WHERE property_id = $1 AND viewed_at >= $2
+         ORDER BY viewed_at DESC
+         LIMIT 10`,
+        [propertyId, since]
+      );
+
+      return {
+        totalViews: parseInt(totalResult.rows[0]?.count || 0),
+        uniqueVisitors: parseInt(uniqueResult.rows[0]?.count || 0),
+        viewsByDay: dailyResult.rows.map(row => ({
+          date: row.date,
+          count: parseInt(row.count)
+        })),
+        recentViews: recentResult.rows.map(row => ({
+          viewedAt: row.viewed_at,
+          sessionId: row.session_id,
+          ipAddress: row.ip_address,
+          referrer: row.referrer
+        }))
+      };
+    } catch (error) {
+      logger.error('Error getting page view stats:', error);
+      return {
+        totalViews: 0,
+        uniqueVisitors: 0,
+        viewsByDay: [],
+        recentViews: []
+      };
+    }
+  }
+
   async getQuestionStats(propertyId, days = 30) {
     try {
       if (!await this.ensureDatabase()) {
@@ -373,6 +469,193 @@ class AnalyticsService {
       byLanguage: [],
       helpfulRate: 0,
       timeSeries: []
+    };
+  }
+
+  // App-wide analytics for developer/admin
+  async getAppWideStats(days = 30) {
+    try {
+      if (!await this.ensureDatabase()) {
+        return this.getEmptyAppStats();
+      }
+
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+
+      // Total users
+      const usersResult = await database.query(
+        `SELECT COUNT(*) as count FROM users WHERE created_at >= $1`,
+        [since]
+      );
+
+      // Total properties
+      const propertiesResult = await database.query(
+        `SELECT COUNT(*) as count FROM properties WHERE created_at >= $1`,
+        [since]
+      );
+
+      // Total page views
+      const pageViewsResult = await database.query(
+        `SELECT COUNT(*) as count FROM page_views WHERE viewed_at >= $1`,
+        [since]
+      );
+
+      // Unique visitors (across all properties)
+      const uniqueVisitorsResult = await database.query(
+        `SELECT COUNT(DISTINCT COALESCE(session_id, ip_address)) as count 
+         FROM page_views WHERE viewed_at >= $1`,
+        [since]
+      );
+
+      // Total questions
+      const questionsResult = await database.query(
+        `SELECT COUNT(*) as count FROM questions WHERE created_at >= $1`,
+        [since]
+      );
+
+      // Users over time
+      const usersOverTimeResult = await database.query(
+        `SELECT DATE(created_at) as date, COUNT(*) as count
+         FROM users WHERE created_at >= $1
+         GROUP BY DATE(created_at)
+         ORDER BY date ASC`,
+        [since]
+      );
+
+      // Properties over time
+      const propertiesOverTimeResult = await database.query(
+        `SELECT DATE(created_at) as date, COUNT(*) as count
+         FROM properties WHERE created_at >= $1
+         GROUP BY DATE(created_at)
+         ORDER BY date ASC`,
+        [since]
+      );
+
+      // Page views over time
+      const pageViewsOverTimeResult = await database.query(
+        `SELECT DATE(viewed_at) as date, COUNT(*) as count
+         FROM page_views WHERE viewed_at >= $1
+         GROUP BY DATE(viewed_at)
+         ORDER BY date ASC`,
+        [since]
+      );
+
+      // Questions over time
+      const questionsOverTimeResult = await database.query(
+        `SELECT DATE(created_at) as date, COUNT(*) as count
+         FROM questions WHERE created_at >= $1
+         GROUP BY DATE(created_at)
+         ORDER BY date ASC`,
+        [since]
+      );
+
+      // Top properties by page views
+      const topPropertiesByViewsResult = await database.query(
+        `SELECT p.property_id, p.name, COUNT(pv.id) as view_count
+         FROM properties p
+         LEFT JOIN page_views pv ON p.property_id = pv.property_id AND pv.viewed_at >= $1
+         GROUP BY p.property_id, p.name
+         ORDER BY view_count DESC
+         LIMIT 10`,
+        [since]
+      );
+
+      // Top properties by questions
+      const topPropertiesByQuestionsResult = await database.query(
+        `SELECT p.property_id, p.name, COUNT(q.id) as question_count
+         FROM properties p
+         LEFT JOIN questions q ON p.property_id = q.property_id AND q.created_at >= $1
+         GROUP BY p.property_id, p.name
+         ORDER BY question_count DESC
+         LIMIT 10`,
+        [since]
+      );
+
+      // Recent activity (last 20 events)
+      const recentActivityResult = await database.query(
+        `SELECT 
+           'user' as type, user_id as id, username as name, created_at as timestamp
+         FROM users WHERE created_at >= $1
+         UNION ALL
+         SELECT 
+           'property' as type, property_id as id, name, created_at as timestamp
+         FROM properties WHERE created_at >= $1
+         ORDER BY timestamp DESC
+         LIMIT 20`,
+        [since]
+      );
+
+      return {
+        summary: {
+          totalUsers: parseInt(usersResult.rows[0]?.count || 0),
+          totalProperties: parseInt(propertiesResult.rows[0]?.count || 0),
+          totalPageViews: parseInt(pageViewsResult.rows[0]?.count || 0),
+          uniqueVisitors: parseInt(uniqueVisitorsResult.rows[0]?.count || 0),
+          totalQuestions: parseInt(questionsResult.rows[0]?.count || 0)
+        },
+        timeSeries: {
+          users: usersOverTimeResult.rows.map(r => ({
+            date: r.date.toISOString().split('T')[0],
+            count: parseInt(r.count)
+          })),
+          properties: propertiesOverTimeResult.rows.map(r => ({
+            date: r.date.toISOString().split('T')[0],
+            count: parseInt(r.count)
+          })),
+          pageViews: pageViewsOverTimeResult.rows.map(r => ({
+            date: r.date.toISOString().split('T')[0],
+            count: parseInt(r.count)
+          })),
+          questions: questionsOverTimeResult.rows.map(r => ({
+            date: r.date.toISOString().split('T')[0],
+            count: parseInt(r.count)
+          }))
+        },
+        topProperties: {
+          byViews: topPropertiesByViewsResult.rows.map(r => ({
+            propertyId: r.property_id,
+            name: r.name,
+            viewCount: parseInt(r.view_count || 0)
+          })),
+          byQuestions: topPropertiesByQuestionsResult.rows.map(r => ({
+            propertyId: r.property_id,
+            name: r.name,
+            questionCount: parseInt(r.question_count || 0)
+          }))
+        },
+        recentActivity: recentActivityResult.rows.map(r => ({
+          type: r.type,
+          id: r.id,
+          name: r.name,
+          timestamp: r.timestamp
+        }))
+      };
+    } catch (error) {
+      logger.error('Error getting app-wide stats:', error);
+      return this.getEmptyAppStats();
+    }
+  }
+
+  getEmptyAppStats() {
+    return {
+      summary: {
+        totalUsers: 0,
+        totalProperties: 0,
+        totalPageViews: 0,
+        uniqueVisitors: 0,
+        totalQuestions: 0
+      },
+      timeSeries: {
+        users: [],
+        properties: [],
+        pageViews: [],
+        questions: []
+      },
+      topProperties: {
+        byViews: [],
+        byQuestions: []
+      },
+      recentActivity: []
     };
   }
 }

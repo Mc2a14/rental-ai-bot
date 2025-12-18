@@ -135,6 +135,10 @@ app.use('/api/user', generalLimiter, userRoutes);
 // Analytics API - Analytics rate limiting
 app.use('/api/analytics', analyticsLimiter, analyticsRoutes);
 
+// Admin Analytics API - App-wide stats for developer
+const adminAnalyticsController = require('./controllers/adminAnalyticsController');
+app.get('/api/admin/stats', generalLimiter, (req, res) => adminAnalyticsController.getAppStats(req, res));
+
 // User Properties API
 app.get('/api/user/:userId/properties', async (req, res) => {
   const propertyController = require('./controllers/propertyController');
@@ -158,6 +162,11 @@ app.get('/analytics.html', (req, res) => {
 // Admin Page
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Admin Analytics Dashboard (Developer)
+app.get('/admin-analytics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-analytics.html'));
 });
 
 // Root - redirect to main chat

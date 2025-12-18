@@ -19,6 +19,9 @@ router.get('/property/:propertyId/faqs', analyticsController.getFAQs.bind(analyt
 // Generate FAQs from frequent questions
 router.post('/property/:propertyId/generate-faqs', analyticsController.generateFAQs.bind(analyticsController));
 
+// Track page view for a property
+router.post('/property/:propertyId/pageview', analyticsController.trackPageView.bind(analyticsController));
+
 // Notification routes
 router.get('/property/:propertyId/notifications', notificationController.getNotifications.bind(notificationController));
 router.post('/property/:propertyId/notifications/mark-read', notificationController.markAsRead.bind(notificationController));
