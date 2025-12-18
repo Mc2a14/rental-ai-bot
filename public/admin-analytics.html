@@ -139,15 +139,49 @@
         
         @media (min-width: 768px) {
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
+            }
+            
+            /* Center the last 2 cards on bottom row */
+            .stats-grid > *:nth-child(4),
+            .stats-grid > *:nth-child(5) {
+                grid-column: span 1;
+            }
+            
+            /* Center the bottom row with 2 cards */
+            .stats-grid::after {
+                content: '';
+                grid-column: 1;
             }
         }
         
         @media (min-width: 1200px) {
             .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
+                justify-items: center;
+            }
+            
+            /* First 3 cards take full width of their columns */
+            .stats-grid > *:nth-child(1),
+            .stats-grid > *:nth-child(2),
+            .stats-grid > *:nth-child(3) {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            /* Last 2 cards centered on bottom row */
+            .stats-grid > *:nth-child(4) {
+                grid-column: 2;
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .stats-grid > *:nth-child(5) {
+                grid-column: 3;
+                width: 100%;
+                max-width: 100%;
             }
         }
         
