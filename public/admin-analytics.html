@@ -13,9 +13,8 @@
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             overflow-y: auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            display: block;
+            box-sizing: border-box;
         }
         
         .admin-analytics-container {
@@ -28,6 +27,7 @@
             box-shadow: none;
             min-height: auto;
             overflow: visible;
+            box-sizing: border-box;
         }
         
         .header-section {
@@ -401,8 +401,7 @@
         @media (max-width: 768px) {
             body {
                 padding: 10px !important;
-                display: flex;
-                justify-content: center;
+                display: block;
             }
             
             .admin-analytics-container {
