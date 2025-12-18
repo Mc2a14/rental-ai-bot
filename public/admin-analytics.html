@@ -160,10 +160,9 @@
             .stats-grid {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
-                justify-items: center;
             }
             
-            /* First 3 cards take full width of their columns */
+            /* First 3 cards on top row */
             .stats-grid > *:nth-child(1),
             .stats-grid > *:nth-child(2),
             .stats-grid > *:nth-child(3) {
@@ -171,7 +170,7 @@
                 max-width: 100%;
             }
             
-            /* Last 2 cards centered on bottom row */
+            /* Last 2 cards centered on bottom row - start from column 2 */
             .stats-grid > *:nth-child(4) {
                 grid-column: 2;
                 width: 100%;
@@ -182,6 +181,21 @@
                 grid-column: 3;
                 width: 100%;
                 max-width: 100%;
+            }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            /* Last 2 cards centered on bottom row */
+            .stats-grid > *:nth-child(4) {
+                grid-column: 2;
+            }
+            
+            .stats-grid > *:nth-child(5) {
+                grid-column: 3;
             }
         }
         
