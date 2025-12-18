@@ -644,14 +644,28 @@ class AnalyticsService {
           name: r.name,
           timestamp: r.timestamp
         })),
-        users: usersListResult.rows.map(r => ({
-          userId: r.user_id,
-          username: r.username,
-          createdAt: r.created_at,
-          propertyCount: parseInt(r.property_count || 0),
-          totalPageViews: parseInt(r.total_page_views || 0),
-          totalQuestions: parseInt(r.total_questions || 0)
-        }))
+        users: (() => {
+          // Group properties by user
+          const userMap = new Map();
+          usersListResult.rows.forEach(row => {
+            if (!userMap.has(row.user_id)) {
+              userMap.set(row.user_id, {
+                userId: row.user_id,
+                username: row.username,
+                createdAt: row.user_created_at,
+                properties: []
+              });
+            }
+            if (row.property_id) {
+              userMap.get(row.user_id).properties.push({
+                propertyId: row.property_id,
+                name: row.property_name,
+                createdAt: row.property_created_at
+              });
+            }
+          });
+          return Array.from(userMap.values());
+        })()
       };
     } catch (error) {
       logger.error('Error getting app-wide stats:', error);
