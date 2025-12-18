@@ -117,25 +117,33 @@ function displayStats(stats) {
             
             const initials = user.username.substring(0, 2).toUpperCase();
             
+            // Build properties list
+            let propertiesHtml = '';
+            if (user.properties && user.properties.length > 0) {
+                user.properties.forEach(prop => {
+                    const propDate = new Date(prop.createdAt);
+                    const propDateStr = propDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    propertiesHtml += `
+                        <div style="margin-top: 8px; padding-left: 20px; color: #7f8c8d; font-size: 0.9rem;">
+                            <i class="fas fa-home" style="margin-right: 5px;"></i>
+                            <strong>${escapeHtml(prop.name)}</strong> - ${propDateStr}
+                        </div>
+                    `;
+                });
+            } else {
+                propertiesHtml = '<div style="margin-top: 8px; padding-left: 20px; color: #95a5a6; font-size: 0.85rem; font-style: italic;">No properties yet</div>';
+            }
+            
             item.innerHTML = `
                 <div class="user-avatar">${initials}</div>
-                <div class="user-info">
+                <div class="user-info" style="flex: 1;">
                     <div class="username">${escapeHtml(user.username)}</div>
-                    <div class="user-id">${user.userId}</div>
-                    <div class="user-stats">
-                        <div class="user-stat">
-                            <i class="fas fa-home"></i>
-                            <span><span class="stat-value">${user.propertyCount}</span> properties</span>
-                        </div>
-                        <div class="user-stat">
-                            <i class="fas fa-eye"></i>
-                            <span><span class="stat-value">${user.totalPageViews}</span> views</span>
-                        </div>
-                        <div class="user-stat">
-                            <i class="fas fa-question-circle"></i>
-                            <span><span class="stat-value">${user.totalQuestions}</span> questions</span>
-                        </div>
-                    </div>
+                    <div class="user-id" style="font-size: 0.8rem; color: #95a5a6; margin-bottom: 5px;">${user.userId}</div>
+                    ${propertiesHtml}
                 </div>
                 <div class="user-date">
                     Joined: ${dateStr}

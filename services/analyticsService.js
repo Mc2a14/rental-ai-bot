@@ -585,21 +585,18 @@ class AnalyticsService {
         [since]
       );
 
-      // Get all users with their property counts
+      // Get all users with their properties
       const usersListResult = await database.query(
         `SELECT 
            u.user_id,
            u.username,
-           u.created_at,
-           COUNT(p.property_id) as property_count,
-           COUNT(DISTINCT pv.id) as total_page_views,
-           COUNT(DISTINCT q.id) as total_questions
+           u.created_at as user_created_at,
+           p.property_id,
+           p.name as property_name,
+           p.created_at as property_created_at
          FROM users u
          LEFT JOIN properties p ON u.user_id = p.user_id
-         LEFT JOIN page_views pv ON p.property_id = pv.property_id
-         LEFT JOIN questions q ON p.property_id = q.property_id
-         GROUP BY u.user_id, u.username, u.created_at
-         ORDER BY u.created_at DESC`,
+         ORDER BY u.created_at DESC, p.created_at DESC`,
         []
       );
 
