@@ -18,7 +18,7 @@
         .admin-analytics-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 30px;
+            padding: 0;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -26,21 +26,36 @@
             overflow: visible;
         }
         
+        .container-inner {
+            padding: 30px;
+        }
+        
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 0;
+            padding: 30px;
             padding-bottom: 20px;
-            border-bottom: 3px solid #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px 20px 0 0;
+            color: white;
+        }
+        
+        .header .app-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            opacity: 0.95;
+            letter-spacing: 1px;
         }
         
         .header h1 {
-            color: #2c3e50;
+            color: white;
             font-size: 2.5rem;
             margin: 0 0 10px 0;
         }
         
         .header p {
-            color: #7f8c8d;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 1.1rem;
             margin: 0;
         }
@@ -112,6 +127,12 @@
             padding: 25px;
             background: #f8f9fa;
             border-radius: 15px;
+            max-width: 100%;
+        }
+        
+        .content-wrapper {
+            padding: 30px;
+            padding-bottom: 50px;
         }
         
         .section h2 {
@@ -329,31 +350,52 @@
         .back-link:hover {
             background: rgba(255,255,255,0.3);
         }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px !important;
+            }
+            
+            .admin-analytics-container {
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+                border-radius: 15px 15px 0 0;
+            }
+            
+            .content-wrapper {
+                padding: 20px;
+                padding-bottom: 50px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="admin-analytics-container">
-        <a href="/admin" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Admin
-        </a>
-        
         <div class="header">
+            <a href="/admin" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Admin
+            </a>
+            <div class="app-name">GuestBud</div>
             <h1><i class="fas fa-chart-line"></i> App Analytics</h1>
             <p>Developer Dashboard - Overall App Usage & Engagement</p>
         </div>
         
-        <div class="time-selector">
-            <button onclick="loadStats(7)" class="time-btn" data-days="7">Last 7 Days</button>
-            <button onclick="loadStats(30)" class="time-btn active" data-days="30">Last 30 Days</button>
-            <button onclick="loadStats(90)" class="time-btn" data-days="90">Last 90 Days</button>
-            <button onclick="loadStats(365)" class="time-btn" data-days="365">Last Year</button>
-        </div>
-        
-        <div id="loading" class="loading">
-            <i class="fas fa-spinner fa-spin"></i> Loading analytics...
-        </div>
-        
-        <div id="content" style="display: none;">
+        <div class="content-wrapper">
+            <div class="time-selector">
+                <button onclick="loadStats(7)" class="time-btn" data-days="7">Last 7 Days</button>
+                <button onclick="loadStats(30)" class="time-btn active" data-days="30">Last 30 Days</button>
+                <button onclick="loadStats(90)" class="time-btn" data-days="90">Last 90 Days</button>
+                <button onclick="loadStats(365)" class="time-btn" data-days="365">Last Year</button>
+            </div>
+            
+            <div id="loading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Loading analytics...
+            </div>
+            
+            <div id="content" style="display: none;">
             <!-- Summary Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -412,6 +454,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </div>
