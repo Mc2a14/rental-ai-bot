@@ -104,7 +104,7 @@ function displayStats(stats) {
     usersListDiv.innerHTML = '';
     
     if (stats.users && stats.users.length > 0) {
-        stats.users.forEach(user => {
+        stats.users.forEach((user, userIndex) => {
             const item = document.createElement('div');
             item.className = 'user-item';
             
@@ -117,33 +117,68 @@ function displayStats(stats) {
             
             const initials = user.username.substring(0, 2).toUpperCase();
             
-            // Build properties list
-            let propertiesHtml = '';
+            // Get unique property names (remove duplicates)
+            const uniqueProperties = [];
+            const propertyMap = new Map();
             if (user.properties && user.properties.length > 0) {
                 user.properties.forEach(prop => {
+                    if (!propertyMap.has(prop.name)) {
+                        propertyMap.set(prop.name, prop);
+                        uniqueProperties.push(prop);
+                    }
+                });
+            }
+            
+            // Build properties list (just names, no dates)
+            let propertiesHtml = '';
+            if (uniqueProperties.length > 0) {
+                propertiesHtml = uniqueProperties.map(prop => 
+                    `<span style="display: inline-block; margin-right: 10px; margin-top: 5px; padding: 4px 10px; background: #f0f0f0; border-radius: 12px; font-size: 0.85rem; color: #2c3e50;">
+                        <i class="fas fa-home" style="margin-right: 4px;"></i>${escapeHtml(prop.name)}
+                    </span>`
+                ).join('');
+            } else {
+                propertiesHtml = '<span style="color: #95a5a6; font-size: 0.85rem; font-style: italic;">No properties yet</span>';
+            }
+            
+            // Build dates dropdown content
+            let datesHtml = '';
+            if (user.properties && user.properties.length > 0) {
+                datesHtml = user.properties.map(prop => {
                     const propDate = new Date(prop.createdAt);
                     const propDateStr = propDate.toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
                     });
-                    propertiesHtml += `
-                        <div style="margin-top: 8px; padding-left: 20px; color: #7f8c8d; font-size: 0.9rem;">
-                            <i class="fas fa-home" style="margin-right: 5px;"></i>
-                            <strong>${escapeHtml(prop.name)}</strong> - ${propDateStr}
-                        </div>
-                    `;
-                });
-            } else {
-                propertiesHtml = '<div style="margin-top: 8px; padding-left: 20px; color: #95a5a6; font-size: 0.85rem; font-style: italic;">No properties yet</div>';
+                    return `<div style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                        <strong>${escapeHtml(prop.name)}</strong><br>
+                        <span style="color: #7f8c8d; font-size: 0.85rem;">Created: ${propDateStr}</span>
+                    </div>`;
+                }).join('');
             }
+            
+            const dropdownId = `user-dates-${userIndex}`;
             
             item.innerHTML = `
                 <div class="user-avatar">${initials}</div>
                 <div class="user-info" style="flex: 1;">
                     <div class="username">${escapeHtml(user.username)}</div>
-                    <div class="user-id" style="font-size: 0.8rem; color: #95a5a6; margin-bottom: 5px;">${user.userId}</div>
-                    ${propertiesHtml}
+                    <div style="margin-top: 8px;">
+                        ${propertiesHtml}
+                    </div>
+                    ${datesHtml ? `
+                        <div style="margin-top: 10px;">
+                            <button onclick="toggleDates('${dropdownId}')" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 0.85rem; padding: 5px 0; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>View Dates</span>
+                                <i class="fas fa-chevron-down" id="${dropdownId}-icon"></i>
+                            </button>
+                            <div id="${dropdownId}" style="display: none; margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 8px; max-height: 300px; overflow-y: auto;">
+                                ${datesHtml}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
                 <div class="user-date">
                     Joined: ${dateStr}
