@@ -585,6 +585,24 @@ class AnalyticsService {
         [since]
       );
 
+      // Get all users with their property counts
+      const usersListResult = await database.query(
+        `SELECT 
+           u.user_id,
+           u.username,
+           u.created_at,
+           COUNT(p.property_id) as property_count,
+           COUNT(DISTINCT pv.id) as total_page_views,
+           COUNT(DISTINCT q.id) as total_questions
+         FROM users u
+         LEFT JOIN properties p ON u.user_id = p.user_id
+         LEFT JOIN page_views pv ON p.property_id = pv.property_id
+         LEFT JOIN questions q ON p.property_id = q.property_id
+         GROUP BY u.user_id, u.username, u.created_at
+         ORDER BY u.created_at DESC`,
+        []
+      );
+
       return {
         summary: {
           totalUsers: parseInt(usersResult.rows[0]?.count || 0),
@@ -628,6 +646,14 @@ class AnalyticsService {
           id: r.id,
           name: r.name,
           timestamp: r.timestamp
+        })),
+        users: usersListResult.rows.map(r => ({
+          userId: r.user_id,
+          username: r.username,
+          createdAt: r.created_at,
+          propertyCount: parseInt(r.property_count || 0),
+          totalPageViews: parseInt(r.total_page_views || 0),
+          totalQuestions: parseInt(r.total_questions || 0)
         }))
       };
     } catch (error) {
@@ -655,7 +681,8 @@ class AnalyticsService {
         byViews: [],
         byQuestions: []
       },
-      recentActivity: []
+      recentActivity: [],
+      users: []
     };
   }
 }

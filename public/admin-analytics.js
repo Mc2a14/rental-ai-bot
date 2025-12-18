@@ -99,6 +99,54 @@ function displayStats(stats) {
         topQuestionsDiv.innerHTML = '<div class="empty-state">No questions yet</div>';
     }
     
+    // Users list
+    const usersListDiv = document.getElementById('usersList');
+    usersListDiv.innerHTML = '';
+    
+    if (stats.users && stats.users.length > 0) {
+        stats.users.forEach(user => {
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            
+            const createdAt = new Date(user.createdAt);
+            const dateStr = createdAt.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            
+            const initials = user.username.substring(0, 2).toUpperCase();
+            
+            item.innerHTML = `
+                <div class="user-avatar">${initials}</div>
+                <div class="user-info">
+                    <div class="username">${escapeHtml(user.username)}</div>
+                    <div class="user-id">${user.userId}</div>
+                    <div class="user-stats">
+                        <div class="user-stat">
+                            <i class="fas fa-home"></i>
+                            <span><span class="stat-value">${user.propertyCount}</span> properties</span>
+                        </div>
+                        <div class="user-stat">
+                            <i class="fas fa-eye"></i>
+                            <span><span class="stat-value">${user.totalPageViews}</span> views</span>
+                        </div>
+                        <div class="user-stat">
+                            <i class="fas fa-question-circle"></i>
+                            <span><span class="stat-value">${user.totalQuestions}</span> questions</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-date">
+                    Joined: ${dateStr}
+                </div>
+            `;
+            usersListDiv.appendChild(item);
+        });
+    } else {
+        usersListDiv.innerHTML = '<div class="empty-state">No users yet</div>';
+    }
+    
     // Recent activity
     const recentActivityDiv = document.getElementById('recentActivity');
     recentActivityDiv.innerHTML = '';
