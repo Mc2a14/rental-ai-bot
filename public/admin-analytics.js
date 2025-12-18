@@ -233,3 +233,17 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function toggleDates(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    const icon = document.getElementById(dropdownId + '-icon');
+    if (dropdown.style.display === 'none') {
+        dropdown.style.display = 'block';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        dropdown.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
