@@ -549,25 +549,25 @@ class AnalyticsService {
         [since]
       );
 
-      // Top properties by page views
+      // Top properties by page views (top 5)
       const topPropertiesByViewsResult = await database.query(
         `SELECT p.property_id, p.name, COUNT(pv.id) as view_count
          FROM properties p
          LEFT JOIN page_views pv ON p.property_id = pv.property_id AND pv.viewed_at >= $1
          GROUP BY p.property_id, p.name
          ORDER BY view_count DESC
-         LIMIT 10`,
+         LIMIT 5`,
         [since]
       );
 
-      // Top properties by questions
+      // Top properties by questions (top 5)
       const topPropertiesByQuestionsResult = await database.query(
         `SELECT p.property_id, p.name, COUNT(q.id) as question_count
          FROM properties p
          LEFT JOIN questions q ON p.property_id = q.property_id AND q.created_at >= $1
          GROUP BY p.property_id, p.name
          ORDER BY question_count DESC
-         LIMIT 10`,
+         LIMIT 5`,
         [since]
       );
 
