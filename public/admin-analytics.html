@@ -19,43 +19,45 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 0;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
             min-height: auto;
             overflow: visible;
         }
         
-        .container-inner {
+        .header-section {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            margin-bottom: 0;
             padding: 30px;
+            padding-bottom: 20px;
         }
         
         .header {
             text-align: center;
             margin-bottom: 0;
-            padding: 30px;
-            padding-bottom: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px 20px 0 0;
-            color: white;
+            padding: 0;
+            background: transparent;
+            color: #2c3e50;
         }
         
         .header .app-name {
             font-size: 1.2rem;
             font-weight: bold;
             margin-bottom: 15px;
-            opacity: 0.95;
+            color: #667eea;
             letter-spacing: 1px;
         }
         
         .header h1 {
-            color: white;
+            color: #2c3e50;
             font-size: 2.5rem;
             margin: 0 0 10px 0;
         }
         
         .header p {
-            color: rgba(255, 255, 255, 0.9);
+            color: #7f8c8d;
             font-size: 1.1rem;
             margin: 0;
         }
@@ -133,6 +135,8 @@
         .content-wrapper {
             padding: 30px;
             padding-bottom: 50px;
+            background: white;
+            border-radius: 0 0 20px 20px;
         }
         
         .section h2 {
@@ -339,16 +343,17 @@
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
-            color: white;
+            color: #667eea;
             text-decoration: none;
             padding: 10px 20px;
-            background: rgba(255,255,255,0.2);
+            background: #f8f9fa;
             border-radius: 25px;
             transition: all 0.3s;
+            border: 1px solid #e0e0e0;
         }
         
         .back-link:hover {
-            background: rgba(255,255,255,0.3);
+            background: #e9ecef;
         }
         
         @media (max-width: 768px) {
@@ -360,7 +365,7 @@
                 border-radius: 15px;
             }
             
-            .header {
+            .header-section {
                 padding: 20px;
                 border-radius: 15px 15px 0 0;
             }
@@ -368,19 +373,22 @@
             .content-wrapper {
                 padding: 20px;
                 padding-bottom: 50px;
+                border-radius: 0 0 15px 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="admin-analytics-container">
-        <div class="header">
-            <a href="/admin" class="back-link">
-                <i class="fas fa-arrow-left"></i> Back to Admin
-            </a>
-            <div class="app-name">GuestBud</div>
-            <h1><i class="fas fa-chart-line"></i> App Analytics</h1>
-            <p>Developer Dashboard - Overall App Usage & Engagement</p>
+        <div class="header-section">
+            <div class="header">
+                <a href="/admin" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Admin
+                </a>
+                <div class="app-name">GuestBud</div>
+                <h1><i class="fas fa-chart-line"></i> App Analytics</h1>
+                <p>Developer Dashboard - Overall App Usage & Engagement</p>
+            </div>
         </div>
         
         <div class="content-wrapper">
