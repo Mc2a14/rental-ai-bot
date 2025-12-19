@@ -56,6 +56,22 @@ app.use(cors({
   credentials: true
 }));
 
+// Force HTTPS in production (Railway uses proxy, check X-Forwarded-Proto)
+if (config.nodeEnv === 'production') {
+  app.use((req, res, next) => {
+    // Check if request is HTTP (not HTTPS)
+    const isSecure = req.secure || 
+                     req.headers['x-forwarded-proto'] === 'https' ||
+                     req.headers['x-forwarded-ssl'] === 'on';
+    
+    if (!isSecure && req.method === 'GET') {
+      // Redirect to HTTPS
+      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
+}
+
 // Session Configuration
 // Use PostgreSQL store if DATABASE_URL is available, otherwise use memory store
 const sessionConfig = {
